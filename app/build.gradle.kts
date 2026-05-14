@@ -5,6 +5,12 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+ksp {
+    // Export Room schemas so future migrations can diff against version 1.
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+}
+
 android {
     namespace = "com.rldjrgo.grocerynote"
     compileSdk = 36
