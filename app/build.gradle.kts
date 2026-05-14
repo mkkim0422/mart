@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+}
+
+// Read keystore.properties if present (gitignored). Release-only.
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 ksp {
@@ -30,9 +40,31 @@ android {
         localeFilters += listOf("ko", "en")
     }
 
+    signingConfigs {
+        create("release") {
+            val ksFileName = keystoreProps["KEYSTORE_FILE"] as String?
+            val ksFile = ksFileName?.let { rootProject.file(it) }
+            // Only configure signing if the .jks file is actually on disk and the password
+            // is set — otherwise leave the config empty so unsigned release builds work.
+            if (ksFile != null && ksFile.exists() && (keystoreProps["KEYSTORE_PASSWORD"] as String?).isNullOrBlank().not()) {
+                storeFile = ksFile
+                storePassword = keystoreProps["KEYSTORE_PASSWORD"] as String?
+                keyAlias = keystoreProps["KEY_ALIAS"] as String?
+                keyPassword = keystoreProps["KEY_PASSWORD"] as String?
+            }
+        }
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
+            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -41,6 +73,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            // Sign release only if keystore.properties + .jks are present and valid.
+            val rsc = signingConfigs.findByName("release")
+            if (rsc?.storeFile?.exists() == true) signingConfig = rsc
         }
     }
 
@@ -51,10 +88,6 @@ android {
 
     kotlin {
         jvmToolchain(21)
-    }
-
-    buildFeatures {
-        compose = true
     }
 
     packaging {
@@ -102,6 +135,13 @@ dependencies {
     // Coroutines / DataStore
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
+
+    // Firebase / Ads / Billing (Phase 6)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.play.services.ads)
+    implementation(libs.billing.ktx)
 
     // Tests
     testImplementation(libs.junit)

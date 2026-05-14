@@ -1,0 +1,31 @@
+{
+  "_comment": "PLACEHOLDER — replace with the real google-services.json downloaded from Firebase Console (Project settings → Your apps → Android app).",
+  "_instructions_kr": "Firebase Console에서 'com.rldjrgo.grocerynote' 패키지로 Android 앱을 등록하고 google-services.json 다운로드한 다음 이 파일을 통째로 교체하세요.",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "grocerynote-placeholder",
+    "storage_bucket": "grocerynote-placeholder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.rldjrgo.grocerynote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUMMY_REPLACE_ME_WITH_REAL_KEY_FROM_FIREBASE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
