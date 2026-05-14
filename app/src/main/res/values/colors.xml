@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#3182F6</color>
+    <color name="bg_primary">#FFFFFF</color>
+    <color name="bg_primary_dark">#17171B</color>
+    <color name="text_primary">#191F28</color>
+    <color name="text_primary_dark">#F2F4F6</color>
+    <color name="ic_launcher_background">#3182F6</color>
+</resources>

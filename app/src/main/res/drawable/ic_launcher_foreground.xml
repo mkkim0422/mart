@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- White grocery cart icon on toss-blue background -->
+    <group android:translateX="22" android:translateY="26">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M6,8 L8,8 L12,30 L52,30 L56,12 L18,12 M16,40 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M48,40 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>
