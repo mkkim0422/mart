@@ -292,8 +292,9 @@ app/src/main/java/com/rldjrgo/grocerynote/
 ## 14. Phase Plan & Status
 
 - [x] Phase 0 — Decisions confirmed (package=`com.rldjrgo.grocerynote`, repo=`mkkim0422/mart`, dir=`C:\mart`) — 2026-05-14
-- [ ] **Phase 1** — Project bootstrap + Toss design system + git/GitHub + first build
-- [ ] Phase 2 — Data layer (Room + Hilt)
+- [x] Phase 1 — Project bootstrap + Toss design system + git/GitHub + first debug APK — 2026-05-14
+- [x] Phase 2 — Data layer (Room + Hilt + DevTest screen, schemas/1.json exported) — 2026-05-14
+- [ ] **Phase 3** — Main screen (tab UI, Toss style)
 - [ ] Phase 3 — Main screen (tab UI)
 - [ ] Phase 4 — Widget (most important)
 - [ ] Phase 5 — Completed + Settings + Onboarding + DataStore + Auto Backup
