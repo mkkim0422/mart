@@ -41,3 +41,12 @@
 
 # --- Billing (Phase 6) ---
 -keep class com.android.billingclient.** { *; }
+
+# --- Domain models / data classes ---
+-keep class com.rldjrgo.grocerynote.domain.model.** { *; }
+-keep class com.rldjrgo.grocerynote.data.local.*Entity { *; }
+
+# --- Crashlytics: keep stack-trace mappable ---
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

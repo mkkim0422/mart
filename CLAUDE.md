@@ -294,7 +294,10 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 0 — Decisions confirmed (package=`com.rldjrgo.grocerynote`, repo=`mkkim0422/mart`, dir=`C:\mart`) — 2026-05-14
 - [x] Phase 1 — Project bootstrap + Toss design system + git/GitHub + first debug APK — 2026-05-14
 - [x] Phase 2 — Data layer (Room + Hilt + DevTest screen, schemas/1.json exported) — 2026-05-14
-- [ ] **Phase 3** — Main screen (tab UI, Toss style)
+- [x] Phase 3 — Main UI (tab strip + check anim + AddItem/Store sheets + bottom nav) — 2026-05-14
+- [x] Phase 4 — Glance widget (Small/Medium/Large + CheckItemAction API 31+ + OpenStoreAction fallback + day/night) — 2026-05-14
+- [x] Phase 5 — Completed/Settings/Onboarding + DataStore + auto backup + DevTest removed — 2026-05-14
+- [x] Phase 6 — AdMob banner + BillingClient (remove_ads) + Firebase Crashlytics/Analytics + signing config + privacy policy + store listing + Release AAB 11.91MB / Release APK 5.91MB — 2026-05-14
 - [ ] Phase 3 — Main screen (tab UI)
 - [ ] Phase 4 — Widget (most important)
 - [ ] Phase 5 — Completed + Settings + Onboarding + DataStore + Auto Backup

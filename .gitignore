@@ -17,7 +17,9 @@ local.properties
 *.jks
 *.keystore
 keystore.properties
-google-services.json
+# google-services.json is committed as a placeholder — real one comes from Firebase Console.
+# Uncomment the next line after replacing with your real google-services.json:
+# google-services.json
 GoogleService-Info.plist
 .kotlin/
 out/

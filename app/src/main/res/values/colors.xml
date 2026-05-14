@@ -6,4 +6,11 @@
     <color name="text_primary">#191F28</color>
     <color name="text_primary_dark">#F2F4F6</color>
     <color name="ic_launcher_background">#3182F6</color>
+    <!-- Widget XML preview tokens -->
+    <color name="widget_preview_card_bg">#FFFFFF</color>
+    <color name="widget_preview_header_bg">#14FFB800</color>
+    <color name="widget_preview_dot">#FFB800</color>
+    <color name="widget_preview_text_primary">#191F28</color>
+    <color name="widget_preview_text_secondary">#4E5968</color>
+    <color name="widget_preview_text_tertiary">#8B95A1</color>
 </resources>

@@ -11,11 +11,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 
 /**
- * App-wide Toss-style theme. Material3 ColorScheme is provided so that Material components
- * (Surface, etc.) get sane defaults, but our own [LocalAppColors] is the source of truth for
- * brand and semantic colors.
- *
- * Material You dynamic color is intentionally NOT used (brand consistency).
+ * App-wide Toss-style theme. Material You dynamic color is intentionally NOT used
+ * — brand consistency wins.
  */
 @Composable
 fun AppTheme(
@@ -63,14 +60,10 @@ fun AppTheme(
         LocalContentColor provides appColors.textPrimary,
         LocalTextStyle provides typography.body.copy(color = appColors.textPrimary),
     ) {
-        MaterialTheme(
-            colorScheme = materialColorScheme,
-            content = content,
-        )
+        MaterialTheme(colorScheme = materialColorScheme, content = content)
     }
 }
 
-/** Convenience accessors. */
 object AppTheme {
     val colors: AppColors
         @Composable @ReadOnlyComposable get() = LocalAppColors.current
