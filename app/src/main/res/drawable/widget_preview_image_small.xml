@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static fallback thumbnail for launchers that prefer previewImage (Samsung One UI). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="110dp"
+    android:height="110dp"
+    android:viewportWidth="110"
+    android:viewportHeight="110">
+    <path android:fillColor="#FAFAF7" android:pathData="M0,0h110v110h-110z" />
+    <path android:fillColor="#FFE08A" android:pathData="M14,14h18v18h-18z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M38,18h36v8h-36z" />
+    <path android:fillColor="#FFE08A" android:pathData="M84,16h12v10h-12z" />
+    <path android:fillColor="#F0EEE9" android:pathData="M14,42h82v1h-82z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,52h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,52h44v5h-44z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,66h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,66h52v5h-52z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,80h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,80h38v5h-38z" />
+</vector>

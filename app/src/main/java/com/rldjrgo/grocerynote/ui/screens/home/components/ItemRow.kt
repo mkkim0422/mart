@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,12 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.Corners
@@ -45,10 +48,10 @@ private const val STRIKE_MS = 300
 private const val WAIT_MS = 700
 private const val FADE_MS = 300
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ItemRow(
     item: Item,
+    storeColor: Color,
     highlighted: Boolean,
     onCompleteAnimDone: () -> Unit,
     onRename: () -> Unit,
@@ -57,6 +60,7 @@ fun ItemRow(
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
+    val haptic = LocalHapticFeedback.current
     var menuOpen by remember { mutableStateOf(false) }
     var checked by remember { mutableStateOf(item.isCompleted) }
     val alpha = remember { Animatable(1f) }
@@ -68,15 +72,12 @@ fun ItemRow(
         label = "textColor",
     )
 
-    LaunchedEffect(checked) {
-        if (checked) {
-            // hold strike + text fade
-            kotlinx.coroutines.delay((CHECK_FILL_MS + STRIKE_MS + WAIT_MS).toLong())
-            // fade-out + slide-up (parallel)
-            kotlinx.coroutines.coroutineScope {
-                launch { alpha.animateTo(0f, tween(FADE_MS)) }
-                launch { translateY.animateTo(-24f, tween(FADE_MS)) }
-            }
+    // No delay/animation — tapping "완료" removes the item right away
+    // (the list flow recomposes and drops the row instantly).
+    val complete: () -> Unit = {
+        if (!checked) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            checked = true
             onCompleteAnimDone()
         }
     }
@@ -87,38 +88,14 @@ fun ItemRow(
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                if (highlighted) colors.brandPrimarySoft else colors.bgPrimary,
+                if (highlighted) storeColor.copy(alpha = if (colors.isDark) 0.25f else 0.15f)
+                else colors.bgPrimary,
             )
-            .padding(horizontal = 20.dp)
             .alpha(alpha.value)
             .graphicsLayer { translationY = translateY.value }
-            .combinedClickable(onClick = { /* row tap is no-op; check via checkbox */ }, onLongClick = { menuOpen = true }),
+            // Row tap does NOT complete — only the explicit "완료" button does.
+            .padding(horizontal = 20.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .background(
-                    color = if (checked) colors.brandPrimary else colors.bgPrimary,
-                    shape = Corners.small,
-                )
-                .border(
-                    width = 1.5.dp,
-                    color = if (checked) colors.brandPrimary else colors.textDisabled,
-                    shape = Corners.small,
-                )
-                .clickable(enabled = !checked) { checked = true },
-            contentAlignment = Alignment.Center,
-        ) {
-            if (checked) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = colors.bgPrimary,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
-        Spacer(Modifier.width(12.dp))
         Text(
             text = item.name,
             style = typo.body.copy(
@@ -127,13 +104,46 @@ fun ItemRow(
             color = textColor,
             modifier = Modifier.weight(1f),
         )
+        Spacer(Modifier.width(12.dp))
+        // "완료" affordance — clearly a complete action, not a vague selection box.
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 32.dp)
+                .background(
+                    color = if (checked) storeColor else Color.Transparent,
+                    shape = Corners.small,
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = if (checked) storeColor else colors.divider,
+                    shape = Corners.small,
+                )
+                .clickable(enabled = !checked, onClick = complete),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = "완료",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp),
+                )
+            } else {
+                Text(
+                    text = "완료",
+                    style = typo.caption.copy(fontWeight = FontWeight.Medium, fontSize = 12.sp),
+                    color = Color(0xFF6B6B6B),
+                )
+            }
+        }
+        Spacer(Modifier.width(8.dp))
         Box {
             Icon(
                 imageVector = Icons.Filled.MoreVert,
                 contentDescription = "더보기",
                 tint = colors.textTertiary,
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(20.dp)
                     .clickable { menuOpen = true },
             )
             DropdownMenu(

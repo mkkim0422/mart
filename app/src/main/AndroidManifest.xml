@@ -33,17 +33,62 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <receiver
-            android:name=".widget.GroceryWidgetReceiver"
+            android:name=".widget.WidgetPinSuccessReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".widget.GroceryWidgetSmallReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/grocery_widget_info" />
+                android:resource="@xml/grocery_widget_small_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.GroceryWidgetMediumReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grocery_widget_medium_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.GroceryWidgetLargeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grocery_widget_large_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.GroceryWidget2x1Receiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grocery_widget_2x1_info" />
         </receiver>
 
     </application>

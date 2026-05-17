@@ -2,6 +2,8 @@ package com.rldjrgo.grocerynote
 
 import android.app.Application
 import com.google.android.gms.ads.MobileAds
+import com.rldjrgo.grocerynote.di.WidgetEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,5 +19,13 @@ class App : Application() {
             runCatching { MobileAds.initialize(this@App) {} }
         }
         // Firebase / Crashlytics auto-initialize via google-services plugin.
+
+        // Start the widget auto-refresher (process-lifetime DB subscription).
+        runCatching {
+            EntryPointAccessors
+                .fromApplication(this, WidgetEntryPoint::class.java)
+                .widgetUpdater()
+                .start()
+        }
     }
 }

@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">장보기 메모</string>
+    <string name="app_name">마트노트</string>
     <string name="widget_description">마트별 장보기 리스트</string>
+    <string name="widget_description_small">3개 마트 표기</string>
+    <string name="widget_description_medium">2개 마트 항목 표기 (권장)</string>
+    <string name="widget_description_large">4개 마트 항목 표기</string>
+    <string name="widget_description_2x1">2개 마트 표기</string>
+    <string name="shortcut_add_short">빠른 추가</string>
+    <string name="shortcut_add_long">장보기 항목 빠르게 추가</string>
 </resources>

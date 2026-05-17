@@ -11,8 +11,8 @@
 
     <!-- Android 12+ SplashScreen API. Pre-12 falls back to a static window bg. -->
     <style name="Theme.GroceryNote.SplashScreen" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/brand_primary</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_cart</item>
         <item name="postSplashScreenTheme">@style/Theme.GroceryNote</item>
     </style>
 

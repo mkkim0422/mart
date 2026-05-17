@@ -76,11 +76,36 @@ class MainActivity : ComponentActivity() {
  * Pre-Hilt lifecycle so widget intents can land before ViewModels exist.
  */
 object DeepLinkBus {
-    data class Payload(val storeId: Long?, val itemId: Long?)
+    data class Payload(
+        val storeId: Long? = null,
+        val itemId: Long? = null,
+        val openAddItem: Boolean = false,
+        val sharedText: String? = null,
+    )
     val flow = MutableStateFlow<Payload?>(null)
 
     fun consume(intent: Intent?) {
         if (intent == null) return
+        // Share sheet (카톡 등 텍스트 공유) → 항목 추가 시트 프리필
+        if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()?.take(100)
+            if (!text.isNullOrEmpty()) {
+                flow.value = Payload(openAddItem = true, sharedText = text)
+                return
+            }
+        }
+        // Widget "+" button / App Shortcut → 해당 마트로 추가 시트 자동
+        val action = intent.getStringExtra("action")
+        if (action == "ADD_ITEM") {
+            val sid = intent.getLongExtra("store_id", -1L).takeIf { it > 0 }
+            flow.value = Payload(storeId = sid, openAddItem = true)
+            return
+        }
+        // Empty-widget tap → just force-route to Home (no mart/item to select).
+        if (action == "OPEN_HOME") {
+            flow.value = Payload()
+            return
+        }
         val storeId = intent.getLongExtra(Routes.HOME_DEEPLINK_STORE_ARG, -1L).takeIf { it > 0 }
         val itemId = intent.getLongExtra(Routes.HOME_DEEPLINK_ITEM_ARG, -1L).takeIf { it > 0 }
         if (storeId != null || itemId != null) flow.value = Payload(storeId, itemId)
@@ -94,11 +119,28 @@ private fun AppRoot(settings: SettingsDataStore) {
     val hasSeen by settings.hasSeenOnboarding.collectAsState(initial = true)
     val start = if (hasSeen) Routes.HOME else Routes.ONBOARDING
 
+    // A widget deep-link can arrive while the app sits on Settings/Completed.
+    // HomeScreen only reacts when it's composed, so route to Home FIRST here
+    // (don't clear the bus — HomeScreen still consumes it to select the mart).
+    LaunchedEffect(Unit) {
+        DeepLinkBus.flow.collect { payload ->
+            if (payload == null) return@collect
+            val route = navController.currentDestination?.route
+            if (route != null && route != Routes.HOME && route != Routes.ONBOARDING) {
+                navController.navigate(Routes.HOME) {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = AppTheme.colors.bgPrimary,
         bottomBar = {
-            if (current != Routes.ONBOARDING) {
+            if (current != Routes.ONBOARDING && current != Routes.STORE_MANAGE) {
                 BottomNavBar(
                     currentRoute = current,
                     onNavigate = { route ->

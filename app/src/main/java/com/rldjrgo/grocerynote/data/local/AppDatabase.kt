@@ -51,11 +51,12 @@ abstract class AppDatabase : RoomDatabase() {
 
         private suspend fun seedDefaultStores(dao: StoreDao) {
             val now = System.currentTimeMillis()
+            // Default marts on first install: 쿠팡, 다이소 (이마트 제외).
             val seeds = listOf(
                 StoreEntity(
-                    name = "이마트",
-                    colorHex = "#FFB800",
-                    iconKey = "cart",
+                    name = "쿠팡",
+                    colorHex = "#3182F6",
+                    iconKey = "emoji:🚀",
                     displayOrder = 0,
                     createdAt = now,
                 ),
@@ -65,13 +66,6 @@ abstract class AppDatabase : RoomDatabase() {
                     iconKey = "store",
                     displayOrder = 1,
                     createdAt = now + 1,
-                ),
-                StoreEntity(
-                    name = "쿠팡",
-                    colorHex = "#3182F6",
-                    iconKey = "box",
-                    displayOrder = 2,
-                    createdAt = now + 2,
                 ),
             )
             seeds.forEach { dao.insertStore(it) }

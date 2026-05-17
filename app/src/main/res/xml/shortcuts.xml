@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_item"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add_short"
+        android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.rldjrgo.grocerynote"
+            android:targetClass="com.rldjrgo.grocerynote.MainActivity">
+            <extra android:name="action" android:value="ADD_ITEM" />
+        </intent>
+    </shortcut>
+</shortcuts>

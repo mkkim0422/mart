@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "grocery_prefs")
 
 enum class DarkModePref { Auto, On, Off }
-enum class WidgetRefresh { Immediate, Min5, Min30 }
 
 @Singleton
 class SettingsDataStore @Inject constructor(@ApplicationContext private val context: Context) {
@@ -25,9 +24,11 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
     private object Keys {
         val HasSeenOnboarding = booleanPreferencesKey("has_seen_onboarding")
         val DarkMode = stringPreferencesKey("dark_mode")
-        val WidgetRefresh = stringPreferencesKey("widget_refresh")
         val IsAdRemoved = booleanPreferencesKey("is_ad_removed")
         val OnboardingCompletedCount = intPreferencesKey("onboarding_completed_count")
+        val HasAddedWidget = booleanPreferencesKey("has_added_widget")
+        val HasDismissedWidgetBanner = booleanPreferencesKey("has_dismissed_widget_banner")
+        val LargeWidgetStoreIds = stringPreferencesKey("large_widget_store_ids")
     }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data
@@ -36,11 +37,22 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
     val darkMode: Flow<DarkModePref> = context.dataStore.data
         .map { runCatching { DarkModePref.valueOf(it[Keys.DarkMode] ?: "Auto") }.getOrDefault(DarkModePref.Auto) }
 
-    val widgetRefresh: Flow<WidgetRefresh> = context.dataStore.data
-        .map { runCatching { WidgetRefresh.valueOf(it[Keys.WidgetRefresh] ?: "Immediate") }.getOrDefault(WidgetRefresh.Immediate) }
-
     val isAdRemoved: Flow<Boolean> = context.dataStore.data
         .map { it[Keys.IsAdRemoved] ?: false }
+
+    val hasAddedWidget: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasAddedWidget] ?: false }
+
+    val hasDismissedWidgetBanner: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasDismissedWidgetBanner] ?: false }
+
+    /** Stores chosen for the Large widget, in display order. Empty = auto (top by display order). */
+    val largeWidgetStoreIds: Flow<List<Long>> = context.dataStore.data
+        .map { prefs ->
+            (prefs[Keys.LargeWidgetStoreIds] ?: "")
+                .split(",")
+                .mapNotNull { it.trim().toLongOrNull() }
+        }
 
     suspend fun setOnboardingSeen() {
         context.dataStore.edit { it[Keys.HasSeenOnboarding] = true }
@@ -50,11 +62,19 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         context.dataStore.edit { it[Keys.DarkMode] = pref.name }
     }
 
-    suspend fun setWidgetRefresh(pref: WidgetRefresh) {
-        context.dataStore.edit { it[Keys.WidgetRefresh] = pref.name }
-    }
-
     suspend fun setAdRemoved(removed: Boolean) {
         context.dataStore.edit { it[Keys.IsAdRemoved] = removed }
+    }
+
+    suspend fun setHasAddedWidget(added: Boolean) {
+        context.dataStore.edit { it[Keys.HasAddedWidget] = added }
+    }
+
+    suspend fun setHasDismissedWidgetBanner(dismissed: Boolean) {
+        context.dataStore.edit { it[Keys.HasDismissedWidgetBanner] = dismissed }
+    }
+
+    suspend fun setLargeWidgetStoreIds(ids: List<Long>) {
+        context.dataStore.edit { it[Keys.LargeWidgetStoreIds] = ids.joinToString(",") }
     }
 }

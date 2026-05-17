@@ -1,7 +1,9 @@
 package com.rldjrgo.grocerynote.di
 
+import com.rldjrgo.grocerynote.data.local.SettingsDataStore
 import com.rldjrgo.grocerynote.data.repository.ItemRepository
 import com.rldjrgo.grocerynote.data.repository.StoreRepository
+import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -16,4 +18,6 @@ import dagger.hilt.components.SingletonComponent
 interface WidgetEntryPoint {
     fun storeRepository(): StoreRepository
     fun itemRepository(): ItemRepository
+    fun settingsDataStore(): SettingsDataStore
+    fun widgetUpdater(): WidgetUpdater
 }

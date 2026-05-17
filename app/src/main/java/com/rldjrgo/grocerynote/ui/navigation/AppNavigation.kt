@@ -15,6 +15,7 @@ import com.rldjrgo.grocerynote.ui.screens.completed.CompletedScreen
 import com.rldjrgo.grocerynote.ui.screens.home.HomeScreen
 import com.rldjrgo.grocerynote.ui.screens.onboarding.OnboardingScreen
 import com.rldjrgo.grocerynote.ui.screens.settings.SettingsScreen
+import com.rldjrgo.grocerynote.ui.screens.store.StoreManageScreen
 
 private const val ANIM_MS = 300
 
@@ -47,13 +48,18 @@ fun AppNavHost(
             OnboardingScreen(onDone = onOnboardingComplete)
         }
         composable(Routes.HOME) {
-            HomeScreen()
+            HomeScreen(
+                onManageStores = { navController.navigate(Routes.STORE_MANAGE) },
+            )
         }
         composable(Routes.COMPLETED) {
             CompletedScreen()
         }
         composable(Routes.SETTINGS) {
             SettingsScreen()
+        }
+        composable(Routes.STORE_MANAGE) {
+            StoreManageScreen(onClose = { navController.popBackStack() })
         }
     }
 }

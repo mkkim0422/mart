@@ -16,6 +16,22 @@ data class Store(
     val createdAt: Long,
 )
 
+/**
+ * iconKey → display emoji.
+ * Seed stores use legacy keys ("cart"/"store"/"box"); user-created stores
+ * store the emoji directly as "emoji:🛒".
+ */
+fun iconKeyToEmoji(iconKey: String): String = when {
+    iconKey.startsWith("emoji:") -> iconKey.removePrefix("emoji:")
+    iconKey == "cart" -> "🛒"
+    iconKey == "store" -> "🏪"
+    iconKey == "box" -> "📦"
+    else -> "🛒"
+}
+
+/** Convenience: this store's display emoji. */
+fun Store.emoji(): String = iconKeyToEmoji(iconKey)
+
 /** "#3182F6" → Color */
 internal fun String.toComposeColorOrDefault(default: Color = Color(0xFF3182F6)): Color {
     val hex = trim().removePrefix("#")
