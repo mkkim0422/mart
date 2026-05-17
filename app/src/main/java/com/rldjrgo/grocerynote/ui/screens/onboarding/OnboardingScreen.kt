@@ -1,9 +1,5 @@
 package com.rldjrgo.grocerynote.ui.screens.onboarding
 
-import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -41,7 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
-import com.rldjrgo.grocerynote.widget.GroceryWidgetReceiver
+import com.rldjrgo.grocerynote.ui.components.WidgetSizePickerSheet
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -50,12 +47,16 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val settings: com.rldjrgo.grocerynote.data.local.SettingsDataStore,
+    private val widgetPin: com.rldjrgo.grocerynote.util.WidgetPinHelper,
 ) : androidx.lifecycle.ViewModel() {
     fun markSeen() {
         viewModelScope.launch {
             settings.setOnboardingSeen()
         }
     }
+
+    fun pinWidget(size: com.rldjrgo.grocerynote.util.WidgetSize): Boolean =
+        widgetPin.pinWidget(size)
 }
 
 private data class Page(
@@ -93,13 +94,14 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     var showWidgetHint by remember { mutableStateOf(false) }
+    var showSizePicker by remember { mutableStateOf(false) }
 
     val finish: () -> Unit = {
         viewModel.markSeen()
         onDone()
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.bgPrimary)) {
+    Column(modifier = Modifier.fillMaxSize().background(colors.bgPrimary).statusBarsPadding()) {
         // Top right "건너뛰기"
         Row(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -142,15 +144,14 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(0.7f)
-                            .height(48.dp)
-                            .background(colors.bgTertiary, RoundedCornerShape(12.dp))
+                            .height(52.dp)
+                            .background(colors.brandPrimary, RoundedCornerShape(12.dp))
                             .clickable {
-                                val ok = tryPinWidget(context)
-                                if (!ok) showWidgetHint = true
+                                showSizePicker = true
                             },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("위젯 추가하기", style = typo.title, color = colors.textSecondary)
+                        Text("지금 위젯 추가하기", style = typo.title, color = colors.bgPrimary)
                     }
                 }
             }
@@ -208,25 +209,21 @@ fun OnboardingScreen(
         }
     }
 
+    if (showSizePicker) {
+        WidgetSizePickerSheet(
+            onPick = viewModel::pinWidget,
+            onDismiss = { showSizePicker = false },
+        )
+    }
+
     if (showWidgetHint) {
         com.rldjrgo.grocerynote.ui.screens.home.ConfirmDialog(
             title = "위젯 추가 안내",
-            message = "홈 화면을 길게 누른 뒤 ‘위젯’ → ‘장보기 메모’ 를 선택해주세요.",
+            message = "홈 화면을 길게 누른 뒤 ‘위젯’ → ‘마트노트’ 를 선택해주세요.",
             confirmLabel = "확인",
             destructive = false,
             onConfirm = { showWidgetHint = false },
             onDismiss = { showWidgetHint = false },
         )
     }
-}
-
-private fun tryPinWidget(context: android.content.Context): Boolean {
-    val mgr = AppWidgetManager.getInstance(context)
-    if (!mgr.isRequestPinAppWidgetSupported) return false
-    val provider = ComponentName(context, GroceryWidgetReceiver::class.java)
-    val callback = PendingIntent.getBroadcast(
-        context, 0, Intent(),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
-    return runCatching { mgr.requestPinAppWidget(provider, null, callback) }.getOrDefault(false)
 }

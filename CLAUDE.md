@@ -1,4 +1,4 @@
-# CLAUDE.md — 장보기 메모 (Grocery Note)
+# CLAUDE.md — 마트노트 (MartNote)
 
 > Permanent project context. **Read this first** at the start of every conversation about this project.
 
@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| App name (KO) | 장보기 메모 |
-| App name (EN) | Grocery Note |
-| Package | `com.rldjrgo.grocerynote` (PERMANENT — set 2026-05-14, cannot change after Play release) |
+| App name (KO) | 마트노트 (renamed 2026-05-17 from "장보기 메모") |
+| App name (EN) | MartNote |
+| Package | `com.rldjrgo.grocerynote` (PERMANENT — set 2026-05-14, cannot change after Play release; package keeps `grocerynote` despite the app rename) |
 | Platform | Android only |
 | Owner | mkkim0422 (help@sphinfo.co.kr) |
 | Repo | https://github.com/mkkim0422/mart |
@@ -131,10 +131,10 @@ Item(
 indices: items.storeId, items.isCompleted
 ```
 
-Seed (RoomCallback on first create):
-1. 이마트 — `#FFB800`, icon `cart`
-2. 다이소 — `#FF4D6D`, icon `store`
-3. 쿠팡 — `#3182F6`, icon `box`
+Seed (RoomCallback on first create) — changed 2026-05-17 (이마트 dropped):
+1. 쿠팡 — `#3182F6`, icon `box`
+2. 다이소 — `#F04452`, icon `store`
+(SettingsViewModel.wipeAllData re-seeds the same two.)
 
 ## 10. Design System (Toss-style)
 
@@ -202,11 +202,13 @@ small (chip/badge) 8dp · medium (input/button) 12dp · large (card/modal) 16dp 
 
 ## 11. UI Structure
 
-Top: hamburger | "장보기 메모" (Heading M) | search
-Tab strip (ScrollableTabRow): ●이마트(5) ●다이소(3) ●쿠팡(2) [+ 추가]
+Top: shared **`PageTitle`** (`ui/components/PageTitle.kt`) — `headingL` (20sp Bold, -0.02em), textPrimary, left, pad h20/top16/bottom12; params title/subtitle/trailing. All 3 top screens use it (one place to change title sizing).
+- Home title: **"구매예정"** (app name lives in launcher/onboarding/Play, not the screen)
+- Completed title: **"완료"**  · Settings title: **"설정"**
+Tab strip (ScrollableTabRow): ●이마트(5) ●다이소(3) ●쿠팡(2) [+ 추가] [⋮ 마트관리]
 Body: items of selected mart (□ name, ⋮ on right)
 FAB: Toss-blue + (bottom right)
-Bottom nav: 활성 / 완료 / 설정 — selected = `#3182F6` for both icon and text
+Bottom nav: 구매예정 / 완료 / 설정 — selected = `#3182F6` for both icon and text (titles match nav labels)
 
 Check anim (1.3s total):
 - 0.15s checkbox fills `#3182F6`
@@ -217,10 +219,13 @@ Check anim (1.3s total):
 
 ## 12. Widget (most important — invest most time)
 
-3 sizes via `SizeMode.Responsive`:
-- **Small** (2x2 ≈ 110×110dp) — single mart, ≤4 items + "외 N개"
-- **Medium** (4x2 ≈ 250×110dp) ★ default — 1-2 marts, 3-5 items each
-- **Large** (4x4 ≈ 250×250dp) — up to 5 marts, 3-4 items each
+**4 separate Glance widgets** (not one `SizeMode.Responsive`; each = own class + Receiver + xml info, shared logic in `widget/common/WidgetCommon.kt`):
+- **Mini** (2x1, 110×40dp, resizable) — picker label "Mini"; reuses `SmallContent` compact = **exactly 2** mart count rows (3rd clips in 2x1, no "외 N" footer)
+- **Small** (2x2 ≈ 110×110dp) — per-mart remaining counts (`WidgetStoreCountRow`), ≤4 marts + "외 N개"
+- **Medium** (4x2 ≈ 250×110dp) ★ default — item list: 1 mart full-width / ≥2 top-2 split
+- **Large** (4x4 ≈ 250×250dp) — item list: up to 4 marts (1 / 2 / 1+2 / 2x2); marts user-selectable via `SettingsDataStore.largeWidgetStoreIds`
+
+`WidgetSize` enum order = `TWO_BY_ONE, SMALL, MEDIUM, LARGE`. Add-widget picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 4; pick → `requestPinAppWidget`.
 
 Item check (API 31+): `CheckItemAction` (ActionCallback) → `ItemRepository.completeItem(id)` via Hilt EntryPoint → `GroceryWidget().update(...)` → item gone in <1s.
 
@@ -242,7 +247,7 @@ Empty states:
 - 0 marts: "마트를 추가해주세요" → tap = open app
 - 0 items across all marts: "추가할 항목이 없어요" + "+" → tap = open app
 
-Onboarding last page: "위젯 추가하기" → `AppWidgetManager.requestPinAppWidget()` (Android 8+, depends on launcher); fallback hint: "홈화면을 길게 누르고 위젯 → 장보기 메모".
+Onboarding last page: "위젯 추가하기" → `AppWidgetManager.requestPinAppWidget()` (Android 8+, depends on launcher); fallback hint: "홈화면을 길게 누르고 위젯 → 마트노트".
 
 Widget visual (Toss):
 - bg `#FFFFFF` (dark `#1F1F23`), r 16dp

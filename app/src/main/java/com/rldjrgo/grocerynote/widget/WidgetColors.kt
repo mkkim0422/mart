@@ -16,20 +16,20 @@ import androidx.glance.unit.ColorProvider
 object WidgetColors {
     val LightBg = Color(0xFFFFFFFF)
     val LightCardBg = Color(0xFFFFFFFF)
-    val LightDivider = Color(0xFFE5E8EB)
+    val LightDivider = Color(0xFFF0EEE9)
     val LightTextPrimary = Color(0xFF191F28)
     val LightTextSecondary = Color(0xFF4E5968)
     val LightTextTertiary = Color(0xFF8B95A1)
-    val LightCheckboxBorder = Color(0xFFC9CDD2)
+    val LightCheckboxBorder = Color(0xFFD5D2CB)
     val LightBrand = Color(0xFF3182F6)
 
-    val DarkBg = Color(0xFF1F1F23)
-    val DarkCardBg = Color(0xFF1F1F23)
-    val DarkDivider = Color(0xFF3A3D42)
+    val DarkBg = Color(0xFF262626)
+    val DarkCardBg = Color(0xFF262626)
+    val DarkDivider = Color(0xFF333333)
     val DarkTextPrimary = Color(0xFFF2F4F6)
     val DarkTextSecondary = Color(0xFFA8B0BA)
     val DarkTextTertiary = Color(0xFF6B7684)
-    val DarkCheckboxBorder = Color(0xFF4E5968)
+    val DarkCheckboxBorder = Color(0xFF555555)
     val DarkBrand = Color(0xFF4592FF)
 }
 
@@ -45,3 +45,10 @@ fun textTertiaryProvider(): ColorProvider = dn(WidgetColors.LightTextTertiary, W
 fun checkboxBorderProvider(): ColorProvider = dn(WidgetColors.LightCheckboxBorder, WidgetColors.DarkCheckboxBorder)
 fun brandProvider(): ColorProvider = dn(WidgetColors.LightBrand, WidgetColors.DarkBrand)
 fun staticProvider(c: Color): ColorProvider = androidx.glance.unit.ColorProvider(c)
+
+/**
+ * Soft tint of a mart color for the widget header icon-box / count pill.
+ * Day alpha 0.15, night 0.22 (slightly stronger so it reads on dark card bg).
+ */
+fun martSoftProvider(c: Color): ColorProvider =
+    dn(c.copy(alpha = 0.15f), c.copy(alpha = 0.25f))

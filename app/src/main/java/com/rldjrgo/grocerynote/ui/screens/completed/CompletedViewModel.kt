@@ -23,6 +23,7 @@ data class CompletedUiState(
     val items: List<Item> = emptyList(),
     val stores: List<Store> = emptyList(),
     val storesById: Map<Long, Store> = emptyMap(),
+    val completedCounts: Map<Long, Int> = emptyMap(),
     val filterStoreId: Long? = null,
 )
 
@@ -32,10 +33,22 @@ class CompletedViewModel @Inject constructor(
     application: Application,
     private val storeRepo: StoreRepository,
     private val itemRepo: ItemRepository,
+    private val widgetUpdater: WidgetUpdater,
 ) : AndroidViewModel(application) {
 
-    private val ctx get() = getApplication<Application>()
     private val filterFlow = MutableStateFlow<Long?>(null)
+
+    enum class UndoKind { Reactivated, Deleted }
+    data class CompletedUndo(
+        val kind: UndoKind,
+        val itemId: Long,
+        val name: String,
+        val snapshot: Item?,
+        val token: Long,
+    )
+
+    private val _undoEvent = MutableStateFlow<CompletedUndo?>(null)
+    val undoEvent: StateFlow<CompletedUndo?> = _undoEvent
 
     private val itemsFlow = filterFlow.flatMapLatest { sid ->
         if (sid == null) itemRepo.observeCompletedItems()
@@ -46,11 +59,13 @@ class CompletedViewModel @Inject constructor(
         itemsFlow,
         storeRepo.observeActiveStores(),
         filterFlow,
-    ) { items, stores, filter ->
+        itemRepo.observeCompletedCounts(),
+    ) { items, stores, filter, counts ->
         CompletedUiState(
             items = items,
             stores = stores,
             storesById = stores.associateBy { it.id },
+            completedCounts = counts,
             filterStoreId = filter,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, CompletedUiState())
@@ -61,15 +76,38 @@ class CompletedViewModel @Inject constructor(
 
     fun reactivate(itemId: Long) {
         viewModelScope.launch {
+            val item = itemRepo.getItem(itemId)
             itemRepo.reactivateItem(itemId)
-            WidgetUpdater.requestUpdate(ctx)
+            _undoEvent.value = CompletedUndo(
+                UndoKind.Reactivated, itemId, item?.name ?: "", item, System.currentTimeMillis(),
+            )
+            widgetUpdater.updateAll()
         }
     }
 
     fun delete(itemId: Long) {
         viewModelScope.launch {
+            val item = itemRepo.getItem(itemId)
             itemRepo.deleteItem(itemId)
-            WidgetUpdater.requestUpdate(ctx)
+            _undoEvent.value = CompletedUndo(
+                UndoKind.Deleted, itemId, item?.name ?: "", item, System.currentTimeMillis(),
+            )
+            widgetUpdater.updateAll()
         }
+    }
+
+    fun undo(u: CompletedUndo) {
+        viewModelScope.launch {
+            when (u.kind) {
+                UndoKind.Reactivated -> itemRepo.completeItem(u.itemId)
+                UndoKind.Deleted -> u.snapshot?.let { itemRepo.restoreItem(it) }
+            }
+            _undoEvent.value = null
+            widgetUpdater.updateAll()
+        }
+    }
+
+    fun consumeUndoEvent() {
+        _undoEvent.value = null
     }
 }

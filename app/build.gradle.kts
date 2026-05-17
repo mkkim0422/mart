@@ -65,6 +65,8 @@ android {
             isMinifyEnabled = false
             buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            // Billing UI hidden until v1.5; BillingRepository code stays compiled.
+            buildConfigField("boolean", "SHOW_BILLING", "true")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -75,6 +77,7 @@ android {
             )
             buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            buildConfigField("boolean", "SHOW_BILLING", "true")
             // Sign release only if keystore.properties + .jks are present and valid.
             val rsc = signingConfigs.findByName("release")
             if (rsc?.storeFile?.exists() == true) signingConfig = rsc
@@ -135,6 +138,9 @@ dependencies {
     // Coroutines / DataStore
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
+
+    // Drag-to-reorder (store management screen)
+    implementation(libs.reorderable)
 
     // Firebase / Ads / Billing (Phase 6)
     implementation(platform(libs.firebase.bom))

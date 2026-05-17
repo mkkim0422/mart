@@ -6,13 +6,13 @@ import androidx.compose.ui.graphics.Color
 
 // ── Toss Light palette ─────────────────────────────────────────────
 object TossLight {
-    val BgPrimary = Color(0xFFFFFFFF)
+    val BgPrimary = Color(0xFFFAFAF7)   // warm off-white (design spec)
     val BgSecondary = Color(0xFFF9FAFB)
     val BgTertiary = Color(0xFFF2F4F6)
-    val Divider = Color(0xFFE5E8EB)
+    val Divider = Color(0xFFF0EEE9)     // warm hairline (design spec)
     val TextPrimary = Color(0xFF191F28)
     val TextSecondary = Color(0xFF4E5968)
-    val TextTertiary = Color(0xFF8B95A1)
+    val TextTertiary = Color(0xFFB0B0B0) // warmer tertiary (design spec)
     val TextDisabled = Color(0xFFC9CDD2)
     val BrandPrimary = Color(0xFF3182F6)
     val BrandPrimaryHover = Color(0xFF1B64DA)
@@ -53,6 +53,13 @@ object MartPalette {
 
     val all: List<Color> = listOf(Blue, Yellow, Red, Green, Purple, Pink, Orange, Gray)
 }
+
+/**
+ * Soft tint of a mart color, used for badge/pill/icon-box backgrounds.
+ * Dark mode uses a slightly stronger alpha so the tint stays visible on dark bg.
+ * The text drawn on top keeps the original mart color (enough contrast either way).
+ */
+fun Color.soft(isDark: Boolean = false): Color = copy(alpha = if (isDark) 0.25f else 0.15f)
 
 @Immutable
 data class AppColors(

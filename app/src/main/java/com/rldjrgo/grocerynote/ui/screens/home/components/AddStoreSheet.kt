@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.rldjrgo.grocerynote.domain.model.iconKeyToEmoji
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.MartPalette
 
@@ -47,7 +48,7 @@ private val MART_PRESETS = listOf(
 
 private val ICONS = listOf(
     "🛒", "🏪", "🥬", "🥚", "🍞", "🧺", "🛍",
-    "📦", "🥕", "🍎", "💊", "🌸", "🧴", "🧻",
+    "📦", "🚀", "🥕", "🍎", "💊", "🌸", "🧴", "🧻",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,14 +56,21 @@ private val ICONS = listOf(
 fun AddStoreSheet(
     onAdd: (name: String, color: Color, iconKey: String) -> Unit,
     onDismiss: () -> Unit,
+    title: String = "새 마트 추가",
+    confirmLabel: String = "추가하기",
+    initialName: String = "",
+    initialColor: Color = MartPalette.Blue,
+    initialIconKey: String = "",
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var name by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(MartPalette.Blue) }
-    var selectedIcon by remember { mutableStateOf(ICONS.first()) }
+    var name by remember { mutableStateOf(initialName) }
+    var selectedColor by remember { mutableStateOf(initialColor) }
+    var selectedIcon by remember {
+        mutableStateOf(if (initialIconKey.isBlank()) ICONS.first() else iconKeyToEmoji(initialIconKey))
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -77,7 +85,7 @@ fun AddStoreSheet(
                 .imePadding(),
         ) {
             Text(
-                text = "새 마트 추가",
+                text = title,
                 style = typo.headingM,
                 color = colors.textPrimary,
             )
@@ -185,7 +193,7 @@ fun AddStoreSheet(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "추가하기",
+                    text = confirmLabel,
                     style = typo.title,
                     color = if (name.isNotBlank()) colors.bgPrimary else colors.textDisabled,
                 )

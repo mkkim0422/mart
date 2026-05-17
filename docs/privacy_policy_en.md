@@ -1,8 +1,8 @@
-# Grocery Note Privacy Policy
+# MartNote Privacy Policy
 
 **Last updated: 2026-05-14**
 
-Grocery Note ("the App") respects user privacy. This policy describes what information the App collects and how it's used.
+MartNote ("the App") respects user privacy. This policy describes what information the App collects and how it's used.
 
 ## 1. Information We Collect
 

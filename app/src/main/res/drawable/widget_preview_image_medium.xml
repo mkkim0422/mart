@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static fallback thumbnail for launchers that prefer previewImage (Samsung One UI). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="250dp"
+    android:height="110dp"
+    android:viewportWidth="250"
+    android:viewportHeight="110">
+    <path android:fillColor="#FAFAF7" android:pathData="M0,0h250v110h-250z" />
+    <!-- left: 이마트 -->
+    <path android:fillColor="#FFE08A" android:pathData="M14,14h18v18h-18z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M38,18h44v8h-44z" />
+    <path android:fillColor="#FFE08A" android:pathData="M100,16h12v10h-12z" />
+    <path android:fillColor="#F0EEE9" android:pathData="M14,42h104v1h-104z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,52h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,52h60v5h-60z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,66h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,66h70v5h-70z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M14,80h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M24,80h52v5h-52z" />
+    <!-- center divider -->
+    <path android:fillColor="#F0EEE9" android:pathData="M125,14h1v82h-1z" />
+    <!-- right: 다이소 -->
+    <path android:fillColor="#FFB3C0" android:pathData="M139,14h18v18h-18z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M163,18h44v8h-44z" />
+    <path android:fillColor="#FFB3C0" android:pathData="M224,16h12v10h-12z" />
+    <path android:fillColor="#F0EEE9" android:pathData="M139,42h104v1h-104z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M139,52h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M149,52h60v5h-60z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M139,66h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M149,66h70v5h-70z" />
+    <path android:fillColor="#B0B0B0" android:pathData="M139,80h4v4h-4z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M149,80h44v5h-44z" />
+</vector>

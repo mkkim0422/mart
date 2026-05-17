@@ -34,7 +34,7 @@ private data class NavItem(
 )
 
 private val items = listOf(
-    NavItem(Routes.HOME, "활성", Icons.AutoMirrored.Outlined.List),
+    NavItem(Routes.HOME, "구매예정", Icons.AutoMirrored.Outlined.List),
     NavItem(Routes.COMPLETED, "완료", Icons.Outlined.CheckCircle),
     NavItem(Routes.SETTINGS, "설정", Icons.Outlined.Settings),
 )

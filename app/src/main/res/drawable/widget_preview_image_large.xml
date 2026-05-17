@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static fallback thumbnail for launchers that prefer previewImage (Samsung One UI). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="250dp"
+    android:height="250dp"
+    android:viewportWidth="250"
+    android:viewportHeight="250">
+    <path android:fillColor="#FAFAF7" android:pathData="M0,0h250v250h-250z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M14,16h70v9h-70z" />
+    <path android:fillColor="#F0EEE9" android:pathData="M14,34h222v1h-222z" />
+    <!-- 4 mart cells -->
+    <path android:fillColor="#FFE08A" android:pathData="M14,46h16v16h-16z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M36,50h44v7h-44z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M14,70h90v5h-90z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M14,82h78v5h-78z" />
+    <path android:fillColor="#FFB3C0" android:pathData="M139,46h16v16h-16z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M161,50h44v7h-44z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M139,70h90v5h-90z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M139,82h70v5h-70z" />
+    <path android:fillColor="#F0EEE9" android:pathData="M14,108h222v1h-222z" />
+    <path android:fillColor="#A8C7FA" android:pathData="M14,124h16v16h-16z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M36,128h44v7h-44z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M14,148h90v5h-90z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M14,160h78v5h-78z" />
+    <path android:fillColor="#D4BBF0" android:pathData="M139,124h16v16h-16z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M161,128h44v7h-44z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M139,148h90v5h-90z" />
+    <path android:fillColor="#C9CDD2" android:pathData="M139,160h70v5h-70z" />
+</vector>

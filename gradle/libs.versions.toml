@@ -29,6 +29,9 @@ hiltNavigationCompose = "1.3.0"
 coroutines = "1.10.2"
 datastore = "1.2.1"
 
+# Drag-to-reorder (Maven Central latest stable, verified 2026-05-17)
+reorderable = "3.1.0"
+
 # Firebase / Ads / Billing (later phases)
 firebaseBom = "34.13.0"
 playServicesAds = "25.2.0"
@@ -79,6 +82,9 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 # Coroutines / DataStore
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+# Drag-to-reorder for LazyColumn (store management)
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 
 # Firebase / Ads / Billing
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }

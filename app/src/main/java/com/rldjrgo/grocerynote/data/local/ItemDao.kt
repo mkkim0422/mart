@@ -8,8 +8,15 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
+/** Aggregate row for per-mart active item counts (tab badges). */
+data class StoreActiveCount(val storeId: Long, val count: Int)
+
 @Dao
 interface ItemDao {
+
+    /** Any-change signal for the widget auto-refresher (reacts to add/rename/move/complete/delete). */
+    @Query("SELECT * FROM items")
+    fun observeAll(): Flow<List<ItemEntity>>
 
     @Query(
         """
@@ -37,6 +44,24 @@ interface ItemDao {
         """
     )
     fun observeCompletedItemsByStore(storeId: Long): Flow<List<ItemEntity>>
+
+    @Query(
+        """
+        SELECT store_id AS storeId, COUNT(*) AS count FROM items
+        WHERE is_completed = 0
+        GROUP BY store_id
+        """
+    )
+    fun observeActiveCounts(): Flow<List<StoreActiveCount>>
+
+    @Query(
+        """
+        SELECT store_id AS storeId, COUNT(*) AS count FROM items
+        WHERE is_completed = 1
+        GROUP BY store_id
+        """
+    )
+    fun observeCompletedCounts(): Flow<List<StoreActiveCount>>
 
     @Query("SELECT * FROM items WHERE id = :id LIMIT 1")
     suspend fun getItemById(id: Long): ItemEntity?
@@ -77,4 +102,20 @@ interface ItemDao {
         """
     )
     suspend fun getRecentItemNames(limit: Int = 50): List<String>
+
+    /** Per-mart "frequently bought" — only names ever registered in THIS store. */
+    @Query(
+        """
+        SELECT name FROM items
+        WHERE store_id = :storeId
+        GROUP BY name
+        ORDER BY MAX(created_at) DESC
+        LIMIT :limit
+        """
+    )
+    suspend fun getRecentItemNamesByStore(storeId: Long, limit: Int = 20): List<String>
+
+    /** Remove a name from a store's "frequently bought" list (deletes its rows in that store). */
+    @Query("DELETE FROM items WHERE store_id = :storeId AND name = :name")
+    suspend fun deleteItemsByStoreAndName(storeId: Long, name: String)
 }

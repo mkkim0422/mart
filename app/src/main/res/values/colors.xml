@@ -3,6 +3,8 @@
     <color name="brand_primary">#3182F6</color>
     <color name="bg_primary">#FFFFFF</color>
     <color name="bg_primary_dark">#17171B</color>
+    <!-- Splash background: matches app bg so launching (incl. from widget) has no color flash. -->
+    <color name="splash_bg">#FFFFFF</color>
     <color name="text_primary">#191F28</color>
     <color name="text_primary_dark">#F2F4F6</color>
     <color name="ic_launcher_background">#3182F6</color>
@@ -13,4 +15,18 @@
     <color name="widget_preview_text_primary">#191F28</color>
     <color name="widget_preview_text_secondary">#4E5968</color>
     <color name="widget_preview_text_tertiary">#8B95A1</color>
+    <!-- Widget picker preview (design-faithful) tokens -->
+    <color name="wpv_card">#FAFAF7</color>
+    <color name="wpv_divider">#F0EEE9</color>
+    <color name="wpv_text">#191F28</color>
+    <color name="wpv_text_sub">#B0B0B0</color>
+    <color name="wpv_yellow">#FFB800</color>
+    <color name="wpv_red">#F04452</color>
+    <color name="wpv_blue">#3182F6</color>
+    <color name="wpv_purple">#8B5CF6</color>
+    <color name="wpv_yellow_soft">#26FFB800</color>
+    <color name="wpv_red_soft">#26F04452</color>
+    <color name="wpv_blue_soft">#263182F6</color>
+    <color name="wpv_purple_soft">#268B5CF6</color>
+    <color name="wpv_checkbox_border">#D5D2CB</color>
 </resources>

@@ -27,6 +27,21 @@ object OpenStoreAction {
         )
     }
 
+    /** Widget mart-header "+" → open the app straight into the add-item sheet for that mart. */
+    fun addToStore(storeId: Long): Action {
+        return actionStartActivity(
+            intent = Intent().apply {
+                setClassName(
+                    "com.rldjrgo.grocerynote",
+                    MainActivity::class.java.name,
+                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra("action", "ADD_ITEM")
+                if (storeId > 0) putExtra("store_id", storeId)
+            },
+        )
+    }
+
     val StoreIdKey: ActionParameters.Key<Long> = ActionParameters.Key("storeId")
     val ItemIdKey: ActionParameters.Key<Long> = ActionParameters.Key("itemId")
 
@@ -43,6 +58,11 @@ object OpenStoreAction {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             if (storeId > 0) putExtra(Routes.HOME_DEEPLINK_STORE_ARG, storeId)
             if (itemId != null && itemId > 0) putExtra(Routes.HOME_DEEPLINK_ITEM_ARG, itemId)
+            // Empty-state tap (no mart/item, e.g. storeId = -1): still force-route to Home,
+            // otherwise the app just resumes on whatever screen it was on (e.g. Settings).
+            if (storeId <= 0 && (itemId == null || itemId <= 0)) {
+                putExtra("action", "OPEN_HOME")
+            }
         }
     }
 }
