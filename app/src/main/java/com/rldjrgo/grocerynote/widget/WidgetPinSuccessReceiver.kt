@@ -18,6 +18,18 @@ class WidgetPinSuccessReceiver : BroadcastReceiver() {
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Fired the moment the user taps "추가" and the widget is actually
+        // placed. Send them to the home screen now so they immediately see the
+        // freshly-placed widget and can drag it where they want — no manual
+        // "go to home screen" step. Race-free: this runs *after* the pin, not
+        // before/with the requestPinAppWidget call.
+        runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_HOME)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
         val pending = goAsync()
         appScope.launch {
             try {
