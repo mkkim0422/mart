@@ -1,5 +1,7 @@
 package com.rldjrgo.grocerynote.ui.screens.onboarding
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +20,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Assignment
-import androidx.compose.material.icons.outlined.Storefront
-import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,11 +30,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
+import com.rldjrgo.grocerynote.R
 import com.rldjrgo.grocerynote.ui.components.WidgetSizePickerSheet
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,24 +61,24 @@ class OnboardingViewModel @Inject constructor(
 private data class Page(
     val title: String,
     val subtitle: String,
-    val icon: ImageVector,
+    @param:DrawableRes val illustration: Int,
 )
 
 private val pages = listOf(
     Page(
         "마트별로 따로 정리하세요",
         "쿠팡, 다이소 따로따로, 어디 가서도 헷갈리지 않게",
-        Icons.Outlined.Storefront,
+        R.drawable.onboarding_page1,
     ),
     Page(
         "위젯으로 한눈에 확인",
         "마트 가기 전에 홈화면에서 바로 확인, 탭하면 그 마트 리스트로 이어져요",
-        Icons.Outlined.Widgets,
+        R.drawable.onboarding_page2,
     ),
     Page(
         "이름만 적으면 끝",
         "가격도 수량도 필요 없어요. 빠르고 심플하게",
-        Icons.AutoMirrored.Outlined.Assignment,
+        R.drawable.onboarding_page3,
     ),
 )
 
@@ -129,10 +128,10 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(
-                    imageVector = p.icon,
-                    contentDescription = null,
-                    tint = colors.brandPrimary,
+                Image(
+                    painter = painterResource(p.illustration),
+                    contentDescription = p.title,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.size(96.dp),
                 )
                 Spacer(Modifier.height(24.dp))

@@ -3,39 +3,35 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- 마트노트 cart — blue cart + 3 mart-color item dots, centered in the
-         adaptive-icon safe zone (warm off-white background layer). -->
-    <!-- cart handle -->
+    <!-- Themed-icon (Android 13+) silhouette: single-color cart.
+         The system replaces these colors with the monochrome theme tint. -->
     <path
         android:pathData="M25.84,29.58 L34.64,29.58 L40.8,44.54"
         android:fillColor="#00000000"
-        android:strokeColor="#3182F6"
+        android:strokeColor="#1F1F1F"
         android:strokeWidth="5.28"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
-    <!-- cart basket -->
     <path
         android:pathData="M40.8,44.54 L82.16,44.54 L76.0,64.78 L47.84,64.78 Z"
         android:fillColor="#00000000"
-        android:strokeColor="#3182F6"
+        android:strokeColor="#1F1F1F"
         android:strokeWidth="5.28"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
-    <!-- wheels -->
     <path
         android:pathData="M50.04,77.1 a3.96,3.96 0 1,0 7.92,0 a3.96,3.96 0 1,0 -7.92,0 Z"
-        android:fillColor="#3182F6" />
+        android:fillColor="#1F1F1F" />
     <path
         android:pathData="M67.64,77.1 a3.96,3.96 0 1,0 7.92,0 a3.96,3.96 0 1,0 -7.92,0 Z"
-        android:fillColor="#3182F6" />
-    <!-- 3 mart-color item dots (Blue / Red / Yellow) -->
+        android:fillColor="#1F1F1F" />
     <path
         android:pathData="M47.84,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#3182F6" />
+        android:fillColor="#1F1F1F" />
     <path
         android:pathData="M58.4,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#F04452" />
+        android:fillColor="#1F1F1F" />
     <path
         android:pathData="M68.96,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#FFB800" />
+        android:fillColor="#1F1F1F" />
 </vector>
