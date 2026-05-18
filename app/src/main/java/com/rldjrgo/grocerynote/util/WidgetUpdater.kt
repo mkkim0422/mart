@@ -11,6 +11,7 @@ import com.rldjrgo.grocerynote.data.repository.StoreRepository
 import com.rldjrgo.grocerynote.di.ApplicationScope
 import com.rldjrgo.grocerynote.widget.GroceryWidget2x1
 import com.rldjrgo.grocerynote.widget.GroceryWidgetLarge
+import com.rldjrgo.grocerynote.widget.GroceryWidgetLong
 import com.rldjrgo.grocerynote.widget.GroceryWidgetMedium
 import com.rldjrgo.grocerynote.widget.GroceryWidgetSmall
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -99,6 +100,7 @@ class WidgetUpdater @Inject constructor(
     private fun targets(): List<Target> = listOf(
         Target(GroceryWidget2x1(), GroceryWidget2x1::class.java, "2x1"),
         Target(GroceryWidgetSmall(), GroceryWidgetSmall::class.java, "Small"),
+        Target(GroceryWidgetLong(), GroceryWidgetLong::class.java, "Long"),
         Target(GroceryWidgetMedium(), GroceryWidgetMedium::class.java, "Medium"),
         Target(GroceryWidgetLarge(), GroceryWidgetLarge::class.java, "Large"),
     )

@@ -3,6 +3,7 @@ package com.rldjrgo.grocerynote.widget.common
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
@@ -11,9 +12,11 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.background
+import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -24,6 +27,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.rldjrgo.grocerynote.di.WidgetEntryPoint
+import com.rldjrgo.grocerynote.widget.WidgetSizes
+import com.rldjrgo.grocerynote.widget.textPrimaryProvider
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.domain.model.emoji
@@ -220,6 +225,96 @@ fun LargeContent(data: WidgetData) = EmptyOr(data) {
             GridRow(active[0], active[1], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
             Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
             GridRow(active[2], active[3], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+        }
+    }
+}
+
+// ── Adaptive dispatcher: every widget resizes between these 5 layouts ──
+// SizeMode.Responsive hands us one of the WidgetSizes breakpoints; pick the
+// matching layout. (Thresholds chosen so each Responsive entry maps 1:1.)
+@Composable
+fun AdaptiveContent(size: DpSize, data: WidgetData) {
+    when {
+        size.width >= WidgetSizes.Medium.width && size.height >= WidgetSizes.Large.height -> LargeContent(data)
+        size.width >= WidgetSizes.Medium.width -> MediumContent(data)
+        size.height >= WidgetSizes.Long.height -> LongContent(data)
+        size.height >= WidgetSizes.Small.height -> SmallContent(data)
+        else -> SmallContent(data, compact = true)
+    }
+}
+
+// ── Long (2x4): ONE mart full-height — header + item list + "+N개 더" ──
+// Mart pick: 노출순서설정 1순위 → 미완료 최다 마트 → displayOrder
+// (data.stores is already item-count-desc then displayOrder.)
+@Composable
+fun LongContent(data: WidgetData) {
+    if (data.stores.isEmpty()) {
+        WidgetCard { WidgetEmptyState(title = "마트를 추가해주세요", hint = "탭하면 앱이 열려요") }
+        return
+    }
+    val target = data.largeStoreIds.firstNotNullOfOrNull { id -> data.stores.find { it.id == id } }
+        ?: data.stores.firstOrNull { (data.itemsByStore[it.id]?.size ?: 0) > 0 }
+        ?: data.stores.first()
+    val items = data.itemsByStore[target.id].orEmpty()
+    val maxRows = 10
+    WidgetCard {
+        Column(modifier = GlanceModifier.fillMaxSize()) {
+            WidgetStoreHeader(
+                storeId = target.id,
+                storeName = target.name,
+                storeColor = target.color,
+                storeEmoji = target.emoji(),
+                itemCount = items.size,
+            )
+            if (items.isEmpty()) {
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .defaultWeight()
+                        .clickable(OpenStoreAction.forStore(storeId = -1L)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${target.name}에 추가할 항목이 없어요",
+                            maxLines = 1,
+                            style = TextStyle(
+                                color = textPrimaryProvider(),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                        )
+                        Spacer(GlanceModifier.height(3.dp))
+                        Text(
+                            text = "탭해서 추가하세요",
+                            maxLines = 1,
+                            style = TextStyle(
+                                color = textTertiaryProvider(),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Normal,
+                            ),
+                        )
+                    }
+                }
+            } else {
+                val shown = items.take(maxRows)
+                Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    shown.forEach { i ->
+                        WidgetItemRow(storeId = target.id, itemId = i.id, name = i.name)
+                    }
+                    if (items.size > shown.size) {
+                        Text(
+                            text = "+ ${items.size - shown.size}개 더",
+                            style = TextStyle(
+                                color = textTertiaryProvider(),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Normal,
+                            ),
+                            modifier = GlanceModifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }

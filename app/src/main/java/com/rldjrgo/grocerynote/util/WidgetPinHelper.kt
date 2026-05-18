@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import com.rldjrgo.grocerynote.widget.GroceryWidget2x1Receiver
 import com.rldjrgo.grocerynote.widget.GroceryWidgetLargeReceiver
+import com.rldjrgo.grocerynote.widget.GroceryWidgetLongReceiver
 import com.rldjrgo.grocerynote.widget.GroceryWidgetMediumReceiver
 import com.rldjrgo.grocerynote.widget.GroceryWidgetSmallReceiver
 import com.rldjrgo.grocerynote.widget.WidgetPinSuccessReceiver
@@ -14,7 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class WidgetSize { TWO_BY_ONE, SMALL, MEDIUM, LARGE }
+enum class WidgetSize { TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE }
 
 /** Requests the launcher to pin a widget of the chosen size. */
 @Singleton
@@ -32,6 +33,7 @@ class WidgetPinHelper @Inject constructor(
             val receiver = when (size) {
                 WidgetSize.TWO_BY_ONE -> GroceryWidget2x1Receiver::class.java
                 WidgetSize.SMALL -> GroceryWidgetSmallReceiver::class.java
+                WidgetSize.LONG -> GroceryWidgetLongReceiver::class.java
                 WidgetSize.MEDIUM -> GroceryWidgetMediumReceiver::class.java
                 WidgetSize.LARGE -> GroceryWidgetLargeReceiver::class.java
             }
