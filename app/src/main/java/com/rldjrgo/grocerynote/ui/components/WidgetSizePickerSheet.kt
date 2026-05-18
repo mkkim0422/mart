@@ -104,9 +104,11 @@ fun WidgetSizePickerSheet(
                 Spacer(Modifier.height(12.dp))
                 WidgetSizeOption(WidgetSize.SMALL, "Small", "3개 마트 표기", false) { choose(WidgetSize.SMALL) }
                 Spacer(Modifier.height(12.dp))
-                WidgetSizeOption(WidgetSize.MEDIUM, "Medium", "2개 마트 항목 표기", true) { choose(WidgetSize.MEDIUM) }
+                WidgetSizeOption(WidgetSize.LONG, "Long", "1개 마트 및 세부항목", false) { choose(WidgetSize.LONG) }
                 Spacer(Modifier.height(12.dp))
-                WidgetSizeOption(WidgetSize.LARGE, "Large", "4개 마트 항목 표기", false) { choose(WidgetSize.LARGE) }
+                WidgetSizeOption(WidgetSize.MEDIUM, "Medium", "2개 마트 및 세부항목", true) { choose(WidgetSize.MEDIUM) }
+                Spacer(Modifier.height(12.dp))
+                WidgetSizeOption(WidgetSize.LARGE, "Large", "4개 마트 및 세부항목", false) { choose(WidgetSize.LARGE) }
             } else {
                 ManualAddGuide(
                     size = fallback,
@@ -197,6 +199,11 @@ private fun WidgetSamplePreview(size: WidgetSize) {
             CountRow(EMart, 4)
             CountRow(Daiso, 3)
             CountRow(Coupang, 1)
+        }
+        WidgetSize.LONG -> SampleCard(96.dp, 168.dp) {
+            MartHeaderMini(Coupang, 6)
+            DotItem("생수"); DotItem("세제"); DotItem("우유")
+            DotItem("계란"); DotItem("바나나"); DotItem("라면")
         }
         WidgetSize.MEDIUM -> SampleCard(168.dp, 96.dp) {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -306,6 +313,7 @@ private fun ManualAddGuide(
     val sizeLabel = when (size) {
         WidgetSize.TWO_BY_ONE -> "Mini"
         WidgetSize.SMALL -> "Small (2×2)"
+        WidgetSize.LONG -> "Long (2×4)"
         WidgetSize.MEDIUM -> "Medium (4×2)"
         WidgetSize.LARGE -> "Large (4×4)"
     }

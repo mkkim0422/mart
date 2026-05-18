@@ -68,12 +68,12 @@ private data class Page(
 private val pages = listOf(
     Page(
         "마트별로 따로 정리하세요",
-        "쿠팡, 다이소 따로따로. 어디 가서도 헷갈리지 않게",
+        "쿠팡, 다이소 따로따로, 어디 가서도 헷갈리지 않게",
         Icons.Outlined.Storefront,
     ),
     Page(
         "위젯으로 한눈에 확인",
-        "마트 가기 전 홈화면에서 한눈에, 탭하면 앱으로 이어져요",
+        "마트 가기 전에 홈화면에서 바로 확인, 탭하면 그 마트 리스트로 이어져요",
         Icons.Outlined.Widgets,
     ),
     Page(

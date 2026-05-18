@@ -20,7 +20,7 @@ One-line definition: **마트별 장보기 리스트를 만들고, 홈화면 위
 ## 2. North Star — 3 Differentiators (do NOT compromise)
 
 1. **Per-mart separated lists** — horizontal scrollable tabs (seed defaults 쿠팡/다이소; user adds 이마트·홈플러스·etc.). **This is the #1 USP.**
-2. **At-a-glance home-screen widget** — per-mart lists in 4 sizes (2x1 / 2x2 / 4x2 / 4x4). **Display + deep-link only.**
+2. **At-a-glance home-screen widget** — per-mart lists in 5 sizes (2x1 / 2x2 / 2x4 / 4x2 / 4x4); **freely resizable — every placed widget auto-adapts between all 5 layouts**. **Display + deep-link only.**
 3. **Name-only, 1-second add/check** — no price/qty/memo; frictionless.
 
 Widget → app flow: tapping a placed widget opens the app **with that mart preselected**, where the user checks items off via the 1-second completion animation (§11). The widget itself never mutates data. This is deliberate: in-widget checking was **removed on 2026-05-18 (business-model pivot)** so the single banner-ad impression is preserved (revenue) and the widget stays battery-free (`updatePeriodMillis=0`). **Do NOT reintroduce in-widget checking.**
@@ -223,13 +223,14 @@ Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemR
 
 ## 12. Widget (most important — invest most time)
 
-**4 separate Glance widgets** (not one `SizeMode.Responsive`; each = own class + Receiver + xml info, shared logic in `widget/common/WidgetCommon.kt`):
-- **Mini** (2x1, 110×40dp, resizable) — picker label "Mini"; reuses `SmallContent` compact = **exactly 2** mart count rows (3rd clips in 2x1, no "외 N" footer)
+**5 Glance widget classes, all adaptive** (each = own class + Receiver + xml info; ALL extend `BaseGroceryWidget` which is `SizeMode.Responsive` over the 5 `WidgetSizes` breakpoints; shared layouts in `widget/common/WidgetCommon.kt` via `AdaptiveContent`). The 5 classes only differ by the xml `targetCell*` (initial pinned size) + picker entry + back-compat; after placement every widget auto-switches between these 5 as the user resizes it:
+- **Mini** (2x1, 110×40dp) — `SmallContent(compact)` = **exactly 2** mart count rows (no "외 N" footer)
 - **Small** (2x2 ≈ 110×110dp) — per-mart remaining counts (`WidgetStoreCountRow`), ≤4 marts + "외 N개"
+- **Long** (2x4 ≈ 110×250dp) — **1 mart** full-height item list + "+ N개 더" footer. Mart pick: 노출순서설정 1순위 → 미완료 최다 → displayOrder
 - **Medium** (4x2 ≈ 250×110dp) ★ default — item list: 1 mart full-width / ≥2 top-2 split
 - **Large** (4x4 ≈ 250×250dp) — item list: up to 4 marts (1 / 2 / 1+2 / 2x2); marts user-selectable via `SettingsDataStore.largeWidgetStoreIds`
 
-`WidgetSize` enum order = `TWO_BY_ONE, SMALL, MEDIUM, LARGE`. Add-widget picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 4; pick → `requestPinAppWidget`.
+`WidgetSize` enum order = `TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE` (= picker display order). Picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 5 with mini-render previews; pick → `requestPinAppWidget` (sets initial size). Adaptive resize: each widget's xml has `resizeMode=horizontal|vertical`, `minResize`=Mini, `maxResize`=360dp; `BaseGroceryWidget` re-runs `provideContent` on resize and `AdaptiveContent(LocalSize, data)` swaps the layout (no ViewModel/repo change).
 
 **Widget is display + deep-link only — it never mutates data (decided 2026-05-18).**
 - Item rows are **read-only** (dot + name). Tap → `OpenStoreAction.forStore(-1L)` → opens MainActivity (HomeScreen, that mart preselected) where the user completes via the §11 V2 animation.
@@ -268,7 +269,7 @@ Test scenarios (verify each after Phase 4):
 2. App add → widget reflects instantly
 3. Widget item tap → app opens on Home with that mart preselected (check happens in-app)
 4. Widget header "+" tap → app opens straight into that mart's add-item sheet
-5. Resize → Small/Medium/Large auto-switch
+5. Resize widget on home screen → auto-adapts between Mini/Small/Long/Medium/Large
 6. System dark toggle → widget colors flip
 7. 1 day usage → battery impact negligible
 
@@ -312,6 +313,7 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 6 — AdMob banner + BillingClient (remove_ads) + Firebase Crashlytics/Analytics + signing config + privacy policy + store listing + Release AAB 11.91MB / Release APK 5.91MB — 2026-05-14
 - [x] Phase 7 — Rename → 마트노트, 4-size widgets (incl. 2x1 Mini), store-management screen, shared PageTitle, seed = 쿠팡/다이소, **widget-model pivot (display + deep-link only)**, UX polish — 2026-05-18 (commit `987a26b`)
 - [x] Phase 8 — Completion animation V2 (1000ms left→right strikethrough + green ✓) + onboarding/store copy realigned + docs↔code reconciled — 2026-05-18
+- [x] Phase 9 — New **Long** widget (2x4, 1 mart + items) + **5-type adaptive resize** (`BaseGroceryWidget` SizeMode.Responsive, `AdaptiveContent`) + picker reorder/labels + onboarding copy finalized — 2026-05-18
 
 End-of-phase report format:
 1. Files created/modified (tree)
