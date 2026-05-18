@@ -153,7 +153,7 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "위젯을 추가하면 홈화면에서 바로 체크",
+                    text = "위젯을 추가하면 홈화면에서 한눈에 확인",
                     style = typo.bodyS,
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),

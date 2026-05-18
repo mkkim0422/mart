@@ -46,4 +46,4 @@ If this policy changes, we will publish updates here.
 
 ## 8. Contact
 
-For privacy-related questions: help@sphinfo.co.kr
+For privacy-related questions: mkkim850422@gmail.com

@@ -142,7 +142,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 ActionRow("전체 삭제", icon = Icons.Outlined.DeleteForever, destructive = true) { confirmWipe1 = true }
             }
 
-            // Billing UI hidden until v1.5 (BillingRepository code stays compiled).
+            // 광고 제거 IAP — SHOW_BILLING 게이트로 노출 제어 (현재 true → 표시됨).
             if (com.rldjrgo.grocerynote.BuildConfig.SHOW_BILLING) {
                 item { SectionHeader("결제") }
                 item {

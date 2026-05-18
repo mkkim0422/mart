@@ -10,18 +10,20 @@
 | App name (EN) | MartNote |
 | Package | `com.rldjrgo.grocerynote` (PERMANENT — set 2026-05-14, cannot change after Play release; package keeps `grocerynote` despite the app rename) |
 | Platform | Android only |
-| Owner | mkkim0422 (help@sphinfo.co.kr) |
+| Owner | mkkim0422 (mkkim850422@gmail.com) |
 | Repo | https://github.com/mkkim0422/mart |
 | Local | `C:\mart` |
 | Started | 2026-05-14 |
 
-One-line definition: **마트별 장보기 리스트를 홈화면 위젯에서 바로 체크하는 한국형 초심플 앱**
+One-line definition: **마트별 장보기 리스트를 만들고, 홈화면 위젯에서 한눈에 확인한 뒤 앱에서 1초 만에 체크하는 한국형 초심플 앱**
 
 ## 2. North Star — 3 Differentiators (do NOT compromise)
 
-1. **Per-mart separated lists** (이마트, 다이소, 쿠팡 …) — horizontal scrollable tabs
-2. **Home screen widget** displays per-mart lists
-3. **Widget item tap → instant strikethrough → 1s later disappears → moved to Completed** (the killer feature)
+1. **Per-mart separated lists** — horizontal scrollable tabs (seed defaults 쿠팡/다이소; user adds 이마트·홈플러스·etc.). **This is the #1 USP.**
+2. **At-a-glance home-screen widget** — per-mart lists in 4 sizes (2x1 / 2x2 / 4x2 / 4x4). **Display + deep-link only.**
+3. **Name-only, 1-second add/check** — no price/qty/memo; frictionless.
+
+Widget → app flow: tapping a placed widget opens the app **with that mart preselected**, where the user checks items off via the 1-second completion animation (§11). The widget itself never mutates data. This is deliberate: in-widget checking was **removed on 2026-05-18 (business-model pivot)** so the single banner-ad impression is preserved (revenue) and the widget stays battery-free (`updatePeriodMillis=0`). **Do NOT reintroduce in-widget checking.**
 
 ## 3. Hard No (refuse even if user asks until v2.0)
 
@@ -205,17 +207,19 @@ small (chip/badge) 8dp · medium (input/button) 12dp · large (card/modal) 16dp 
 Top: shared **`PageTitle`** (`ui/components/PageTitle.kt`) — `headingL` (20sp Bold, -0.02em), textPrimary, left, pad h20/top16/bottom12; params title/subtitle/trailing. All 3 top screens use it (one place to change title sizing).
 - Home title: **"구매예정"** (app name lives in launcher/onboarding/Play, not the screen)
 - Completed title: **"완료"**  · Settings title: **"설정"**
-Tab strip (ScrollableTabRow): ●이마트(5) ●다이소(3) ●쿠팡(2) [+ 추가] [⋮ 마트관리]
+Tab strip (pill tabs, horizontally scrollable): ●쿠팡(2) ●다이소(3) [+ 추가] [⋮ 마트관리]
 Body: items of selected mart (□ name, ⋮ on right)
 FAB: Toss-blue + (bottom right)
 Bottom nav: 구매예정 / 완료 / 설정 — selected = `#3182F6` for both icon and text (titles match nav labels)
 
-Check anim (1.3s total):
-- 0.15s checkbox fills `#3182F6`
-- 0.3s strikethrough + text → `#8B95A1`
-- 0.7s wait
-- 0.3s fade out + slide up 8dp
-→ moves to Completed
+Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemRow.kt`)**:
+- Tap the right-side "완료" button → haptic (LongPress)
+- 0–1000ms: a 2dp strikethrough is drawn over the item name, sweeping **left → right** (progress 0→1, `FastOutSlowInEasing`); line color = item text color @ 70% alpha
+- 0–250ms: a 28dp **green circle + white ✓** fades + scales (0.6→1.0) into the "완료" slot, then holds until 1000ms. Green = `AppColors.success` (Light `#2BA471` / Dark `#3FBE85`); check mark white
+- 1000ms: row removed (data Flow drops it) + `[되돌리기]` Snackbar (Short)
+- During play that row's other actions (⋮ menu / rename) are disabled; rows animate independently (fast consecutive completes each finish their own 1s)
+- a11y: row contentDescription → "완료됨"; if system `ANIMATOR_DURATION_SCALE == 0`, skip animation and complete instantly
+- Constants: `STRIKE_DURATION_MS = 1000`, `CHECK_FADE_IN_MS = 250`
 
 ## 12. Widget (most important — invest most time)
 
@@ -227,9 +231,11 @@ Check anim (1.3s total):
 
 `WidgetSize` enum order = `TWO_BY_ONE, SMALL, MEDIUM, LARGE`. Add-widget picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 4; pick → `requestPinAppWidget`.
 
-Item check (API 31+): `CheckItemAction` (ActionCallback) → `ItemRepository.completeItem(id)` via Hilt EntryPoint → `GroceryWidget().update(...)` → item gone in <1s.
-
-Fallback (API 26-30): tap → `actionStartActivity` with deep-link to mart+item (smooth, not just "open app").
+**Widget is display + deep-link only — it never mutates data (decided 2026-05-18).**
+- Item rows are **read-only** (dot + name). Tap → `OpenStoreAction.forStore(-1L)` → opens MainActivity (HomeScreen, that mart preselected) where the user completes via the §11 V2 animation.
+- Mart-header **"+"** → `OpenStoreAction.addToStore(storeId)` → opens straight into that mart's add-item sheet (via `DeepLinkBus`, `action=ADD_ITEM`).
+- Tapping anywhere else on the card → opens the app.
+- **No API branching.** Identical on all supported APIs (26–36). No `CheckItemAction`, no `ActionCallback` (`CheckItemAction.kt` deleted in commit `987a26b`).
 
 `res/xml/grocery_widget_info.xml`:
 - `updatePeriodMillis="0"` (battery: only refresh on user action)
@@ -241,7 +247,7 @@ Fallback (API 26-30): tap → `actionStartActivity` with deep-link to mart+item 
 
 Dark mode auto via `GlanceTheme` + `ColorProviders`.
 
-App↔Widget sync: every mutation in HomeViewModel calls `GlanceAppWidgetManager.getGlanceIds(GroceryWidget::class.java).forEach { GroceryWidget().update(ctx, it) }`. Widget→App sync is automatic via Room Flow.
+App↔Widget sync: a process-lifetime `WidgetUpdater` (@Singleton, started in `App.onCreate`) subscribes to the items+stores Flows and, debounced 120ms, calls `GlanceAppWidget.updateAll(context)` on all 4 widget classes; every ViewModel mutation also pokes `WidgetUpdater.updateAll()`. Widget→App sync is automatic: widgets subscribe to `widgetDataFlow` via `collectAsState`.
 
 Empty states:
 - 0 marts: "마트를 추가해주세요" → tap = open app
@@ -260,8 +266,8 @@ Widget visual (Toss):
 Test scenarios (verify each after Phase 4):
 1. Add widget from launcher
 2. App add → widget reflects instantly
-3. (API 31+) Widget check → gone in 1s → in Completed
-4. (API 26-30) Widget tap → app opens with mart preselected and item highlighted
+3. Widget item tap → app opens on Home with that mart preselected (check happens in-app)
+4. Widget header "+" tap → app opens straight into that mart's add-item sheet
 5. Resize → Small/Medium/Large auto-switch
 6. System dark toggle → widget colors flip
 7. 1 day usage → battery impact negligible
@@ -300,13 +306,12 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 1 — Project bootstrap + Toss design system + git/GitHub + first debug APK — 2026-05-14
 - [x] Phase 2 — Data layer (Room + Hilt + DevTest screen, schemas/1.json exported) — 2026-05-14
 - [x] Phase 3 — Main UI (tab strip + check anim + AddItem/Store sheets + bottom nav) — 2026-05-14
-- [x] Phase 4 — Glance widget (Small/Medium/Large + CheckItemAction API 31+ + OpenStoreAction fallback + day/night) — 2026-05-14
+- [x] Phase 4 — Glance widget (Small/Medium/Large) + day/night — 2026-05-14
+  - [removed 2026-05-18 — business-model pivot] in-widget `CheckItemAction` (API 31+) + item-check fallback. Widget is now display + deep-link only.
 - [x] Phase 5 — Completed/Settings/Onboarding + DataStore + auto backup + DevTest removed — 2026-05-14
 - [x] Phase 6 — AdMob banner + BillingClient (remove_ads) + Firebase Crashlytics/Analytics + signing config + privacy policy + store listing + Release AAB 11.91MB / Release APK 5.91MB — 2026-05-14
-- [ ] Phase 3 — Main screen (tab UI)
-- [ ] Phase 4 — Widget (most important)
-- [ ] Phase 5 — Completed + Settings + Onboarding + DataStore + Auto Backup
-- [ ] Phase 6 — AdMob + Billing + Crashlytics + signing + Play release
+- [x] Phase 7 — Rename → 마트노트, 4-size widgets (incl. 2x1 Mini), store-management screen, shared PageTitle, seed = 쿠팡/다이소, **widget-model pivot (display + deep-link only)**, UX polish — 2026-05-18 (commit `987a26b`)
+- [x] Phase 8 — Completion animation V2 (1000ms left→right strikethrough + green ✓) + onboarding/store copy realigned + docs↔code reconciled — 2026-05-18
 
 End-of-phase report format:
 1. Files created/modified (tree)
