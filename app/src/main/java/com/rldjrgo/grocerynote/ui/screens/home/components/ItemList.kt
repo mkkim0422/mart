@@ -122,7 +122,7 @@ fun EmptyStores(
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "이마트, 다이소, 쿠팡… 마트별로 따로 정리할 수 있어요",
+            text = "쿠팡, 다이소처럼 마트별로 따로 정리할 수 있어요",
             style = typo.bodyS,
             color = colors.textTertiary,
         )

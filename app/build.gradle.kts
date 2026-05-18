@@ -65,7 +65,7 @@ android {
             isMinifyEnabled = false
             buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
-            // Billing UI hidden until v1.5; BillingRepository code stays compiled.
+            // SHOW_BILLING=true → 광고 제거 IAP 행이 설정 화면에 노출됨 (BillingRepository v8 사용 중).
             buildConfigField("boolean", "SHOW_BILLING", "true")
         }
         getByName("release") {

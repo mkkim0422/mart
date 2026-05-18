@@ -67,18 +67,18 @@ private data class Page(
 
 private val pages = listOf(
     Page(
-        "마트별로 따로 적어두세요",
-        "이마트, 다이소, 쿠팡… 한 번에 정리",
+        "마트별로 따로 정리하세요",
+        "쿠팡, 다이소 따로따로. 어디 가서도 헷갈리지 않게",
         Icons.Outlined.Storefront,
     ),
     Page(
-        "홈화면 위젯에서 바로 체크",
-        "앱 안 열고도 한 번에",
+        "위젯으로 한눈에 확인",
+        "마트 가기 전 홈화면에서 한눈에, 탭하면 앱으로 이어져요",
         Icons.Outlined.Widgets,
     ),
     Page(
-        "심플하게, 이름만 적으면 끝",
-        "복잡한 정보 없이, 빠르게",
+        "이름만 적으면 끝",
+        "가격도 수량도 필요 없어요. 빠르고 심플하게",
         Icons.AutoMirrored.Outlined.Assignment,
     ),
 )

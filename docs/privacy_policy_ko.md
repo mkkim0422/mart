@@ -47,4 +47,4 @@ Android Auto Backup을 통해 사용자가 동의한 Google 계정의 클라우�
 ## 8. 문의
 
 개인정보 처리에 관한 문의는 다음으로 연락주세요:
-- 이메일: help@sphinfo.co.kr
+- 이메일: mkkim850422@gmail.com
