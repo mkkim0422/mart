@@ -3,7 +3,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Warm off-white brand background (#FAFAF7) -->
     <path
-        android:fillColor="#3182F6"
+        android:fillColor="#FAFAF7"
         android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
 </vector>
