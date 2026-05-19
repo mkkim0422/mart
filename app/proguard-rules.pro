@@ -50,3 +50,11 @@
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# --- Strip verbose/debug logs in release (privacy: item names/store names
+#     were going to Log.d). R8 removes these calls + their string building.
+#     Log.i/w/e kept for crash diagnostics. ---
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+}

@@ -114,7 +114,7 @@ Room 데이터 계층 + Hilt + 개발용 테스트 화면.
 - **드래그 재정렬**: sh.calvin.reorderable 3.1.0
 - **수익화/분석**: play-services-ads 25.2.0 · billing-ktx 8.3.0 · firebase-bom 34.13.0(analytics+crashlytics)
 - **SDK 분기 정책(CLAUDE.md §7)**: API 26~30은 위젯 비대화형→딥링크 폴백 / API 31+ 대화형 / API 33+ Material You 동적색 미사용(브랜드 일관성)
-- **BuildConfig 플래그**: `SHOW_BILLING=true`(debug·release 모두), `AD_UNIT_BANNER_ID`/`ADMOB_APP_ID`는 **테스트 ID 하드코딩 상태**
+- **BuildConfig 플래그**: `SHOW_BILLING=true`(debug·release 모두). `AD_UNIT_BANNER_ID`/`ADMOB_APP_ID`는 `build.gradle.kts` 상단 단일 소스에서 **buildType별 분리**: debug=Google 테스트 ID, release=실 ID. 매니페스트 AdMob 앱 ID도 `${admobAppId}` manifestPlaceholder로 동일 분리(섞임 불가). 릴리스는 ProGuard `-assumenosideeffects`로 `Log.v/d` 제거
 - **서명**: `keystore.properties` + `.jks`가 존재하고 비번이 있을 때만 release 서명. 없으면 unsigned 빌드 통과
 - **로케일**: ko, en만 포함
 - 라이브러리 버전은 `gradle/libs.versions.toml`로 핀 고정. 변경 시 ref 이름 grep 필수.
