@@ -3,14 +3,50 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Toss-blue grocery cart — visible on the neutral (white/dark) splash bg. -->
-    <group android:translateX="22" android:translateY="26">
+    <!-- Splash icon = IDENTICAL artwork to the launcher icon
+         (ic_launcher_foreground): same cart geometry + same
+         0.84 scale / recenter group, on the neutral splash bg.
+         Previously this was a different, flat/wide cart which looked
+         out of place vs. the app icon — now they match exactly. -->
+    <group
+        android:pivotX="50.465"
+        android:pivotY="52.45"
+        android:scaleX="0.84"
+        android:scaleY="0.84"
+        android:translateX="3.535"
+        android:translateY="1.55">
+        <!-- cart handle -->
         <path
-            android:fillColor="@android:color/transparent"
-            android:pathData="M6,8 L8,8 L12,30 L52,30 L56,12 L18,12 M16,40 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M48,40 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+            android:pathData="M24.4,32 L31.2,32 L36.53,43.94"
+            android:fillColor="#00000000"
             android:strokeColor="#3182F6"
-            android:strokeWidth="3"
+            android:strokeWidth="5.1"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
+        <!-- cart basket (trapezoid, wider at the top) -->
+        <path
+            android:pathData="M36.53,43.94 L76.53,43.94 L70.51,63.62 L43.73,63.62 Z"
+            android:fillColor="#00000000"
+            android:strokeColor="#3182F6"
+            android:strokeWidth="5.1"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <!-- wheels -->
+        <path
+            android:pathData="M45.24,71.15 a4.3,4.3 0 1,0 8.6,0 a4.3,4.3 0 1,0 -8.6,0 Z"
+            android:fillColor="#3182F6" />
+        <path
+            android:pathData="M60.4,71.15 a4.3,4.3 0 1,0 8.6,0 a4.3,4.3 0 1,0 -8.6,0 Z"
+            android:fillColor="#3182F6" />
+        <!-- 3 mart-color item dots (Blue / Yellow / Red, left to right) -->
+        <path
+            android:pathData="M44.81,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#3182F6" />
+        <path
+            android:pathData="M53.3,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#FFB800" />
+        <path
+            android:pathData="M61.8,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#F04452" />
     </group>
 </vector>
