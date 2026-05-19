@@ -14,7 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 
 /**
- * Material "undo" Snackbar, pinned just above the BottomNavBar.
+ * Material "undo" Snackbar, pinned ABOVE the extended "+추가" FAB so the two
+ * never overlap. The FAB sits ~(banner ≈50 + 18 margin + 56 height) ≈ 124-134dp
+ * up from the bottom; 140dp clears it with a small gap.
  * Dark pill (#191F28 / dark #2B2D31), white text, Toss-blue [되돌리기] action
  * — the action stays global Toss-blue regardless of mart color.
  */
@@ -25,7 +27,7 @@ fun BoxScope.UndoSnackbarHost(hostState: SnackbarHostState) {
         hostState = hostState,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(start = 16.dp, end = 16.dp, bottom = 80.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 140.dp),
     ) { data ->
         Snackbar(
             snackbarData = data,
