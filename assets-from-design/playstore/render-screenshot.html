@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>play store · export 1080×2400</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  html, body { margin:0; padding:0; font-family: 'Pretendard Variable', Pretendard, -apple-system, system-ui, sans-serif; }
+  body { width: 1080px; height: 2400px; overflow: hidden; background: #fff; }
+  #root { width: 1080px; height: 2400px; }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+<div id="root"></div>
+
+<script type="text/babel" src="../screenshot-pieces.jsx"></script>
+
+<script type="text/babel">
+  // ---- Inlined Screenshot composition (same as main file) ----
+  function Screenshot({ idx, title, sub, dark = false, children }) {
+    const bgLight = 'linear-gradient(170deg, #EAF2FE 0%, #F4F8FF 45%, #FAFAF7 100%)';
+    const bgDark  = 'linear-gradient(170deg, #1B2740 0%, #181B23 45%, #17171B 100%)';
+    const textColor = dark ? '#F2F4F6' : '#191F28';
+    const subColor  = dark ? '#A8B0BA' : '#4E5968';
+
+    return (
+      <div style={{ width: 1080, height: 2400, background: dark ? bgDark : bgLight, position:'relative', overflow:'hidden' }}>
+        <div style={{
+          position:'absolute', top: 60, left: 60,
+          padding: '14px 28px', borderRadius: 999,
+          background: dark ? 'rgba(255,255,255,0.10)' : 'rgba(49,130,246,0.12)',
+          color: dark ? '#A8C7FF' : '#3182F6',
+          fontSize: 28, fontWeight: 700, letterSpacing:'-0.01em',
+          fontFamily:'JetBrains Mono, ui-monospace, monospace',
+        }}>{String(idx).padStart(2,'0')} / 06</div>
+
+        <div style={{ padding: '180px 80px 0', textAlign:'center' }}>
+          <h2 style={{ margin: 0, fontSize: 88, fontWeight: 700, color: textColor,
+            lineHeight: 1.15, letterSpacing:'-0.04em', textWrap: 'pretty' }}>{title}</h2>
+          <p style={{ margin: '28px auto 0', fontSize: 38, fontWeight: 400, color: subColor,
+            lineHeight: 1.45, letterSpacing:'-0.015em', maxWidth: 820 }}>{sub}</p>
+        </div>
+
+        <div style={{ position:'absolute', left: '50%', bottom: 60, transform:'translateX(-50%)' }}>
+          <PhoneFrame dark={dark}>{children}</PhoneFrame>
+        </div>
+      </div>
+    );
+  }
+
+  const SHOTS = [
+    { title: '마트별로 따로 —\n헷갈리지 않게', sub: '쿠팡, 다이소, 이마트…\n한 번에 정리해요', dark:false, Screen:() => <AppHome dark={false}/> },
+    { title: '홈화면 위젯으로\n한눈에',         sub: '마트 가기 전, 한 번 보고 출발하세요', dark:false, Screen:() => <AppHomescreen/> },
+    { title: '위젯 5가지 크기,\n자유롭게',     sub: '원하는 자리에, 원하는 크기로',          dark:false, Screen:() => <AppWidgetPicker/> },
+    { title: '이름만 적으면 끝,\n1초',          sub: '가격도, 수량도 필요 없어요',            dark:false, Screen:() => <AppAddSheet/> },
+    { title: '체크하면\n깔끔하게 정리돼요',     sub: '오늘, 어제, 이번 주 — 한눈에',          dark:true,  Screen:() => <AppCompleted dark={true}/> },
+    { title: '다크 모드도\n자연스럽게',         sub: '눈이 편한 밤에도 그대로',               dark:true,  Screen:() => <AppHome dark={true}/> },
+  ];
+
+  let root;
+  function mount(n) {
+    const s = SHOTS[(n-1) || 0];
+    if (!root) root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Screenshot idx={n} title={s.title} sub={s.sub} dark={s.dark}><s.Screen/></Screenshot>);
+  }
+  window.setShot = (n) => mount(n);
+
+  // Generate a 1080×2400 PNG dataUrl for shot n.
+  // Uses html-to-image to rasterize at the exact target size,
+  // independent of the iframe viewport.
+  window.genDataUrl = async (n) => {
+    mount(n);
+    // Wait for fonts + layout to settle
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 400));
+    const el = document.getElementById('root');
+    return await htmlToImage.toPng(el, {
+      width: 1080, height: 2400,
+      canvasWidth: 1080, canvasHeight: 2400,
+      pixelRatio: 1,
+      cacheBust: true,
+      style: { transform: 'none' },
+    });
+  };
+
+  setTimeout(() => {
+    mount(1);
+    window.__ready = true;
+  }, 80);
+</script>
+
+</body>
+</html>
