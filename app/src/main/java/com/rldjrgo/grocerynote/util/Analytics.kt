@@ -10,10 +10,16 @@ object Analytics {
 
     private val fa: FirebaseAnalytics by lazy { Firebase.analytics }
 
-    fun storeAdded(name: String) = log("store_added", "store_name" to name)
-    fun itemAdded(storeName: String) = log("item_added", "store_name" to storeName)
+    // Seed marts (CLAUDE.md §9). User-named marts must NOT be sent raw to
+    // Analytics — only a coarse default/custom class, so a personally-named
+    // mart never leaves the device as-is.
+    private val seedStores = setOf("쿠팡", "다이소")
+    private fun storeClass(name: String) = if (name in seedStores) "default" else "custom"
+
+    fun storeAdded(name: String) = log("store_added", "store_type" to storeClass(name))
+    fun itemAdded(storeName: String) = log("item_added", "store_type" to storeClass(storeName))
     fun itemCompleted(storeName: String, fromWidget: Boolean = false) =
-        log(if (fromWidget) "item_completed_widget" else "item_completed", "store_name" to storeName)
+        log(if (fromWidget) "item_completed_widget" else "item_completed", "store_type" to storeClass(storeName))
     fun widgetUsed() = log("widget_used")
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")

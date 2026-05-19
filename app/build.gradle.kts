@@ -15,6 +15,16 @@ val keystoreProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// --- AdMob IDs ---------------------------------------------------------------
+// Debug builds MUST always use Google's official TEST ids; release uses the
+// real ones. They must NEVER mix: serving (and ourselves clicking) real ads in
+// a debug build violates AdMob policy and risks account suspension. Single
+// source of truth here — manifest + BuildConfig both derive from these.
+val admobTestAppId = "ca-app-pub-3940256099942544~3347511713"   // Google official TEST — do not change
+val admobTestBannerId = "ca-app-pub-3940256099942544/6300978111" // Google official TEST — do not change
+val admobRealAppId = "ca-app-pub-3708412629376493~1464671233"
+val admobRealBannerId = "ca-app-pub-3708412629376493/1854342020"
+
 ksp {
     // Export Room schemas so future migrations can diff against version 1.
     arg("room.schemaLocation", "$projectDir/schemas")
@@ -34,6 +44,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        // Safe default: TEST id. Each buildType overrides explicitly below, so
+        // any future/unconfigured buildType still falls back to test ads.
+        manifestPlaceholders["admobAppId"] = admobTestAppId
     }
 
     androidResources {
@@ -63,8 +77,10 @@ android {
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
-            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
-            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            // TEST ids only.
+            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"$admobTestBannerId\"")
+            buildConfigField("String", "ADMOB_APP_ID", "\"$admobTestAppId\"")
+            manifestPlaceholders["admobAppId"] = admobTestAppId
             // SHOW_BILLING=true → 광고 제거 IAP 행이 설정 화면에 노출됨 (BillingRepository v8 사용 중).
             buildConfigField("boolean", "SHOW_BILLING", "true")
         }
@@ -75,8 +91,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
-            buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            // REAL ids only.
+            buildConfigField("String", "AD_UNIT_BANNER_ID", "\"$admobRealBannerId\"")
+            buildConfigField("String", "ADMOB_APP_ID", "\"$admobRealAppId\"")
+            manifestPlaceholders["admobAppId"] = admobRealAppId
             buildConfigField("boolean", "SHOW_BILLING", "true")
             // Sign release only if keystore.properties + .jks are present and valid.
             val rsc = signingConfigs.findByName("release")

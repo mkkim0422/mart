@@ -18,10 +18,11 @@
         android:theme="@style/Theme.GroceryNote"
         tools:targetApi="36">
 
-        <!-- AdMob app ID (test ID by default; replace via BuildConfig in release) -->
+        <!-- AdMob app ID — injected per buildType via manifestPlaceholders
+             (debug = Google test id, release = real id). See app/build.gradle.kts -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"
