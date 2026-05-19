@@ -31,10 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -290,7 +287,6 @@ private fun FilterPill(
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun CompletedRow(
     item: Item,
@@ -298,44 +294,10 @@ private fun CompletedRow(
     onReactivate: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val colors = AppTheme.colors
-    val swipeState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> { onReactivate(); false }
-                SwipeToDismissBoxValue.EndToStart -> { onDelete(); false }
-                SwipeToDismissBoxValue.Settled -> false
-            }
-        },
-    )
-    SwipeToDismissBox(
-        state = swipeState,
-        backgroundContent = {
-            val dir = swipeState.dismissDirection
-            val bg = when (dir) {
-                SwipeToDismissBoxValue.StartToEnd -> colors.success
-                SwipeToDismissBoxValue.EndToStart -> colors.danger
-                SwipeToDismissBoxValue.Settled -> Color.Transparent
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(bg)
-                    .padding(horizontal = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (dir == SwipeToDismissBoxValue.StartToEnd) {
-                    Text("다시 구매예정으로", style = AppTheme.typography.bodyS, color = Color.White)
-                }
-                Spacer(Modifier.weight(1f))
-                if (dir == SwipeToDismissBoxValue.EndToStart) {
-                    Text("삭제", style = AppTheme.typography.bodyS, color = Color.White)
-                }
-            }
-        },
-    ) {
-        CompletedRowContent(item, store, onReactivate, onDelete)
-    }
+    // Swipe-to-delete/reactivate removed: the gesture is unreliable on this
+    // device. The ⋮ menu in CompletedRowContent already provides 삭제 +
+    // 되돌리기, so the actions stay available without the broken swipe.
+    CompletedRowContent(item, store, onReactivate, onDelete)
 }
 
 @Composable
