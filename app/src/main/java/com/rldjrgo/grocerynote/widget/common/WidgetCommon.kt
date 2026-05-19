@@ -9,8 +9,6 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -236,6 +234,10 @@ fun LargeContent(data: WidgetData) = EmptyOr(data) {
 fun AdaptiveContent(size: DpSize, data: WidgetData) {
     when {
         size.width >= WidgetSizes.Medium.width && size.height >= WidgetSizes.Large.height -> LargeContent(data)
+        // Tall & not-wider-than-tall (a 2x4 "Long" widget) → ONE mart. This must
+        // beat the Medium check so a portrait widget never splits into 2 marts
+        // (the launcher/Glance sometimes reports width ≥ Medium for a 2x4).
+        size.height >= WidgetSizes.Long.height && size.height >= size.width -> LongContent(data)
         size.width >= WidgetSizes.Medium.width -> MediumContent(data)
         size.height >= WidgetSizes.Long.height -> LongContent(data)
         size.height >= WidgetSizes.Small.height -> SmallContent(data)
@@ -364,53 +366,52 @@ private fun MartColumn(
             storeEmoji = store.emoji(),
             itemCount = items.size,
         )
-        when {
-            items.isEmpty() -> {
-                // No list → explicit clickable filler so the empty area opens
-                // the app (a bare ListView swallows taps, breaking fall-through).
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .defaultWeight()
-                        .clickable(OpenStoreAction.forStore(storeId = -1L)),
-                ) {}
-            }
-            items.size <= maxItems -> {
-                // Fits without scrolling → plain Column. The leftover space is
-                // then the (clickable) parent Column's, not a ListView's, so
-                // tapping the blank area below the list opens the app.
-                Column(modifier = GlanceModifier.fillMaxWidth()) {
-                    items.forEach { i ->
-                        WidgetItemRow(
-                            storeId = store.id,
-                            itemId = i.id,
-                            name = i.name,
-                            checkboxSize = itemCheckboxSize,
-                            nameSize = itemNameSize,
-                        )
-                    }
+        if (items.isEmpty()) {
+            // No list → explicit clickable filler so the empty area opens
+            // the app (a bare ListView swallows taps, breaking fall-through).
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .defaultWeight()
+                    .clickable(OpenStoreAction.forStore(storeId = -1L)),
+            ) {}
+        } else {
+            // Plain Column (NOT LazyColumn): the Large 2x2 grid would otherwise
+            // nest up to 4 LazyColumns (RemoteViews collection views) inside one
+            // widget, which Glance fails to inflate → the Large widget rendered
+            // as a broken/blank image and was non-interactive. Cap at maxItems
+            // with a "+N개 더" footer — the same proven pattern the Long widget
+            // already uses. The leftover space is the (clickable) parent
+            // Column's, so tapping below the list still opens the app.
+            val shown = items.take(maxItems)
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
+                shown.forEach { i ->
+                    WidgetItemRow(
+                        storeId = store.id,
+                        itemId = i.id,
+                        name = i.name,
+                        checkboxSize = itemCheckboxSize,
+                        nameSize = itemNameSize,
+                    )
                 }
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .defaultWeight()
-                        .clickable(OpenStoreAction.forStore(storeId = -1L)),
-                ) {}
-            }
-            else -> {
-                // Overflow → scrollable LazyColumn (content fills, no dead zone).
-                LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
-                    items(items, itemId = { it.id }) { i ->
-                        WidgetItemRow(
-                            storeId = store.id,
-                            itemId = i.id,
-                            name = i.name,
-                            checkboxSize = itemCheckboxSize,
-                            nameSize = itemNameSize,
-                        )
-                    }
+                if (items.size > shown.size) {
+                    Text(
+                        text = "+ ${items.size - shown.size}개 더",
+                        style = TextStyle(
+                            color = textTertiaryProvider(),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Normal,
+                        ),
+                        modifier = GlanceModifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
                 }
             }
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .defaultWeight()
+                    .clickable(OpenStoreAction.forStore(storeId = -1L)),
+            ) {}
         }
     }
 }

@@ -123,21 +123,31 @@ fun ItemRow(
             .semantics { contentDescription = if (triggered) "완료됨" else item.name }
             .padding(horizontal = 20.dp),
     ) {
+        // Actual rendered text width (the Text node fills the weight, so
+        // size.width ≠ glyph width). The strikethrough must only span the
+        // text itself, not the empty space up to the "완료" button.
+        var textRightPx by remember(item.id) { mutableStateOf(0f) }
         Text(
             text = item.name,
             style = typo.body,
             color = colors.textPrimary,
+            onTextLayout = { result ->
+                textRightPx = (0 until result.lineCount)
+                    .maxOfOrNull { result.getLineRight(it) }
+                    ?: result.size.width.toFloat()
+            },
             modifier = Modifier
                 .weight(1f)
                 .drawWithContent {
                     drawContent()
                     val p = strike.value
-                    if (p > 0f) {
+                    if (p > 0f && textRightPx > 0f) {
                         val y = size.height / 2f
+                        val end = textRightPx.coerceAtMost(size.width) * p
                         drawLine(
                             color = lineColor,
                             start = Offset(0f, y),
-                            end = Offset(size.width * p, y),
+                            end = Offset(end, y),
                             strokeWidth = 2.dp.toPx(),
                         )
                     }

@@ -37,6 +37,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +66,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import com.rldjrgo.grocerynote.domain.model.Store
+import com.rldjrgo.grocerynote.domain.model.emoji
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.soft
 
@@ -78,6 +83,9 @@ import com.rldjrgo.grocerynote.ui.theme.soft
  */
 @Composable
 fun AddItemSheet(
+    stores: List<Store>,
+    selectedStoreId: Long,
+    onSelectStore: (Long) -> Unit,
     storeName: String,
     storeColor: Color,
     storeEmoji: String,
@@ -94,6 +102,7 @@ fun AddItemSheet(
     val keyboard = LocalSoftwareKeyboardController.current
     var lastAdded by remember { mutableStateOf<String?>(null) }
     var deleteTarget by remember { mutableStateOf<String?>(null) }
+    var martMenuOpen by remember { mutableStateOf(false) }
     val scrimClick = remember { MutableInteractionSource() }
     val panelClick = remember { MutableInteractionSource() }
 
@@ -166,11 +175,18 @@ fun AddItemSheet(
                     ),
             )
             // Panel — bottom-aligned, rises with the keyboard via imePadding().
-            Column(
+            // Wrapped in a Box so the "추가됨" confirmation can float as a
+            // bottom overlay that COVERS the panel (issue: it used to push
+            // content from the top).
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .imePadding()
+                    .imePadding(),
+            ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(colors.bgPrimary)
                     // Absorb taps so they don't fall through to the scrim.
@@ -194,14 +210,72 @@ fun AddItemSheet(
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 16.dp),
                 ) {
+                    // Mart selector — tap to choose which mart this item goes to.
+                    Box {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(storeColor.soft(colors.isDark))
+                                .clickable { martMenuOpen = true }
+                                .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        ) {
+                            Text(text = storeEmoji, style = typo.headingM)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = storeName,
+                                style = typo.headingM.copy(fontWeight = FontWeight.Bold),
+                                color = colors.textPrimary,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Filled.ExpandMore,
+                                contentDescription = "마트 선택",
+                                tint = storeColor,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = martMenuOpen,
+                            onDismissRequest = { martMenuOpen = false },
+                        ) {
+                            stores.forEach { s ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(10.dp)
+                                                    .background(s.color, CircleShape),
+                                            )
+                                            Spacer(Modifier.width(10.dp))
+                                            Text(
+                                                text = "${s.emoji()} ${s.name}",
+                                                style = typo.body,
+                                                color = if (s.id == selectedStoreId) s.color else colors.textPrimary,
+                                                fontWeight = if (s.id == selectedStoreId) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        martMenuOpen = false
+                                        if (s.id != selectedStoreId) onSelectStore(s.id)
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "$storeEmoji ${storeName}에 추가",
+                        text = "에 추가해요",
                         style = typo.headingM.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textPrimary,
-                        modifier = Modifier.weight(1f),
+                        color = storeColor,
                     )
+                    Spacer(Modifier.weight(1f))
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -221,27 +295,6 @@ fun AddItemSheet(
                     }
                 }
                 Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.divider))
-                Spacer(Modifier.height(16.dp))
-                // Inline confirmation toast — slides down 1.5s after each add.
-                AnimatedVisibility(
-                    visible = lastAdded != null,
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(top = 12.dp)
-                            .background(storeColor.soft(colors.isDark), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            text = "✓ ‘${lastAdded}’ 추가됨 — 계속 입력하세요",
-                            style = typo.bodyS.copy(fontWeight = FontWeight.Medium),
-                            color = storeColor,
-                        )
-                    }
-                }
                 Spacer(Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -391,7 +444,37 @@ fun AddItemSheet(
                         color = colors.textSecondary,
                     )
                 }
+                // Issue 4: keep a gap so the "완료" button never sits flush
+                // against the top of the keyboard.
+                Spacer(Modifier.height(16.dp))
                 Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
+            }
+            // Issue 2: the confirmation now appears at the BOTTOM as an
+            // overlay that COVERS the panel, then fades/slides away (it used
+            // to be a top inset that pushed the content down).
+            AnimatedVisibility(
+                visible = lastAdded != null,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+                modifier = Modifier.align(Alignment.BottomCenter),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 16.dp)
+                        .background(storeColor, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                ) {
+                    Text(
+                        text = "✓ ‘${lastAdded}’ 추가됨 — 계속 입력하세요",
+                        style = typo.bodyS.copy(fontWeight = FontWeight.Medium),
+                        color = Color.White,
+                    )
+                }
+            }
             }
         }
     }

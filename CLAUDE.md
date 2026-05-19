@@ -230,7 +230,7 @@ Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemR
 - **Medium** (4x2 ≈ 250×110dp) ★ default — item list: 1 mart full-width / ≥2 top-2 split
 - **Large** (4x4 ≈ 250×250dp) — item list: up to 4 marts (1 / 2 / 1+2 / 2x2); marts user-selectable via `SettingsDataStore.largeWidgetStoreIds`
 
-`WidgetSize` enum order = `TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE` (= picker display order). Picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 5 with mini-render previews; pick → `requestPinAppWidget` (sets initial size). Adaptive resize: each widget's xml has `resizeMode=horizontal|vertical`, `minResize`=Mini, `maxResize`=360dp; `BaseGroceryWidget` re-runs `provideContent` on resize and `AdaptiveContent(LocalSize, data)` swaps the layout (no ViewModel/repo change).
+`WidgetSize` enum order = `TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE` (= picker display order). Picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 5 with mini-render previews; pick → `requestPinAppWidget` (sets initial size) → app immediately routes to the home screen so the user sees & drags the placed widget into position. Each xml: `minWidth/minHeight` = the widget's NATURAL size (so it pins at the right size — do NOT shrink these or launchers place it tiny), `minResize`=Mini 110×40 + `maxResize`=360dp + `resizeMode=horizontal|vertical` (this is what enables adaptive shrink/grow), `previewLayout` only (no `previewImage` — the static vectors render broken on One UI; Long has its own `widget_preview_long`). Adaptive resize: `BaseGroceryWidget` re-runs `provideContent` on resize, `AdaptiveContent(LocalSize, data)` swaps the layout (no ViewModel/repo change).
 
 **Widget is display + deep-link only — it never mutates data (decided 2026-05-18).**
 - Item rows are **read-only** (dot + name). Tap → `OpenStoreAction.forStore(-1L)` → opens MainActivity (HomeScreen, that mart preselected) where the user completes via the §11 V2 animation.
@@ -314,6 +314,7 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 7 — Rename → 마트노트, 4-size widgets (incl. 2x1 Mini), store-management screen, shared PageTitle, seed = 쿠팡/다이소, **widget-model pivot (display + deep-link only)**, UX polish — 2026-05-18 (commit `987a26b`)
 - [x] Phase 8 — Completion animation V2 (1000ms left→right strikethrough + green ✓) + onboarding/store copy realigned + docs↔code reconciled — 2026-05-18
 - [x] Phase 9 — New **Long** widget (2x4, 1 mart + items) + **5-type adaptive resize** (`BaseGroceryWidget` SizeMode.Responsive, `AdaptiveContent`) + picker reorder/labels + onboarding copy finalized — 2026-05-18
+- [x] Phase 10 — Device-feedback fixes: AddItemSheet **mart-selector dropdown** (pick target mart inside the sheet), Home **banner now visible** (content `weight(1f)`), banner **height reserved** (no pop-in jump), widget xml **minWidth restored** (correct pin size) + previewImage dropped + Long preview, pick-size→**home-screen** placement — 2026-05-18
 
 End-of-phase report format:
 1. Files created/modified (tree)

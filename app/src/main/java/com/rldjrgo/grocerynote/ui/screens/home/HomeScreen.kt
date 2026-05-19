@@ -183,7 +183,7 @@ fun HomeScreen(
             }
         }
         if (state.stores.isEmpty() && !state.isLoading) {
-            EmptyStores(onAddStoreClick = { showAddStore = true })
+            EmptyStores(onAddStoreClick = { showAddStore = true }, modifier = Modifier.weight(1f))
         } else {
             StoreTabBar(
                 stores = state.stores,
@@ -198,7 +198,8 @@ fun HomeScreen(
             val curIdx = storesL.indexOfFirst { it.id == state.selectedStoreId }
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth()
                     .swipeBetweenTabs(
                         onNext = {
                             if (curIdx in 0 until storesL.lastIndex) {
@@ -215,12 +216,17 @@ fun HomeScreen(
                     transitionSpec = {
                         val ti = storesL.indexOfFirst { it.id == targetState }
                         val ii = storesL.indexOfFirst { it.id == initialState }
-                        if (ti >= ii) {
-                            (slideInHorizontally { it } + fadeIn()) togetherWith
-                                (slideOutHorizontally { -it } + fadeOut())
-                        } else {
-                            (slideInHorizontally { -it } + fadeIn()) togetherWith
-                                (slideOutHorizontally { it } + fadeOut())
+                        when {
+                            // Bootstrap settle (initial id not a real store yet,
+                            // or data still resolving): just fade — NO slide, so
+                            // the screen doesn't swipe left once on first launch.
+                            ii < 0 || ti < 0 -> fadeIn() togetherWith fadeOut()
+                            ti >= ii ->
+                                (slideInHorizontally { it } + fadeIn()) togetherWith
+                                    (slideOutHorizontally { -it } + fadeOut())
+                            else ->
+                                (slideInHorizontally { -it } + fadeIn()) togetherWith
+                                    (slideOutHorizontally { it } + fadeOut())
                         }
                     },
                     label = "martSwitch",
@@ -279,6 +285,9 @@ fun HomeScreen(
 
     if (showAddItem && selectedStore != null) {
         AddItemSheet(
+            stores = state.stores,
+            selectedStoreId = selectedStore.id,
+            onSelectStore = viewModel::selectStore,
             storeName = selectedStore.name,
             storeColor = selectedStore.color,
             storeEmoji = selectedStore.emoji(),
