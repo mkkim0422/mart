@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>onboarding · export 1024×1024</title>
+<style>
+  html, body { margin:0; padding:0; background: transparent; }
+  body { width: 1024px; height: 1024px; overflow: hidden; }
+  #root { width: 1024px; height: 1024px; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<div id="root"></div>
+
+<script type="text/babel" src="../onboarding-illustrations.jsx"></script>
+
+<script type="text/babel">
+  // PNG with alpha. Default = page 1.
+  let root;
+  function mount(n) {
+    const Map = { 1: IllusOrganize, 2: IllusWidget, 3: IllusList };
+    const C = Map[n] || IllusOrganize;
+    if (!root) root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<C size={1024}/>);
+  }
+
+  // Expose for save_screenshot steps
+  window.setVariant = (n) => mount(n);
+
+  setTimeout(() => {
+    mount(1);
+    window.__ready = true;
+  }, 60);
+</script>
+
+</body>
+</html>
