@@ -76,19 +76,22 @@ private val pages = listOf(
         R.drawable.onboarding_page1,
     ),
     Page(
-        "위젯으로 한눈에 확인",
-        "마트 가기 전에 홈화면에서 바로 확인, 탭하면 그 마트 리스트로 이어져요",
-        R.drawable.onboarding_page2,
+        "어두운 화면도 자연스럽게",
+        "설정에서 다크 모드, 밤에도 눈이 편해요",
+        R.drawable.onboarding_page4,
     ),
     Page(
         "이름만 적으면 끝",
         "가격도 수량도 필요 없어요. 빠르고 심플하게",
         R.drawable.onboarding_page3,
     ),
+    // LAST page on purpose: the "홈 화면에 위젯 추가" CTA is rendered on
+    // pages.lastIndex, so the widget intro + its add-widget button stay
+    // together as the final step.
     Page(
-        "어두운 화면도 자연스럽게",
-        "설정에서 다크 모드, 밤에도 눈이 편해요",
-        R.drawable.onboarding_page4,
+        "위젯으로 한눈에 확인",
+        "마트 가기 전에 홈화면에서 바로 확인, 탭하면 그 마트 리스트로 이어져요",
+        R.drawable.onboarding_page2,
     ),
 )
 
