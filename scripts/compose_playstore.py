@@ -67,61 +67,6 @@ def prep(name, paint_ad):
     return im, bg
 
 
-# ---------- synthetic home + faithful widget render (SS2) ----------
-def widget_card(scale=1.0):
-    """Medium (4x2) 쿠팡 widget, faithful to CLAUDE.md §12 + real seeded data."""
-    w, h = int(620*scale), int(360*scale)
-    card = Image.new("RGB", (w, h), (255, 255, 255))
-    d = ImageDraw.Draw(card)
-    accent = MART["쿠팡"]
-    hh = int(96*scale)
-    head = Image.new("RGB", (w, hh), tuple(round(255+(accent[i]-255)*0.08) for i in range(3)))
-    card.paste(head, (0, 0))
-    fb = font(FB, int(34*scale)); fr = font(FR, int(32*scale)); fc = font(FR, int(26*scale))
-    # mart icon = rounded-square swatch in mart color (app MartChip style; no emoji glyph)
-    swx, swy, sws = int(26*scale), int(26*scale), int(44*scale)
-    sw_im = Image.new("RGBA", (sws, sws), (0, 0, 0, 0))
-    ImageDraw.Draw(sw_im).rounded_rectangle([0, 0, sws-1, sws-1], radius=int(12*scale), fill=accent)
-    card.paste(sw_im, (swx, swy), sw_im)
-    d.text((swx+sws+int(16*scale), int(30*scale)), "쿠팡", font=fb, fill=(78, 89, 104))
-    cnt = "4개"; cw = text_w(d, cnt, fc)
-    d.text((w-cw-int(26*scale), int(34*scale)), cnt, font=fc, fill=accent)
-    d.line([(0, hh), (w, hh)], fill=(235, 235, 232), width=1)
-    items = ["생수 2L", "달걀", "두부", "라면"]
-    ry = hh + int(26*scale); rstep = int(60*scale)
-    for it in items:
-        cy = ry + int(16*scale)
-        d.ellipse([int(28*scale), cy, int(28*scale)+int(14*scale), cy+int(14*scale)], fill=accent)
-        d.text((int(60*scale), ry), it, font=fr, fill=(25, 31, 40))
-        ry += rstep
-    # rounded corners + soft shadow
-    rad = int(28*scale)
-    card.putalpha(round_rect_mask((w, h), rad))
-    return card
-
-
-def ss2_home():
-    """Stylized Android home: branded wallpaper + clock + faithful 쿠팡 widget."""
-    base = vgrad(1440, 2968, (228, 238, 252), (208, 224, 248)).convert("RGB")
-    d = ImageDraw.Draw(base)
-    fclock = font(FR, 150); fdate = font(FR, 46)
-    d.text((90, 250), "9:41", font=font(FB, 170), fill=(40, 54, 78))
-    d.text((96, 470), "5월 18일 일요일", font=fdate, fill=(70, 90, 120))
-    wc = widget_card(scale=1.85)
-    wx = (1440 - wc.size[0]) // 2
-    sh = Image.new("RGBA", wc.size, (0, 0, 0, 0))
-    ImageDraw.Draw(sh).rounded_rectangle([0,0,wc.size[0]-1,wc.size[1]-1], radius=int(28*1.85), fill=(20,40,70,60))
-    sh = sh.filter(ImageFilter.GaussianBlur(22))
-    base.paste(sh, (wx, 760), sh)
-    base.paste(wc, (wx, 740), wc)
-    # a faux dock row of neutral app dots (no real brand logos)
-    dy = 2968-260
-    for i in range(5):
-        x = 150 + i*230
-        d.rounded_rectangle([x, dy, x+150, dy+150], radius=38, fill=(255,255,255))
-    return base
-
-
 # ---------- phone mockup ----------
 def mockup(screen_img):
     sw, sh = screen_img.size
@@ -147,7 +92,7 @@ def mockup(screen_img):
 SHOTS = [
     dict(out="01_main_hook.png",    raw="ss1_home.png",      ad=True,  dark=False,
          title=["마트별로 따로 — 헷갈리지 않게"], sub="쿠팡, 다이소, 이마트… 한 번에 정리"),
-    dict(out="02_widget_appeal.png", raw=None,               ad=False, dark=False,
+    dict(out="02_widget_appeal.png", raw="ss2_home.png",     ad=False, dark=False,
          title=["홈화면 위젯에서 한눈에"],        sub="마트 가기 전, 한 번 보고 출발하세요"),
     dict(out="03_widget_variety.png", raw="ss3_picker.png",  ad=False, dark=False,
          title=["위젯 5가지 크기,", "자유롭게 리사이즈"], sub="원하는 사이즈로, 자유롭게"),
@@ -187,10 +132,7 @@ def build(s):
     draw_center(d, CW//2, y, s["sub"], fsub, scol)
 
     # ---- screen ----
-    if s["raw"] is None:
-        screen = ss2_home()
-    else:
-        screen, _ = prep(s["raw"], s["ad"])
+    screen, _ = prep(s["raw"], s["ad"])
     dev = mockup(screen)
 
     # fit device under the copy block

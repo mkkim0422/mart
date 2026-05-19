@@ -277,8 +277,13 @@ fun LongContent(data: WidgetData) {
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // Match WidgetEmptyState exactly (cart 36sp + 8dp +
+                        // title + 3dp + hint) so Long's empty state is fully
+                        // consistent with every other widget size.
+                        Text(text = "🛒", style = TextStyle(fontSize = 36.sp))
+                        Spacer(GlanceModifier.height(8.dp))
                         Text(
-                            text = "${target.name}에 추가할 항목이 없어요",
+                            text = "항목 추가",
                             maxLines = 1,
                             style = TextStyle(
                                 color = textPrimaryProvider(),
