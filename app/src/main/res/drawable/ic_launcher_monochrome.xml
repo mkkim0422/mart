@@ -4,34 +4,44 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <!-- Themed-icon (Android 13+) silhouette: single-color cart.
-         The system replaces these colors with the monochrome theme tint. -->
-    <path
-        android:pathData="M25.84,29.58 L34.64,29.58 L40.8,44.54"
-        android:fillColor="#00000000"
-        android:strokeColor="#1F1F1F"
-        android:strokeWidth="5.28"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M40.8,44.54 L82.16,44.54 L76.0,64.78 L47.84,64.78 Z"
-        android:fillColor="#00000000"
-        android:strokeColor="#1F1F1F"
-        android:strokeWidth="5.28"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M50.04,77.1 a3.96,3.96 0 1,0 7.92,0 a3.96,3.96 0 1,0 -7.92,0 Z"
-        android:fillColor="#1F1F1F" />
-    <path
-        android:pathData="M67.64,77.1 a3.96,3.96 0 1,0 7.92,0 a3.96,3.96 0 1,0 -7.92,0 Z"
-        android:fillColor="#1F1F1F" />
-    <path
-        android:pathData="M47.84,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#1F1F1F" />
-    <path
-        android:pathData="M58.4,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#1F1F1F" />
-    <path
-        android:pathData="M68.96,54.66 a3.52,3.52 0 1,0 7.04,0 a3.52,3.52 0 1,0 -7.04,0 Z"
-        android:fillColor="#1F1F1F" />
+         Same geometry + same recenter/scale group as
+         ic_launcher_foreground (keep these in sync); the system
+         replaces these colors with the monochrome theme tint. -->
+    <group
+        android:pivotX="50.465"
+        android:pivotY="52.45"
+        android:scaleX="0.84"
+        android:scaleY="0.84"
+        android:translateX="3.535"
+        android:translateY="1.55">
+        <path
+            android:pathData="M24.4,32 L31.2,32 L36.53,43.94"
+            android:fillColor="#00000000"
+            android:strokeColor="#1F1F1F"
+            android:strokeWidth="5.1"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M36.53,43.94 L76.53,43.94 L70.51,63.62 L43.73,63.62 Z"
+            android:fillColor="#00000000"
+            android:strokeColor="#1F1F1F"
+            android:strokeWidth="5.1"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M45.24,71.15 a4.3,4.3 0 1,0 8.6,0 a4.3,4.3 0 1,0 -8.6,0 Z"
+            android:fillColor="#1F1F1F" />
+        <path
+            android:pathData="M60.4,71.15 a4.3,4.3 0 1,0 8.6,0 a4.3,4.3 0 1,0 -8.6,0 Z"
+            android:fillColor="#1F1F1F" />
+        <path
+            android:pathData="M44.81,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#1F1F1F" />
+        <path
+            android:pathData="M53.3,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#1F1F1F" />
+        <path
+            android:pathData="M61.8,54.48 a3.76,3.76 0 1,0 7.52,0 a3.76,3.76 0 1,0 -7.52,0 Z"
+            android:fillColor="#1F1F1F" />
+    </group>
 </vector>

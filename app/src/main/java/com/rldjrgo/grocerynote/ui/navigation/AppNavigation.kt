@@ -2,6 +2,8 @@ package com.rldjrgo.grocerynote.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -44,10 +46,33 @@ fun AppNavHost(
             slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(ANIM_MS))
         },
     ) {
-        composable(Routes.ONBOARDING) {
+        composable(
+            Routes.ONBOARDING,
+            // Onboarding → Home: don't horizontally slide. The slide forces a
+            // full-width relayout/redraw of Home EVERY frame for 300ms exactly
+            // while Home is doing its heaviest first-composition work (Hilt VM,
+            // first Room query, AdMob AdView/WebView inflation). That collision
+            // is the "버벅임". A short cross-fade is nearly free to render.
+            exitTransition = {
+                if (targetState.destination.route == Routes.HOME) {
+                    fadeOut(tween(ANIM_MS))
+                } else {
+                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(ANIM_MS))
+                }
+            },
+        ) {
             OnboardingScreen(onDone = onOnboardingComplete)
         }
-        composable(Routes.HOME) {
+        composable(
+            Routes.HOME,
+            enterTransition = {
+                if (initialState.destination.route == Routes.ONBOARDING) {
+                    fadeIn(tween(ANIM_MS))
+                } else {
+                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(ANIM_MS))
+                }
+            },
+        ) {
             HomeScreen(
                 onManageStores = { navController.navigate(Routes.STORE_MANAGE) },
             )
