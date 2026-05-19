@@ -85,6 +85,11 @@ private val pages = listOf(
         "가격도 수량도 필요 없어요. 빠르고 심플하게",
         R.drawable.onboarding_page3,
     ),
+    Page(
+        "어두운 화면도 자연스럽게",
+        "설정에서 다크 모드, 밤에도 눈이 편해요",
+        R.drawable.onboarding_page4,
+    ),
 )
 
 @Composable

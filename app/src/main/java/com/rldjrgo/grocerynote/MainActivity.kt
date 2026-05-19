@@ -25,6 +25,7 @@ import com.rldjrgo.grocerynote.ui.components.BottomNavBar
 import com.rldjrgo.grocerynote.ui.navigation.AppNavHost
 import com.rldjrgo.grocerynote.ui.navigation.Routes
 import com.rldjrgo.grocerynote.ui.navigation.currentRouteOrNull
+import com.rldjrgo.grocerynote.ui.screens.onboarding.OnboardingScreen
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.LocalAppColors
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,8 +38,13 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var settings: SettingsDataStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Keep the system splash up until we know onboarding-vs-Home. The
+        // DataStore read is async; without this NavHost starts at Home for a
+        // frame and Home flashes before onboarding on first launch.
+        var keepSplash = true
+        splash.setKeepOnScreenCondition { keepSplash }
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(
                 lightScrim = android.graphics.Color.TRANSPARENT,
@@ -59,7 +65,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = LocalAppColors.current.bgPrimary,
                 ) {
-                    AppRoot(settings = settings)
+                    AppRoot(settings = settings, onResolved = { keepSplash = false })
                 }
             }
         }
@@ -113,11 +119,27 @@ object DeepLinkBus {
 }
 
 @Composable
-private fun AppRoot(settings: SettingsDataStore) {
+private fun AppRoot(settings: SettingsDataStore, onResolved: () -> Unit) {
+    // null = DataStore not read yet → keep the splash up (no flash).
+    val hasSeen by settings.hasSeenOnboarding.collectAsState(initial = null)
+    LaunchedEffect(hasSeen) { if (hasSeen != null) onResolved() }
+    when (hasSeen) {
+        null -> Unit // splash still held; draw nothing
+        // Onboarding lives OUTSIDE the tab NavHost. OnboardingScreen calls
+        // settings.setOnboardingSeen() on finish → hasSeen flips true → this
+        // recomposes to the main scaffold. That's a plain composable swap:
+        // instant, NO nav slide/fade. It also keeps the tab NavHost's
+        // startDestination always HOME, so bottom-nav popUpTo() is never
+        // pointed at a popped ONBOARDING (the cause of the weird tab swipe).
+        false -> OnboardingScreen(onDone = {})
+        else -> MainScaffold()
+    }
+}
+
+@Composable
+private fun MainScaffold() {
     val navController = rememberNavController()
     val current = navController.currentRouteOrNull()
-    val hasSeen by settings.hasSeenOnboarding.collectAsState(initial = true)
-    val start = if (hasSeen) Routes.HOME else Routes.ONBOARDING
 
     // A widget deep-link can arrive while the app sits on Settings/Completed.
     // HomeScreen only reacts when it's composed, so route to Home FIRST here
@@ -126,7 +148,7 @@ private fun AppRoot(settings: SettingsDataStore) {
         DeepLinkBus.flow.collect { payload ->
             if (payload == null) return@collect
             val route = navController.currentDestination?.route
-            if (route != null && route != Routes.HOME && route != Routes.ONBOARDING) {
+            if (route != null && route != Routes.HOME) {
                 navController.navigate(Routes.HOME) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
@@ -140,7 +162,7 @@ private fun AppRoot(settings: SettingsDataStore) {
         modifier = Modifier.fillMaxSize(),
         containerColor = AppTheme.colors.bgPrimary,
         bottomBar = {
-            if (current != Routes.ONBOARDING && current != Routes.STORE_MANAGE) {
+            if (current != Routes.STORE_MANAGE) {
                 BottomNavBar(
                     currentRoute = current,
                     onNavigate = { route ->
@@ -156,13 +178,7 @@ private fun AppRoot(settings: SettingsDataStore) {
     ) { padding ->
         AppNavHost(
             navController = navController,
-            startDestination = start,
             contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
-            onOnboardingComplete = {
-                navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.ONBOARDING) { inclusive = true }
-                }
-            },
         )
     }
 }
