@@ -227,12 +227,16 @@ fun LargeContent(data: WidgetData) = EmptyOr(data) {
     }
 }
 
-// ── Adaptive dispatcher: every widget resizes between these 5 layouts ──
+// ── Adaptive dispatcher: every widget resizes between these layouts ──
 // SizeMode.Responsive hands us one of the WidgetSizes breakpoints; pick the
 // matching layout. (Thresholds chosen so each Responsive entry maps 1:1.)
 @Composable
 fun AdaptiveContent(size: DpSize, data: WidgetData) {
     when {
+        // ★ XLarge: 사용자가 위젯을 가로·세로 둘 다 크게 늘렸을 때 최대 6마트.
+        // Large 검사보다 먼저 와야 한다 — Large 조건도 동시에 만족하므로
+        // 순서가 바뀌면 Large(4마트)가 먼저 잡혀버린다.
+        size.width >= WidgetSizes.XLarge.width && size.height >= WidgetSizes.XLarge.height -> XLargeContent(data)
         size.width >= WidgetSizes.Medium.width && size.height >= WidgetSizes.Large.height -> LargeContent(data)
         // Tall & not-wider-than-tall (a 2x4 "Long" widget) → ONE mart. This must
         // beat the Medium check so a portrait widget never splits into 2 marts
@@ -242,6 +246,62 @@ fun AdaptiveContent(size: DpSize, data: WidgetData) {
         size.height >= WidgetSizes.Long.height -> LongContent(data)
         size.height >= WidgetSizes.Small.height -> SmallContent(data)
         else -> SmallContent(data, compact = true)
+    }
+}
+
+// ── XLarge (≥5셀 정사각): up to 6 marts — 1 / 2 / (1+2) / 2x2 / (2x2 + 1) / 2x3 ──
+// 사용자가 Large(4x4)에서 더 키웠을 때만 진입. 위젯 클래스나 picker 신규 항목 없음 —
+// 어댑티브 리사이즈 전용. 마트가 5개면 위 2x2 + 아래 풀폭 1, 6개면 가로 2 세로 3 그리드.
+@Composable
+fun XLargeContent(data: WidgetData) = EmptyOr(data) {
+    fun cnt(s: Store) = data.itemsByStore[s.id]?.size ?: 0
+    val base = if (data.largeStoreIds.isNotEmpty()) {
+        data.largeStoreIds.mapNotNull { id -> data.stores.find { it.id == id } }
+    } else {
+        data.stores.filter { cnt(it) > 0 }
+    }
+    val active = base.ifEmpty { data.stores }.take(6)
+
+    @Composable
+    fun fullCol(s: Store) {
+        MartColumn(
+            s, data.itemsByStore[s.id].orEmpty(), 12,
+            modifier = GlanceModifier.fillMaxSize(), areaPadding = 8.dp, itemNameSize = 14.sp,
+        )
+    }
+
+    when {
+        active.size == 1 -> fullCol(active[0])
+        active.size == 2 -> Row(modifier = GlanceModifier.fillMaxSize()) {
+            MartColumn(active[0], data.itemsByStore[active[0].id].orEmpty(), 8, modifier = GlanceModifier.defaultWeight().fillMaxHeight(), areaPadding = 10.dp)
+            Box(modifier = GlanceModifier.width(1.dp).fillMaxHeight().background(dividerProvider())) {}
+            MartColumn(active[1], data.itemsByStore[active[1].id].orEmpty(), 8, modifier = GlanceModifier.defaultWeight().fillMaxHeight(), areaPadding = 10.dp)
+        }
+        active.size == 3 -> Column(modifier = GlanceModifier.fillMaxSize()) {
+            MartColumn(active[0], data.itemsByStore[active[0].id].orEmpty(), 5, modifier = GlanceModifier.fillMaxWidth().defaultWeight(), areaPadding = 8.dp)
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            GridRow(active[1], active[2], data, 4, GlanceModifier.defaultWeight().fillMaxWidth())
+        }
+        active.size == 4 -> Column(modifier = GlanceModifier.fillMaxSize()) {
+            GridRow(active[0], active[1], data, 4, GlanceModifier.defaultWeight().fillMaxWidth())
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            GridRow(active[2], active[3], data, 4, GlanceModifier.defaultWeight().fillMaxWidth())
+        }
+        active.size == 5 -> Column(modifier = GlanceModifier.fillMaxSize()) {
+            GridRow(active[0], active[1], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            GridRow(active[2], active[3], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            MartColumn(active[4], data.itemsByStore[active[4].id].orEmpty(), 4, modifier = GlanceModifier.fillMaxWidth().defaultWeight(), areaPadding = 8.dp)
+        }
+        else -> Column(modifier = GlanceModifier.fillMaxSize()) {
+            // 6 marts: 2 × 3 grid.
+            GridRow(active[0], active[1], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            GridRow(active[2], active[3], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+            Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(dividerProvider())) {}
+            GridRow(active[4], active[5], data, 3, GlanceModifier.defaultWeight().fillMaxWidth())
+        }
     }
 }
 
@@ -273,7 +333,7 @@ fun LongContent(data: WidgetData) {
                     modifier = GlanceModifier
                         .fillMaxWidth()
                         .defaultWeight()
-                        .clickable(OpenStoreAction.forStore(storeId = -1L)),
+                        .clickable(OpenStoreAction.forStore(storeId = target.id)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -355,14 +415,16 @@ private fun MartColumn(
     // item is reachable. (A plain Column clipped the list to whatever fit the
     // widget height → user saw only 2 of 5 with no "more" hint. maxItems is no
     // longer a hard cap — scrolling handles overflow.)
-    // The whole column is clickable → open app. Empty space, the header text
-    // and (for an empty mart) the list area all fall through to this so the
-    // user never taps a "dead" zone. The "+" button and item rows have their
-    // own clicks (RemoteViews: one click per view, innermost wins).
+    // The whole column is clickable → open app WITH THIS MART PRESELECTED.
+    // Empty space, the header text and (for an empty mart) the list area all
+    // fall through to this so the user never taps a "dead" zone. The "+" button
+    // and item rows have their own clicks (RemoteViews: one click per view,
+    // innermost wins). Passing store.id (not -1L) is what makes Medium/Large
+    // route the user straight to that mart's tab.
     Column(
         modifier = modifier
             .padding(areaPadding)
-            .clickable(OpenStoreAction.forStore(storeId = -1L)),
+            .clickable(OpenStoreAction.forStore(storeId = store.id)),
     ) {
         WidgetStoreHeader(
             storeId = store.id,
@@ -374,11 +436,12 @@ private fun MartColumn(
         if (items.isEmpty()) {
             // No list → explicit clickable filler so the empty area opens
             // the app (a bare ListView swallows taps, breaking fall-through).
+            // Use store.id so an empty mart still focuses that mart's tab.
             Box(
                 modifier = GlanceModifier
                     .fillMaxWidth()
                     .defaultWeight()
-                    .clickable(OpenStoreAction.forStore(storeId = -1L)),
+                    .clickable(OpenStoreAction.forStore(storeId = store.id)),
             ) {}
         } else {
             // Plain Column (NOT LazyColumn): the Large 2x2 grid would otherwise
@@ -415,7 +478,7 @@ private fun MartColumn(
                 modifier = GlanceModifier
                     .fillMaxWidth()
                     .defaultWeight()
-                    .clickable(OpenStoreAction.forStore(storeId = -1L)),
+                    .clickable(OpenStoreAction.forStore(storeId = store.id)),
             ) {}
         }
     }
