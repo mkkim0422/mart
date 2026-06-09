@@ -1,5 +1,7 @@
 package com.rldjrgo.grocerynote.ui.screens.home
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,9 +24,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TipsAndUpdates
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -32,8 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +48,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.domain.model.emoji
 import androidx.compose.animation.AnimatedContent
@@ -65,6 +74,7 @@ import com.rldjrgo.grocerynote.ui.screens.home.components.AddStoreSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyItems
 import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyStores
 import com.rldjrgo.grocerynote.ui.screens.home.components.ItemList
+import com.rldjrgo.grocerynote.ui.screens.home.components.ShareRequestDialog
 import com.rldjrgo.grocerynote.ui.screens.home.components.StoreTabBar
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 
@@ -80,6 +90,7 @@ fun HomeScreen(
     var showAddItem by remember { mutableStateOf(false) }
     var sharedDraft by remember { mutableStateOf("") }
     var showAddStore by remember { mutableStateOf(false) }
+    var showShareRequest by remember { mutableStateOf(false) }
     var showWidgetSizePicker by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Item?>(null) }
     var moveTarget by remember { mutableStateOf<Item?>(null) }
@@ -89,6 +100,11 @@ fun HomeScreen(
     val fabColor = selectedStore?.color ?: colors.brandPrimary
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    // Share FAB debounce — guard against double-taps so the system share sheet
+    // is not requested twice (causes flicker on some launchers).
+    var lastShareAt by remember { mutableLongStateOf(0L) }
     val undo by viewModel.undoEvent.collectAsStateWithLifecycle()
     val newlyAddedStoreId by viewModel.newlyAddedStoreId.collectAsStateWithLifecycle()
     LaunchedEffect(undo) {
@@ -133,7 +149,7 @@ fun HomeScreen(
             .statusBarsPadding(),
     ) {
         // Screen title (shared PageTitle — kept in sync across all screens)
-        PageTitle(title = "구매예정")
+        PageTitle(title = "마트노트")
         if (state.showWidgetBanner) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -246,35 +262,79 @@ fun HomeScreen(
                         )
                     }
                 }
-                // Extended FAB — rounded rectangle filled with the current mart
-                // color (Toss-blue fallback when no mart is selected).
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                // FAB stack — share (small, mart-tinted, only when a mart is
+                // selected) above the primary "추가" extended FAB.
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 18.dp, bottom = 18.dp)
-                        .height(56.dp)
-                        .shadow(6.dp, RoundedCornerShape(18.dp))
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(fabColor)
-                        .clickable { showAddItem = true }
-                        .padding(horizontal = 22.dp),
+                        .padding(end = 18.dp, bottom = 18.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "항목 추가",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "추가",
-                        style = typo.body.copy(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                        color = Color.White,
-                    )
+                    if (selectedStore != null) {
+                        SmallFloatingActionButton(
+                            onClick = onClick@{
+                                // 1초 연타 방지 — 다이얼로그가 모달이라 자체적으로
+                                // 중복 호출이 막히지만, 다이얼로그 띄우는 비용도
+                                // 두 번 들지 않게 가드.
+                                val now = System.currentTimeMillis()
+                                if (now - lastShareAt < 1_000L) return@onClick
+                                lastShareAt = now
+
+                                // 빈 리스트 가드는 다이얼로그 띄우기 전에 체크 — 부탁
+                                // 문구 입력하게 한 뒤 "공유할 게 없다"고 알리면 흐름이
+                                // 어색하므로 여기서 끊는다.
+                                if (state.activeItems.isEmpty()) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("공유할 항목이 없습니다.")
+                                    }
+                                    return@onClick
+                                }
+                                showShareRequest = true
+                            },
+                            containerColor = colors.bgPrimary,
+                            contentColor = fabColor,
+                            elevation = FloatingActionButtonDefaults.elevation(
+                                defaultElevation = 4.dp,
+                                pressedElevation = 4.dp,
+                                focusedElevation = 4.dp,
+                                hoveredElevation = 4.dp,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Share,
+                                contentDescription = "장보기 리스트 공유",
+                            )
+                        }
+                    }
+                    // Extended FAB — rounded rectangle filled with the current mart
+                    // color (Toss-blue fallback when no mart is selected).
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .height(56.dp)
+                            .shadow(6.dp, RoundedCornerShape(18.dp))
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(fabColor)
+                            .clickable { showAddItem = true }
+                            .padding(horizontal = 22.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "항목 추가",
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "추가",
+                            style = typo.body.copy(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            ),
+                            color = Color.White,
+                        )
+                    }
                 }
             }
         }
@@ -305,6 +365,40 @@ fun HomeScreen(
                 showAddStore = false
             },
             onDismiss = { showAddStore = false },
+        )
+    }
+
+    if (showShareRequest && selectedStore != null) {
+        ShareRequestDialog(
+            storeName = selectedStore.name,
+            storeColor = selectedStore.color,
+            onShare = { note ->
+                // 다이얼로그 안에서 받은 사용자 입력을 헤더로 얹어 텍스트 빌드 →
+                // 시스템 공유 시트 호출. 다이얼로그는 즉시 닫는다 (시트가 떠 있는
+                // 동안 다이얼로그가 뒤에 남아있을 필요 없음).
+                showShareRequest = false
+                val body = buildShareText(
+                    storeName = selectedStore.name,
+                    items = state.activeItems,
+                    requestNote = note,
+                )
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, body)
+                }
+                try {
+                    context.startActivity(
+                        Intent.createChooser(sendIntent, "장보기 리스트 공유")
+                    )
+                } catch (_: ActivityNotFoundException) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "공유할 수 있는 앱을 찾을 수 없습니다."
+                        )
+                    }
+                }
+            },
+            onDismiss = { showShareRequest = false },
         )
     }
 
@@ -456,6 +550,44 @@ private fun MoveItemDialog(
             )
         },
     )
+}
+
+/**
+ * 공유용 텍스트 빌더.
+ *
+ * 사용자가 부탁 문구를 적었으면 맨 위에 한 줄로 얹고 빈 줄로 띄움. 아이템
+ * 이름은 trim + `\n` 치환으로 한 줄 보장. 푸터는 마트노트 워터마크.
+ *
+ * 향후 확장 자리 (사용자 요청, 2026-05-26):
+ *   - 받는 사람 OS에 따라 마트노트 설치 링크 첨부.
+ *     예) installLinks: SharePlatforms? = null,
+ *         SharePlatforms.Both → Android(Play) + iOS(App Store) 두 줄
+ *         SharePlatforms.AndroidOnly → Play 링크만
+ *     iOS 앱이 아직 존재하지 않으므로([[handoff-master]] §1) iOS 분기는 앱
+ *     출시 후 다시 결정. 시그니처만 열어둠 — 기본값 null이라 호출부 변경 없음.
+ */
+private fun buildShareText(
+    storeName: String,
+    items: List<Item>,
+    requestNote: String,
+    // installLinks: SharePlatforms? = null,   // 향후 확장 자리
+): String = buildString {
+    val note = requestNote.trim().replace('\n', ' ')
+    if (note.isNotEmpty()) {
+        append(note)
+        append("\n\n")
+    }
+    append("🛒 [")
+    append(storeName)
+    append("] 장보기 리스트\n\n")
+    items.forEach { item ->
+        val clean = item.name.trim().replace('\n', ' ')
+        append("• ")
+        append(clean)
+        append('\n')
+    }
+    append("\n📝 마트노트에서 보냄")
+    // 향후 자리: if (installLinks != null) { append("\n👉 ...") }
 }
 
 @Composable

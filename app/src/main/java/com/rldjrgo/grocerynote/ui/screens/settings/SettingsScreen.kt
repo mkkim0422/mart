@@ -158,11 +158,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
             item { SectionHeader("정보") }
             item { ActionRow("버전 ${state.version}", icon = Icons.Outlined.Info, enabled = false) {} }
-            item {
-                ActionRow("인트로 미리보기", icon = Icons.Outlined.Slideshow) {
-                    showIntroPreview = true
-                }
-            }
+            // 인트로 미리보기: 2026-05-21 메뉴 숨김처리. 다시 노출하려면 아래 블록 복구.
+            // item {
+            //     ActionRow("인트로 미리보기", icon = Icons.Outlined.Slideshow) {
+            //         showIntroPreview = true
+            //     }
+            // }
             item {
                 ActionRow("피드백 보내기", icon = Icons.Outlined.Email) {
                     showFeedbackBridge = true

@@ -40,7 +40,7 @@ fun WidgetItemRow(
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .clickable(OpenStoreAction.forStore(storeId = -1L))
+            .clickable(OpenStoreAction.forStore(storeId = storeId))
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

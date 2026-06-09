@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -18,13 +19,15 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.rldjrgo.grocerynote.widget.actions.OpenStoreAction
 import com.rldjrgo.grocerynote.widget.martSoftProvider
 import com.rldjrgo.grocerynote.widget.staticProvider
 import com.rldjrgo.grocerynote.widget.textPrimaryProvider
 
 /**
  * Small-widget row: a mart's emoji badge + name + remaining-count pill.
- * No own click — taps fall through to the widget card (→ opens the app).
+ * Explicit click → open the app with THIS mart preselected (Glance doesn't
+ * reliably bubble taps from a non-clickable Row to a clickable ancestor).
  */
 @Composable
 fun WidgetStoreCountRow(
@@ -37,6 +40,7 @@ fun WidgetStoreCountRow(
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
+            .clickable(OpenStoreAction.forStore(storeId = storeId))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

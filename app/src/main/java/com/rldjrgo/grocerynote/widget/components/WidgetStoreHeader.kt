@@ -53,10 +53,15 @@ fun WidgetStoreHeader(
                 .padding(bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left area (emoji + name + count) — no own click; tap falls through
-            // to the widget card (→ opens the app).
+            // Left area (emoji + name + count) — explicit click → open the app
+            // with THIS mart preselected. Glance/RemoteViews doesn't reliably
+            // bubble taps from non-clickable children up to a clickable parent
+            // Column, so each "category area" row needs its own click anchored
+            // to store.id (the parent MartColumn.clickable alone isn't enough).
             Row(
-                modifier = GlanceModifier.defaultWeight(),
+                modifier = GlanceModifier
+                    .defaultWeight()
+                    .clickable(OpenStoreAction.forStore(storeId = storeId)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
