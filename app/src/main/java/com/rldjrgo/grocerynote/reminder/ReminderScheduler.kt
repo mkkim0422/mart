@@ -64,13 +64,18 @@ class ReminderScheduler @Inject constructor(
     }
 
     companion object {
-        const val CHANNEL_ID = "item_reminders"
+        // v2: the original channel was created without explicit vibration; channel
+        // settings are immutable once created, so we recreate under a new id.
+        const val CHANNEL_ID = "item_reminders_v2"
+        private const val OLD_CHANNEL_ID = "item_reminders"
         const val ACTION_FIRE = "com.rldjrgo.grocerynote.action.REMINDER_FIRE"
         const val EXTRA_ITEM_ID = "extra_item_id"
 
         /** Idempotent — safe to call before every notify. minSdk 26 → channel always exists. */
         fun ensureChannel(context: Context) {
             val nm = context.getSystemService<NotificationManager>() ?: return
+            // Drop the old soundless/vibration-less channel so the new one applies.
+            runCatching { nm.deleteNotificationChannel(OLD_CHANNEL_ID) }
             if (nm.getNotificationChannel(CHANNEL_ID) != null) return
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -78,6 +83,11 @@ class ReminderScheduler @Inject constructor(
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
                 description = "정한 시간에 살 항목을 알려줘요"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 300, 200, 300)
+                enableLights(true)
+                // IMPORTANCE_HIGH already attaches the default notification sound;
+                // leaving sound untouched keeps that default tone.
             }
             nm.createNotificationChannel(channel)
         }
