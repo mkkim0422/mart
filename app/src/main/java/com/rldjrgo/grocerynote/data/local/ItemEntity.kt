@@ -30,4 +30,6 @@ data class ItemEntity(
     @ColumnInfo(name = "completed_at") val completedAt: Long? = null,
     @ColumnInfo(name = "display_order") val displayOrder: Int,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
+    /** Epoch millis of a one-shot purchase reminder, or null when none is set. */
+    @ColumnInfo(name = "reminder_at") val reminderAt: Long? = null,
 )

@@ -315,6 +315,9 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 8 — Completion animation V2 (1000ms left→right strikethrough + green ✓) + onboarding/store copy realigned + docs↔code reconciled — 2026-05-18
 - [x] Phase 9 — New **Long** widget (2x4, 1 mart + items) + **5-type adaptive resize** (`BaseGroceryWidget` SizeMode.Responsive, `AdaptiveContent`) + picker reorder/labels + onboarding copy finalized — 2026-05-18
 - [x] Phase 10 — Device-feedback fixes: AddItemSheet **mart-selector dropdown** (pick target mart inside the sheet), Home **banner now visible** (content `weight(1f)`), banner **height reserved** (no pop-in jump), widget xml **minWidth restored** (correct pin size) + previewImage dropped + Long preview, pick-size→**home-screen** placement — 2026-05-18
+- [x] Phase 11 — **Per-item one-shot reminders** (v1.0.0→**1.1.0**, vc2): item ⋮ menu "알림 설정/변경/끄기" + date·time `ReminderPickerSheet` + a 🔔 chip under the item name (mart-color); local notification via `AlarmManager.setAndAllowWhileIdle` (inexact — **no** exact-alarm permission, Play/battery safe), `ReminderReceiver` looks up fresh mart+item name at fire time → notif `마트 · 항목` / "이거 살 시간이예요! 🛒", tap → app on that mart with the item highlighted (reuses `DeepLinkBus`+`highlightItemId`); `BootReceiver` re-arms future alarms after reboot (drops past-due); `POST_NOTIFICATIONS` runtime ask (API 33+) at first set; reminder auto-cleared on fire/complete/delete. Room **v1→v2** (`reminder_at` nullable col, `MIGRATION_1_2`). One reminder per item ("초심플"). NOT push-spam — user-initiated, so OK vs §3. — 2026-06-09
+
+> Rollback: tag **`rollback-v1.0.0`** (commit 8e692d7) = state right before Phase 11. `git reset --hard rollback-v1.0.0` restores 1.0.0 exactly.
 
 End-of-phase report format:
 1. Files created/modified (tree)

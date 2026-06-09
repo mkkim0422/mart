@@ -9,6 +9,7 @@ import com.rldjrgo.grocerynote.data.repository.ItemRepository
 import com.rldjrgo.grocerynote.data.repository.StoreRepository
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.domain.model.Store
+import com.rldjrgo.grocerynote.reminder.ReminderScheduler
 import com.rldjrgo.grocerynote.util.WidgetPinHelper
 import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +45,7 @@ class HomeViewModel @Inject constructor(
     private val widgetUpdater: WidgetUpdater,
     private val settings: SettingsDataStore,
     private val widgetPin: WidgetPinHelper,
+    private val reminderScheduler: ReminderScheduler,
 ) : AndroidViewModel(application) {
 
     /** Emitted right after an item is completed so the UI can show an undo Snackbar. */
@@ -149,8 +151,29 @@ class HomeViewModel @Inject constructor(
 
     fun completeItem(itemId: Long, itemName: String) {
         viewModelScope.launch {
+            // A pending reminder on a now-bought item is pointless → drop it.
+            itemRepo.setReminder(itemId, null)
+            reminderScheduler.cancel(itemId)
             itemRepo.completeItem(itemId)
             _undoEvent.value = UndoInfo(itemId, itemName, System.currentTimeMillis())
+            widgetUpdater.updateAll()
+        }
+    }
+
+    /** Set a one-shot purchase reminder at [atMillis] (epoch). Caller ensures the
+     *  POST_NOTIFICATIONS permission (13+) and that [atMillis] is in the future. */
+    fun setReminder(itemId: Long, atMillis: Long) {
+        viewModelScope.launch {
+            itemRepo.setReminder(itemId, atMillis)
+            reminderScheduler.schedule(itemId, atMillis)
+            widgetUpdater.updateAll()
+        }
+    }
+
+    fun clearReminder(itemId: Long) {
+        viewModelScope.launch {
+            itemRepo.setReminder(itemId, null)
+            reminderScheduler.cancel(itemId)
             widgetUpdater.updateAll()
         }
     }
@@ -185,6 +208,7 @@ class HomeViewModel @Inject constructor(
 
     fun deleteItem(itemId: Long) {
         viewModelScope.launch {
+            reminderScheduler.cancel(itemId)
             itemRepo.deleteItem(itemId)
             widgetUpdater.updateAll()
         }

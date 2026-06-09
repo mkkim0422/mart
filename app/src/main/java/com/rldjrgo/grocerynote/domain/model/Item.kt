@@ -11,4 +11,6 @@ data class Item(
     val completedAt: Long?,
     val displayOrder: Int,
     val createdAt: Long,
+    /** Epoch millis of a one-shot purchase reminder, or null when none is set. */
+    val reminderAt: Long? = null,
 )
