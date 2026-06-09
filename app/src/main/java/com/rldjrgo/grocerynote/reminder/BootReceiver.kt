@@ -18,11 +18,9 @@ import kotlinx.coroutines.launch
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
-            intent.action != Intent.ACTION_LOCKED_BOOT_COMPLETED
-        ) {
-            return
-        }
+        // Only the post-unlock BOOT_COMPLETED — the DB lives in credential-encrypted
+        // storage, so we must not touch it during direct-boot.
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
         val pending = goAsync()
         val entry = EntryPointAccessors.fromApplication(
