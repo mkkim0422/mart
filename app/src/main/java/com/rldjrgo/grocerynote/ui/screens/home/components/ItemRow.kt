@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -67,7 +69,6 @@ fun ItemRow(
     onMove: () -> Unit,
     onDelete: () -> Unit,
     onSetReminder: () -> Unit,
-    onClearReminder: () -> Unit,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -182,7 +183,26 @@ fun ItemRow(
                 }
             }
         }
-        Spacer(Modifier.width(12.dp))
+        // Reminder bell — one tap opens the date/time picker. Outline = none set,
+        // filled (mart color) = a reminder is armed. Disabled during the complete anim.
+        Spacer(Modifier.width(6.dp))
+        val hasReminder = item.reminderAt != null
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .clickable(enabled = !triggered, onClick = onSetReminder),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = if (hasReminder) Icons.Filled.Notifications
+                else Icons.Outlined.Notifications,
+                contentDescription = if (hasReminder) "알림 변경" else "알림 설정",
+                tint = if (hasReminder) storeColor else colors.textTertiary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(Modifier.width(6.dp))
         // "완료" affordance. Before tap: bordered button. After tap: a green
         // circle + white ✓ fades/scales in (0→250ms) and holds until 1000ms.
         Box(
@@ -240,21 +260,6 @@ fun ItemRow(
                 expanded = menuOpen && !triggered,
                 onDismissRequest = { menuOpen = false },
             ) {
-                if (item.reminderAt == null) {
-                    DropdownMenuItem(
-                        text = { Text("알림 설정", style = typo.body, color = colors.textPrimary) },
-                        onClick = { menuOpen = false; onSetReminder() },
-                    )
-                } else {
-                    DropdownMenuItem(
-                        text = { Text("알림 변경", style = typo.body, color = colors.textPrimary) },
-                        onClick = { menuOpen = false; onSetReminder() },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("알림 끄기", style = typo.body, color = colors.danger) },
-                        onClick = { menuOpen = false; onClearReminder() },
-                    )
-                }
                 DropdownMenuItem(
                     text = { Text("이름 수정", style = typo.body, color = colors.textPrimary) },
                     onClick = { menuOpen = false; onRename() },

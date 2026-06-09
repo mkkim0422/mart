@@ -288,10 +288,6 @@ fun HomeScreen(
                             onMove = { moveTarget = it },
                             onDelete = { deleteTarget = it },
                             onSetReminder = { reminderTarget = it },
-                            onClearReminder = {
-                                viewModel.clearReminder(it.id)
-                                scope.launch { snackbarHostState.showSnackbar("알림을 껐어요") }
-                            },
                         )
                     }
                 }
