@@ -38,7 +38,6 @@ fun ItemList(
     onMove: (Item) -> Unit,
     onDelete: (Item) -> Unit,
     onSetReminder: (Item) -> Unit,
-    onClearReminder: (Item) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = AppTheme.colors
@@ -59,7 +58,6 @@ fun ItemList(
                 onMove = { onMove(item) },
                 onDelete = { onDelete(item) },
                 onSetReminder = { onSetReminder(item) },
-                onClearReminder = { onClearReminder(item) },
             )
         }
     }

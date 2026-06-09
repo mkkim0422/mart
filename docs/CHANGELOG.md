@@ -5,6 +5,7 @@
 
 ## 미커밋 (워킹트리)
 
+- 2026-06-09 · 알림 진입 UX 변경: 항목 행에 종 아이콘 직접 추가(테두리=미설정/꽉찬종=설정·마트색, 한 번 탭→시트), ⋮ 메뉴의 알림 설정/변경/끄기 항목 제거(끄기는 시트 내 "알림 끄기"로 통합) · `ui/screens/home/components/{ItemRow,ItemList}.kt`, `ui/screens/home/HomeScreen.kt`
 - 2026-06-09 · 항목별 일회성 푸시 알림 기능: 항목 ⋮ "알림 설정/변경/끄기" + 날짜·시각 선택 시트 + 이름 아래 🔔 칩 표시, 로컬 알림(AlarmManager inexact, 재부팅 재등록), 알림 탭→해당 마트·항목 하이라이트, POST_NOTIFICATIONS 13+ 런타임 권한. Room v1→v2(reminder_at). 버전 1.0.0→1.1.0(vc2) · `domain/model/Item.kt`, `data/local/{ItemEntity,ItemDao,AppDatabase}.kt`, `data/repository/ItemRepository.kt`, `reminder/{ReminderScheduler,ReminderReceiver,BootReceiver}.kt` (신규), `di/ReminderEntryPoint.kt` (신규), `ui/screens/home/components/{ReminderPickerSheet(신규),ItemRow,ItemList}.kt`, `ui/screens/home/{HomeScreen,HomeViewModel}.kt`, `util/ReminderFormat.kt` (신규), `res/drawable/ic_stat_reminder.xml` (신규), `AndroidManifest.xml`, `app/build.gradle.kts`
 - 2026-05-26 · 위젯 어댑티브 사이즈 확장: XLarge breakpoint(320×320) 추가 + xml maxResize 5개 모두 360→480, 최대 6마트(5: 2x2+1, 6: 2x3) XLargeContent 신규. 위젯 클래스/picker는 그대로 (어댑티브 전용) · `widget/WidgetSizes.kt`, `widget/common/WidgetCommon.kt`, `res/xml/grocery_widget_{2x1,small,long,medium,large}_info.xml` (5개)
 - 2026-05-26 · 공유 다이얼로그 부탁 문구 15개 무작위 회전: DEFAULT_SHARE_REQUEST_NOTE 단일 상수 → SHARE_REQUEST_PLACEHOLDERS 15개 리스트, 다이얼로그 인스턴스마다 random() 추첨 (remember 로 깜빡임 방지) · `ui/screens/home/components/ShareRequestDialog.kt`
