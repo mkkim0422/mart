@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -47,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.Corners
+import com.rldjrgo.grocerynote.util.formatReminderShort
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -63,6 +66,8 @@ fun ItemRow(
     onRename: () -> Unit,
     onMove: () -> Unit,
     onDelete: () -> Unit,
+    onSetReminder: () -> Unit,
+    onClearReminder: () -> Unit,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -127,32 +132,56 @@ fun ItemRow(
         // size.width ≠ glyph width). The strikethrough must only span the
         // text itself, not the empty space up to the "완료" button.
         var textRightPx by remember(item.id) { mutableStateOf(0f) }
-        Text(
-            text = item.name,
-            style = typo.body,
-            color = colors.textPrimary,
-            onTextLayout = { result ->
-                textRightPx = (0 until result.lineCount)
-                    .maxOfOrNull { result.getLineRight(it) }
-                    ?: result.size.width.toFloat()
-            },
-            modifier = Modifier
-                .weight(1f)
-                .drawWithContent {
-                    drawContent()
-                    val p = strike.value
-                    if (p > 0f && textRightPx > 0f) {
-                        val y = size.height / 2f
-                        val end = textRightPx.coerceAtMost(size.width) * p
-                        drawLine(
-                            color = lineColor,
-                            start = Offset(0f, y),
-                            end = Offset(end, y),
-                            strokeWidth = 2.dp.toPx(),
-                        )
-                    }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.name,
+                style = typo.body,
+                color = colors.textPrimary,
+                onTextLayout = { result ->
+                    textRightPx = (0 until result.lineCount)
+                        .maxOfOrNull { result.getLineRight(it) }
+                        ?: result.size.width.toFloat()
                 },
-        )
+                modifier = Modifier
+                    .drawWithContent {
+                        drawContent()
+                        val p = strike.value
+                        if (p > 0f && textRightPx > 0f) {
+                            val y = size.height / 2f
+                            val end = textRightPx.coerceAtMost(size.width) * p
+                            drawLine(
+                                color = lineColor,
+                                start = Offset(0f, y),
+                                end = Offset(end, y),
+                                strokeWidth = 2.dp.toPx(),
+                            )
+                        }
+                    },
+            )
+            // Second line: the reminder chip (only when a reminder is set). Tap it to
+            // re-open the picker. Hidden while the completion animation runs.
+            val reminderAt = item.reminderAt
+            if (reminderAt != null && !triggered) {
+                Spacer(Modifier.height(2.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable(onClick = onSetReminder),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        tint = storeColor,
+                        modifier = Modifier.size(13.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = formatReminderShort(reminderAt),
+                        style = typo.caption.copy(fontWeight = FontWeight.Medium),
+                        color = storeColor,
+                    )
+                }
+            }
+        }
         Spacer(Modifier.width(12.dp))
         // "완료" affordance. Before tap: bordered button. After tap: a green
         // circle + white ✓ fades/scales in (0→250ms) and holds until 1000ms.
@@ -211,6 +240,21 @@ fun ItemRow(
                 expanded = menuOpen && !triggered,
                 onDismissRequest = { menuOpen = false },
             ) {
+                if (item.reminderAt == null) {
+                    DropdownMenuItem(
+                        text = { Text("알림 설정", style = typo.body, color = colors.textPrimary) },
+                        onClick = { menuOpen = false; onSetReminder() },
+                    )
+                } else {
+                    DropdownMenuItem(
+                        text = { Text("알림 변경", style = typo.body, color = colors.textPrimary) },
+                        onClick = { menuOpen = false; onSetReminder() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("알림 끄기", style = typo.body, color = colors.danger) },
+                        onClick = { menuOpen = false; onClearReminder() },
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("이름 수정", style = typo.body, color = colors.textPrimary) },
                     onClick = { menuOpen = false; onRename() },

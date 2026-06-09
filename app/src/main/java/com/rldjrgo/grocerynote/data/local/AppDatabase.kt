@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +13,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [StoreEntity::class, ItemEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +23,13 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val DB_NAME = "grocery_note.db"
+
+        /** v1 → v2: add the nullable one-shot reminder column on items. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE items ADD COLUMN reminder_at INTEGER")
+            }
+        }
 
         /** Build with the seed callback wired in. */
         fun build(context: Context): AppDatabase {
@@ -44,6 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
                 DB_NAME,
             )
                 .addCallback(callback)
+                .addMigrations(MIGRATION_1_2)
                 .build()
             instanceHolder[0] = instance
             return instance

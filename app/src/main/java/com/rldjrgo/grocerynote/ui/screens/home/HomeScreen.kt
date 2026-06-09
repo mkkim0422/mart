@@ -1,7 +1,13 @@
 package com.rldjrgo.grocerynote.ui.screens.home
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -74,6 +80,7 @@ import com.rldjrgo.grocerynote.ui.screens.home.components.AddStoreSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyItems
 import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyStores
 import com.rldjrgo.grocerynote.ui.screens.home.components.ItemList
+import com.rldjrgo.grocerynote.ui.screens.home.components.ReminderPickerSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.ShareRequestDialog
 import com.rldjrgo.grocerynote.ui.screens.home.components.StoreTabBar
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
@@ -95,6 +102,9 @@ fun HomeScreen(
     var renameTarget by remember { mutableStateOf<Item?>(null) }
     var moveTarget by remember { mutableStateOf<Item?>(null) }
     var deleteTarget by remember { mutableStateOf<Item?>(null) }
+    var reminderTarget by remember { mutableStateOf<Item?>(null) }
+    // Captured while the POST_NOTIFICATIONS dialog is up (itemId to epochMillis).
+    var pendingReminder by remember { mutableStateOf<Pair<Long, Long>?>(null) }
 
     val selectedStore = state.stores.firstOrNull { it.id == state.selectedStoreId }
     val fabColor = selectedStore?.color ?: colors.brandPrimary
@@ -102,6 +112,24 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Android 13+ runtime notification permission. On grant, apply the reminder we
+    // captured before showing the dialog; on denial, point the user to settings.
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val pend = pendingReminder
+        pendingReminder = null
+        when {
+            granted && pend != null -> {
+                viewModel.setReminder(pend.first, pend.second)
+                scope.launch { snackbarHostState.showSnackbar("🔔 알림이 설정되었어요") }
+            }
+            !granted -> scope.launch {
+                snackbarHostState.showSnackbar("설정 > 알림에서 마트노트 알림을 켜주세요")
+            }
+        }
+    }
     // Share FAB debounce — guard against double-taps so the system share sheet
     // is not requested twice (causes flicker on some launchers).
     var lastShareAt by remember { mutableLongStateOf(0L) }
@@ -259,6 +287,11 @@ fun HomeScreen(
                             onRename = { renameTarget = it },
                             onMove = { moveTarget = it },
                             onDelete = { deleteTarget = it },
+                            onSetReminder = { reminderTarget = it },
+                            onClearReminder = {
+                                viewModel.clearReminder(it.id)
+                                scope.launch { snackbarHostState.showSnackbar("알림을 껐어요") }
+                            },
                         )
                     }
                 }
@@ -406,6 +439,41 @@ fun HomeScreen(
         WidgetSizePickerSheet(
             onPick = viewModel::pinWidget,
             onDismiss = { showWidgetSizePicker = false },
+        )
+    }
+
+    reminderTarget?.let { target ->
+        ReminderPickerSheet(
+            itemName = target.name,
+            initialAtMillis = target.reminderAt,
+            onConfirm = { atMillis ->
+                when {
+                    atMillis <= System.currentTimeMillis() -> scope.launch {
+                        snackbarHostState.showSnackbar("이미 지난 시간이에요. 다시 선택해주세요")
+                    }
+                    // Android 13+: must hold POST_NOTIFICATIONS before the alarm fires.
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PackageManager.PERMISSION_GRANTED -> {
+                        pendingReminder = target.id to atMillis
+                        reminderTarget = null
+                        notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    else -> {
+                        viewModel.setReminder(target.id, atMillis)
+                        reminderTarget = null
+                        scope.launch { snackbarHostState.showSnackbar("🔔 알림이 설정되었어요") }
+                    }
+                }
+            },
+            onClear = {
+                viewModel.clearReminder(target.id)
+                reminderTarget = null
+                scope.launch { snackbarHostState.showSnackbar("알림을 껐어요") }
+            },
+            onDismiss = { reminderTarget = null },
         )
     }
 

@@ -81,6 +81,14 @@ interface ItemDao {
     @Query("UPDATE items SET is_completed = 0, completed_at = NULL WHERE id = :id")
     suspend fun markActive(id: Long)
 
+    /** Set (or clear, when [at] is null) the one-shot reminder time of an item. */
+    @Query("UPDATE items SET reminder_at = :at WHERE id = :id")
+    suspend fun setReminder(id: Long, at: Long?)
+
+    /** All items that still have a reminder pending — used to re-arm alarms after reboot. */
+    @Query("SELECT * FROM items WHERE reminder_at IS NOT NULL")
+    suspend fun getItemsWithReminder(): List<ItemEntity>
+
     @Query(
         """
         SELECT COALESCE(MAX(display_order), -1) FROM items

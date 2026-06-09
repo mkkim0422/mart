@@ -59,6 +59,13 @@ class ItemRepository @Inject constructor(
 
     suspend fun completeItem(id: Long) = dao.markCompleted(id)
 
+    /** Set (or clear, when [at] is null) the one-shot reminder time of an item. */
+    suspend fun setReminder(id: Long, at: Long?) = dao.setReminder(id, at)
+
+    /** Items that still have a pending reminder — used to re-arm alarms after reboot. */
+    suspend fun itemsWithReminder(): List<Item> =
+        dao.getItemsWithReminder().map(ItemEntity::toDomain)
+
     suspend fun reactivateItem(id: Long) {
         val current = dao.getItemById(id) ?: return
         val nextOrder = dao.getMaxOrderInStore(current.storeId) + 1
@@ -102,4 +109,5 @@ internal fun ItemEntity.toDomain(): Item = Item(
     completedAt = completedAt,
     displayOrder = displayOrder,
     createdAt = createdAt,
+    reminderAt = reminderAt,
 )
