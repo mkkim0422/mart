@@ -53,9 +53,12 @@ import com.rldjrgo.grocerynote.domain.model.emoji
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.IntOffset
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
@@ -172,10 +175,19 @@ fun CompletedScreen(
         AnimatedContent(
             targetState = state.filterStoreId,
             transitionSpec = {
-                // Clean crossfade only — no horizontal slide, so the body doesn't
-                // drift sideways while the fixed filter strip stays put. 220ms.
-                val alpha = tween<Float>(220, easing = FastOutSlowInEasing)
-                fadeIn(alpha) togetherWith fadeOut(alpha)
+                // Nate-style horizontal slide: the body slides in from the swipe
+                // direction while the fixed filter strip stays put. 280ms.
+                val ti = filterIds.indexOf(targetState)
+                val ii = filterIds.indexOf(initialState)
+                val spec = tween<IntOffset>(280, easing = FastOutSlowInEasing)
+                val fade = tween<Float>(280, easing = FastOutSlowInEasing)
+                if (ti >= ii) {
+                    (slideInHorizontally(spec) { it } + fadeIn(fade)) togetherWith
+                        (slideOutHorizontally(spec) { -it } + fadeOut(fade))
+                } else {
+                    (slideInHorizontally(spec) { -it } + fadeIn(fade)) togetherWith
+                        (slideOutHorizontally(spec) { it } + fadeOut(fade))
+                }
             },
             label = "filterSwitch",
             modifier = Modifier
