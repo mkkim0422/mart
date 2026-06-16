@@ -1,10 +1,12 @@
 package com.rldjrgo.grocerynote.ui.screens.home
 
 import android.Manifest
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -30,6 +32,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TipsAndUpdates
 import androidx.compose.material3.AlertDialog
@@ -133,6 +136,58 @@ fun HomeScreen(
             }
         }
     }
+    // Voice add — system speech recognizer (no RECORD_AUDIO permission needed;
+    // the OS speech app owns the mic). A spoken phrase like "라면 추가" is cleaned
+    // to "라면" and added to the currently selected mart. After each successful
+    // add we bump `voiceTick` to relaunch the recognizer for continuous adding;
+    // backing out of the dialog (RESULT_CANCELED) stops the loop.
+    var voiceTick by remember { mutableStateOf(0) }
+    val voiceLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val store = selectedStore
+        when {
+            result.resultCode != Activity.RESULT_OK -> Unit // user backed out → stop
+            store == null -> Unit
+            else -> {
+                val spoken = result.data
+                    ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                    ?.firstOrNull()
+                val name = cleanVoiceItemName(spoken)
+                when {
+                    // Spoken a stop word ("끝", "완료", "그만"…) → end the loop,
+                    // do NOT add it and do NOT relaunch the recognizer.
+                    isVoiceStopWord(spoken) ->
+                        scope.launch { snackbarHostState.showSnackbar("🎤 음성 추가를 종료했어요") }
+                    name.isEmpty() ->
+                        scope.launch { snackbarHostState.showSnackbar("못 알아들었어요. 다시 시도해주세요") }
+                    else -> {
+                        viewModel.addItem(name)
+                        scope.launch { snackbarHostState.showSnackbar("🎤 ‘$name’ 추가됨 — 계속 말하세요") }
+                        voiceTick++ // continuous: reopen the recognizer for the next item
+                    }
+                }
+            }
+        }
+    }
+    LaunchedEffect(voiceTick) {
+        if (voiceTick == 0) return@LaunchedEffect
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "추가할 상품을 말하세요")
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+        }
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            snackbarHostState.showSnackbar("이 기기에서는 음성 인식을 사용할 수 없어요")
+        }
+    }
+
     // Share FAB debounce — guard against double-taps so the system share sheet
     // is not requested twice (causes flicker on some launchers).
     var lastShareAt by remember { mutableLongStateOf(0L) }
@@ -298,7 +353,7 @@ fun HomeScreen(
                     }
                 }
                 // FAB stack — share (small, mart-tinted, only when a mart is
-                // selected) above the primary "추가" extended FAB.
+                // selected) above the 음성추가 + "추가" action row.
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -342,33 +397,70 @@ fun HomeScreen(
                             )
                         }
                     }
-                    // Extended FAB — rounded rectangle filled with the current mart
-                    // color (Toss-blue fallback when no mart is selected).
+                    // Bottom action row — 음성추가 (secondary, bordered) sits at the
+                    // SAME level as the primary "추가" extended FAB.
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .height(56.dp)
-                            .shadow(6.dp, RoundedCornerShape(18.dp))
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(fabColor)
-                            .clickable { showAddItem = true }
-                            .padding(horizontal = 22.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "항목 추가",
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "추가",
-                            style = typo.body.copy(
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                            ),
-                            color = Color.White,
-                        )
+                        // Voice-add — speak an item straight into the selected mart.
+                        if (selectedStore != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .height(56.dp)
+                                    .shadow(6.dp, RoundedCornerShape(18.dp))
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(colors.bgPrimary)
+                                    .border(1.5.dp, fabColor, RoundedCornerShape(18.dp))
+                                    .clickable { voiceTick++ }
+                                    .padding(horizontal = 20.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Mic,
+                                    contentDescription = "음성으로 추가",
+                                    tint = fabColor,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "음성추가",
+                                    style = typo.body.copy(
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    ),
+                                    color = fabColor,
+                                )
+                            }
+                        }
+                        // Extended FAB — rounded rectangle filled with the current mart
+                        // color (Toss-blue fallback when no mart is selected).
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .height(56.dp)
+                                .shadow(6.dp, RoundedCornerShape(18.dp))
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(fabColor)
+                                .clickable { showAddItem = true }
+                                .padding(horizontal = 22.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "항목 추가",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "추가",
+                                style = typo.body.copy(
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                color = Color.White,
+                            )
+                        }
                     }
                 }
             }
@@ -658,6 +750,43 @@ private fun buildShareText(
     }
     append("\n📝 마트노트에서 보냄")
     // 향후 자리: if (installLinks != null) { append("\n👉 ...") }
+}
+
+/**
+ * Turn a spoken phrase into a clean item name. The user typically says
+ * "<상품> 추가" (e.g. "라면 추가"), so we strip a single trailing command verb.
+ * Longest suffixes are checked first so "추가해줘" doesn't leave "해줘".
+ */
+private fun cleanVoiceItemName(raw: String?): String {
+    var s = raw?.trim().orEmpty().trimEnd('.', ',', '!', '?', ' ')
+    if (s.isEmpty()) return ""
+    val tails = listOf(
+        "추가해줘", "추가해", "추가", "담아줘", "담아",
+        "넣어줘", "넣어", "사줘", "사기",
+    )
+    for (t in tails) {
+        if (s.endsWith(t) && s.length > t.length) {
+            s = s.removeSuffix(t).trim()
+            break
+        }
+    }
+    return s
+}
+
+/**
+ * Whether the spoken phrase is a command to STOP continuous voice adding
+ * (e.g. "끝", "완료", "그만"). Matched on the whole utterance (spaces/punctuation
+ * stripped) so it never gets confused with a real item name.
+ */
+private fun isVoiceStopWord(raw: String?): Boolean {
+    val s = raw?.trim()?.trimEnd('.', ',', '!', '?')
+        ?.replace(" ", "").orEmpty()
+    if (s.isEmpty()) return false
+    val stops = setOf(
+        "끝", "끝내기", "끝내", "끝낼게", "끝내자", "그만", "그만하기", "그만해",
+        "완료", "종료", "정지", "스톱", "스탑", "스탚", "됐어", "됐어요", "그만할래",
+    )
+    return s in stops
 }
 
 @Composable
