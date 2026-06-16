@@ -67,9 +67,12 @@ import com.rldjrgo.grocerynote.domain.model.emoji
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.IntOffset
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
@@ -258,11 +261,23 @@ fun HomeScreen(
                 AnimatedContent(
                     targetState = state.selectedStoreId,
                     transitionSpec = {
-                        // Clean crossfade only — no horizontal slide, so the body
-                        // doesn't drift sideways while the fixed tab strip stays put
-                        // (that mismatch felt awkward). 220ms, Toss-style.
-                        val alpha = tween<Float>(220, easing = FastOutSlowInEasing)
-                        fadeIn(alpha) togetherWith fadeOut(alpha)
+                        // Nate-style horizontal slide: the body slides in from the
+                        // swipe direction while the tab strip stays fixed. 280ms.
+                        val ti = storesL.indexOfFirst { it.id == targetState }
+                        val ii = storesL.indexOfFirst { it.id == initialState }
+                        val spec = tween<IntOffset>(280, easing = FastOutSlowInEasing)
+                        val fade = tween<Float>(280, easing = FastOutSlowInEasing)
+                        when {
+                            // Bootstrap settle (ids not resolved yet): plain fade,
+                            // so the screen doesn't swipe once on first launch.
+                            ii < 0 || ti < 0 -> fadeIn(fade) togetherWith fadeOut(fade)
+                            ti >= ii ->
+                                (slideInHorizontally(spec) { it } + fadeIn(fade)) togetherWith
+                                    (slideOutHorizontally(spec) { -it } + fadeOut(fade))
+                            else ->
+                                (slideInHorizontally(spec) { -it } + fadeIn(fade)) togetherWith
+                                    (slideOutHorizontally(spec) { it } + fadeOut(fade))
+                        }
                     },
                     label = "martSwitch",
                     modifier = Modifier.fillMaxSize(),
