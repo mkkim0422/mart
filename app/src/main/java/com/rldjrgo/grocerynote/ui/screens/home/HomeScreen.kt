@@ -67,9 +67,9 @@ import com.rldjrgo.grocerynote.domain.model.emoji
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
@@ -258,20 +258,11 @@ fun HomeScreen(
                 AnimatedContent(
                     targetState = state.selectedStoreId,
                     transitionSpec = {
-                        val ti = storesL.indexOfFirst { it.id == targetState }
-                        val ii = storesL.indexOfFirst { it.id == initialState }
-                        when {
-                            // Bootstrap settle (initial id not a real store yet,
-                            // or data still resolving): just fade — NO slide, so
-                            // the screen doesn't swipe left once on first launch.
-                            ii < 0 || ti < 0 -> fadeIn() togetherWith fadeOut()
-                            ti >= ii ->
-                                (slideInHorizontally { it } + fadeIn()) togetherWith
-                                    (slideOutHorizontally { -it } + fadeOut())
-                            else ->
-                                (slideInHorizontally { -it } + fadeIn()) togetherWith
-                                    (slideOutHorizontally { it } + fadeOut())
-                        }
+                        // Clean crossfade only — no horizontal slide, so the body
+                        // doesn't drift sideways while the fixed tab strip stays put
+                        // (that mismatch felt awkward). 220ms, Toss-style.
+                        val alpha = tween<Float>(220, easing = FastOutSlowInEasing)
+                        fadeIn(alpha) togetherWith fadeOut(alpha)
                     },
                     label = "martSwitch",
                     modifier = Modifier.fillMaxSize(),

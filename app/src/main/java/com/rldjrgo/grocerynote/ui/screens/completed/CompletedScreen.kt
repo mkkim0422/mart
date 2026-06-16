@@ -53,9 +53,9 @@ import com.rldjrgo.grocerynote.domain.model.emoji
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
@@ -172,15 +172,10 @@ fun CompletedScreen(
         AnimatedContent(
             targetState = state.filterStoreId,
             transitionSpec = {
-                val ti = filterIds.indexOf(targetState)
-                val ii = filterIds.indexOf(initialState)
-                if (ti >= ii) {
-                    (slideInHorizontally { it } + fadeIn()) togetherWith
-                        (slideOutHorizontally { -it } + fadeOut())
-                } else {
-                    (slideInHorizontally { -it } + fadeIn()) togetherWith
-                        (slideOutHorizontally { it } + fadeOut())
-                }
+                // Clean crossfade only — no horizontal slide, so the body doesn't
+                // drift sideways while the fixed filter strip stays put. 220ms.
+                val alpha = tween<Float>(220, easing = FastOutSlowInEasing)
+                fadeIn(alpha) togetherWith fadeOut(alpha)
             },
             label = "filterSwitch",
             modifier = Modifier
