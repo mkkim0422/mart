@@ -29,6 +29,7 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val HasAddedWidget = booleanPreferencesKey("has_added_widget")
         val HasDismissedWidgetBanner = booleanPreferencesKey("has_dismissed_widget_banner")
         val LargeWidgetStoreIds = stringPreferencesKey("large_widget_store_ids")
+        val HasSeenVoiceIntro = booleanPreferencesKey("has_seen_voice_intro")
     }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data
@@ -45,6 +46,10 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
 
     val hasDismissedWidgetBanner: Flow<Boolean> = context.dataStore.data
         .map { it[Keys.HasDismissedWidgetBanner] ?: false }
+
+    /** First-time voice-add intro sheet: shown once, then suppressed. */
+    val hasSeenVoiceIntro: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasSeenVoiceIntro] ?: false }
 
     /** Stores chosen for the Large widget, in display order. Empty = auto (top by display order). */
     val largeWidgetStoreIds: Flow<List<Long>> = context.dataStore.data
@@ -72,6 +77,10 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
 
     suspend fun setHasDismissedWidgetBanner(dismissed: Boolean) {
         context.dataStore.edit { it[Keys.HasDismissedWidgetBanner] = dismissed }
+    }
+
+    suspend fun setVoiceIntroSeen() {
+        context.dataStore.edit { it[Keys.HasSeenVoiceIntro] = true }
     }
 
     suspend fun setLargeWidgetStoreIds(ids: List<Long>) {
