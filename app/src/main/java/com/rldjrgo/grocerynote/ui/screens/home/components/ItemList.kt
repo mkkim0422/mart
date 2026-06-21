@@ -45,7 +45,9 @@ fun ItemList(
         modifier = modifier
             .fillMaxSize()
             .background(colors.bgPrimary),
-        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 0.dp),
+        // Bottom inset clears the floating 음성추가/추가 FAB row (56dp + 18dp margin)
+        // so the last items can scroll above the buttons instead of hiding behind them.
+        contentPadding = PaddingValues(top = 8.dp, bottom = 92.dp, start = 0.dp, end = 0.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         items(items, key = { it.id }) { item ->

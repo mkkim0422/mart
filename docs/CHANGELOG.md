@@ -5,6 +5,14 @@
 
 ## 미커밋 (워킹트리)
 
+- 2026-06-19 · Play 출시 자료 일괄 제작: 피처 그래픽 1024×500(`scripts/compose_feature_graphic.py`→`docs/playstore_assets/final/feature_graphic_1024x500.png`), 스토어 등록 복붙 문서(앱이름·짧은/긴 설명·데이터보안·콘텐츠등급·인앱상품 가이드 `docs/playstore_listing.md`), 릴리스 서명 키스토어 생성(`grocery-note-release.jks`, alias grocerynote, gitignore됨) + `keystore.properties` 채움 → **서명된 업로드용 AAB** 빌드(`app/build/outputs/bundle/release/app-release.aab`, 13.8MB, jar verified) · 신규 자료/스크립트
+
+- 2026-06-19 · 리스트 하단 항목이 음성추가/추가 FAB에 가려지던 문제 수정: `ItemList` LazyColumn 하단 contentPadding 8dp→92dp(FAB 56dp+여백)로 마지막 항목이 버튼 위로 스크롤됨. 실기기 확인 완료 · `ui/screens/home/components/ItemList.kt`
+
+- 2026-06-18 · Play스토어 스크린샷 시리즈 v2 재생성(현재 버전·5마트 기준): 실기기(S24+) 캡처 7장(홈/음성인트로/추가시트/위젯피커/완료/이마트홈/다크) → 폰목업+그라데이션+한글카피 합성. 01 마트별 / 02 음성추가 / 03 1초 입력 / 04 위젯 5크기 / 05 완료 / 06 마트색구분 / 07 다크. 광고밴드 자동 제거(y2622–2872) · `scripts/compose_store_v2.py`(신규), `docs/playstore_assets/final/01–07*.png`(교체), `docs/playstore_assets/raw/ss1–7*.png`(교체)
+
+- 2026-06-20 · (세션 중 시도→되돌림) 공유 버튼 상단 ⋮ 이동 / 음성 입력칸 마이크 이동 / 음성 인트로·설정 가이드 추가 등을 검토했으나, 최종적으로 **원래 레이아웃(음성추가 pill + 공유 FAB)** 유지로 결정해 `git checkout HEAD`로 `HomeScreen.kt`·`AddItemSheet.kt` 복원. 리스트 하단 패딩 수정은 유지. versionCode 2→3 · `app/build.gradle.kts`
+
 - 2026-06-16 · 구글 플레이 스토어용 음성추가 스크린샷(07) 제작: 기존 6장과 동일 스타일(그라데이션 배경+폰 목업+캡션)로 음성추가 홈화면을 렌더링, 🎤 "라면 추가" 말풍선 오버레이. 기기 캡처 대신 결정론적 렌더(폰 분리·에뮬 ANR로) · `scripts/compose_voice_shot.py`(신규), `docs/playstore_assets/final/07_voice_add.png`(신규)
 
 - 2026-06-16 · 음성으로 항목 추가: 홈 `추가` 버튼 옆 같은 레벨에 `음성추가` 버튼(마트색 테두리), 시스템 음성인식(RecognizerIntent, ko-KR, RECORD_AUDIO 권한·라이브러리 불필요)으로 현재 마트에 즉시 추가. "라면 추가"→끝 명령어("추가/담아/넣어줘" 등) 제거 후 "라면"만 추가, 인식 성공 시 자동 재실행(계속 듣기). "끝/완료/그만/종료" 등 종료어를 말하면 추가 안 하고 종료(뒤로가기로도 종료) · `ui/screens/home/HomeScreen.kt`

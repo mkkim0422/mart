@@ -94,9 +94,9 @@ def render_home():
     d = ImageDraw.Draw(im)
     LP = 20 * S
 
-    # title "구매예정"
+    # title "마트노트" (matches the real app top title / shot 01)
     f_title = font(FB, 60)
-    d.text((LP, 22 * S), "구매예정", font=f_title, fill=T_PRIMARY)
+    d.text((LP, 22 * S), "마트노트", font=f_title, fill=T_PRIMARY)
 
     # ---- tab chips (emoji icon + name + count) ----
     chips = [("🚀", "쿠팡", 5, BRAND, True), ("🏪", "다이소", 3, RED, False),
