@@ -1,17 +1,20 @@
 package com.rldjrgo.grocerynote.widget
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.glance.unit.ColorProvider
 
 /**
  * Light + Dark color tokens for the widget.
  *
- * Glance 1.1.1 puts the public factories in different packages:
- * - Interface: `androidx.glance.unit.ColorProvider`
- * - Static (single color): `androidx.glance.unit.ColorProvider(color)` — top-level fun
- * - Day/Night: `androidx.glance.color.ColorProvider(day, night)` — top-level fun
- *   (lives in DayNightColorProvidersKt). Called via FQN to avoid name collision
- *   with the interface above.
+ * We no longer use Glance's day/night [ColorProvider] (which defers the light/dark
+ * decision to the LAUNCHER). Some launchers — notably One UI — render the widget in
+ * dark even when the system is in light mode ("폰은 라이트인데 위젯만 다크"). Instead we
+ * resolve `isDark` ONCE in [BaseGroceryWidget.provideGlance] (from the app's
+ * DarkModePref, Auto→system night) and expose it via [LocalWidgetDark]; every color
+ * below is baked as a STATIC provider in-process, so the launcher can't override the
+ * theme and the widget always matches the app.
  */
 object WidgetColors {
     val LightBg = Color(0xFFFFFFFF)
@@ -33,22 +36,32 @@ object WidgetColors {
     val DarkBrand = Color(0xFF4592FF)
 }
 
-private fun dn(day: Color, night: Color): ColorProvider =
-    androidx.glance.color.ColorProvider(day = day, night = night)
+/**
+ * Whether the widget renders in dark theme. Provided by [BaseGroceryWidget]'s
+ * `CompositionLocalProvider`; defaults to light so a stray read never crashes.
+ */
+val LocalWidgetDark = staticCompositionLocalOf { false }
 
-fun bgProvider(): ColorProvider = dn(WidgetColors.LightBg, WidgetColors.DarkBg)
-fun cardBgProvider(): ColorProvider = dn(WidgetColors.LightCardBg, WidgetColors.DarkCardBg)
-fun dividerProvider(): ColorProvider = dn(WidgetColors.LightDivider, WidgetColors.DarkDivider)
-fun textPrimaryProvider(): ColorProvider = dn(WidgetColors.LightTextPrimary, WidgetColors.DarkTextPrimary)
-fun textSecondaryProvider(): ColorProvider = dn(WidgetColors.LightTextSecondary, WidgetColors.DarkTextSecondary)
-fun textTertiaryProvider(): ColorProvider = dn(WidgetColors.LightTextTertiary, WidgetColors.DarkTextTertiary)
-fun checkboxBorderProvider(): ColorProvider = dn(WidgetColors.LightCheckboxBorder, WidgetColors.DarkCheckboxBorder)
-fun brandProvider(): ColorProvider = dn(WidgetColors.LightBrand, WidgetColors.DarkBrand)
+private fun sp(c: Color): ColorProvider = androidx.glance.unit.ColorProvider(c)
+
+@Composable
+private fun pick(day: Color, night: Color): ColorProvider =
+    sp(if (LocalWidgetDark.current) night else day)
+
+@Composable fun bgProvider(): ColorProvider = pick(WidgetColors.LightBg, WidgetColors.DarkBg)
+@Composable fun cardBgProvider(): ColorProvider = pick(WidgetColors.LightCardBg, WidgetColors.DarkCardBg)
+@Composable fun dividerProvider(): ColorProvider = pick(WidgetColors.LightDivider, WidgetColors.DarkDivider)
+@Composable fun textPrimaryProvider(): ColorProvider = pick(WidgetColors.LightTextPrimary, WidgetColors.DarkTextPrimary)
+@Composable fun textSecondaryProvider(): ColorProvider = pick(WidgetColors.LightTextSecondary, WidgetColors.DarkTextSecondary)
+@Composable fun textTertiaryProvider(): ColorProvider = pick(WidgetColors.LightTextTertiary, WidgetColors.DarkTextTertiary)
+@Composable fun checkboxBorderProvider(): ColorProvider = pick(WidgetColors.LightCheckboxBorder, WidgetColors.DarkCheckboxBorder)
+@Composable fun brandProvider(): ColorProvider = pick(WidgetColors.LightBrand, WidgetColors.DarkBrand)
 fun staticProvider(c: Color): ColorProvider = androidx.glance.unit.ColorProvider(c)
 
 /**
  * Soft tint of a mart color for the widget header icon-box / count pill.
- * Day alpha 0.15, night 0.22 (slightly stronger so it reads on dark card bg).
+ * Day alpha 0.15, night 0.25 (slightly stronger so it reads on dark card bg).
  */
+@Composable
 fun martSoftProvider(c: Color): ColorProvider =
-    dn(c.copy(alpha = 0.15f), c.copy(alpha = 0.25f))
+    sp(c.copy(alpha = if (LocalWidgetDark.current) 0.25f else 0.15f))
