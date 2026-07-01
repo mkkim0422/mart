@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         )
         DeepLinkBus.consume(intent)
         setContent {
-            val darkPref by settings.darkMode.collectAsStateWithLifecycle(initialValue = DarkModePref.Auto)
+            val darkPref by settings.darkMode.collectAsStateWithLifecycle(initialValue = DarkModePref.Off)
             val system = isSystemInDarkTheme()
             val dark = when (darkPref) {
                 DarkModePref.Auto -> system
