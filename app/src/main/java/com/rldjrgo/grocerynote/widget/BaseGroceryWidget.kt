@@ -47,7 +47,7 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
                     .fromApplication(ctx.applicationContext, WidgetEntryPoint::class.java)
                     .settingsDataStore()
                     .darkMode
-            }.collectAsState(initial = DarkModePref.Auto)
+            }.collectAsState(initial = DarkModePref.Off)
             val systemNight = (ctx.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
             val isDark = when (darkPref) {

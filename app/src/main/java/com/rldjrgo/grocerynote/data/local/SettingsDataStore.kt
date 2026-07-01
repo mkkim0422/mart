@@ -36,7 +36,7 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         .map { it[Keys.HasSeenOnboarding] ?: false }
 
     val darkMode: Flow<DarkModePref> = context.dataStore.data
-        .map { runCatching { DarkModePref.valueOf(it[Keys.DarkMode] ?: "Auto") }.getOrDefault(DarkModePref.Auto) }
+        .map { runCatching { DarkModePref.valueOf(it[Keys.DarkMode] ?: "Off") }.getOrDefault(DarkModePref.Off) }
 
     val isAdRemoved: Flow<Boolean> = context.dataStore.data
         .map { it[Keys.IsAdRemoved] ?: false }

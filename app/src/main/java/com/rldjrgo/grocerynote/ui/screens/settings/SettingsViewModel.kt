@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val darkMode: DarkModePref = DarkModePref.Auto,
+    val darkMode: DarkModePref = DarkModePref.Off,
     val isAdRemoved: Boolean = false,
     val hasAddedWidget: Boolean = false,
     val stores: List<Store> = emptyList(),
