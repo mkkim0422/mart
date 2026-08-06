@@ -226,6 +226,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /** Persist a tab-strip drag reorder (jiggle edit mode). */
+    fun reorderStores(orderedIds: List<Long>) {
+        viewModelScope.launch {
+            storeRepo.reorder(orderedIds)
+            widgetUpdater.updateAll()
+        }
+    }
+
     fun deleteStore(storeId: Long) {
         viewModelScope.launch {
             storeRepo.deleteStore(storeId)

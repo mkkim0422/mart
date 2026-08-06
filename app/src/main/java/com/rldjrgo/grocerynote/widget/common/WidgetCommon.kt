@@ -62,10 +62,17 @@ private fun buildWidgetData(
         store.id to grouped[store.id].orEmpty()
             .sortedWith(compareBy({ it.displayOrder }, { it.id }))
     }
-    val sorted = stores.sortedWith(
+    val counted = stores.sortedWith(
         compareByDescending<Store> { itemsByStore[it.id]?.size ?: 0 }
             .thenBy { it.displayOrder }
     )
+    // 노출순서설정 applies to EVERY widget size: user-picked marts come first in
+    // their chosen order, the rest keep item-count-desc. (Stable sort — before
+    // this, only Large/Long read the setting and Medium/Small ignored it.)
+    val sorted = if (largeIds.isEmpty()) counted else {
+        val pos = largeIds.withIndex().associate { (i, id) -> id to i }
+        counted.sortedBy { pos[it.id] ?: Int.MAX_VALUE }
+    }
     Log.d(
         "WidgetUpdater",
         "buildWidgetData stores=${stores.size} activeItems=${activeItems.size} " +
@@ -164,9 +171,13 @@ fun SmallContent(data: WidgetData, compact: Boolean = false) = EmptyOr(data, com
 // ── Medium (4x2): 1 mart = full width, else top-2 side-by-side ──
 @Composable
 fun MediumContent(data: WidgetData) = EmptyOr(data) {
-    // data.stores is already item-count-desc. Active = has ≥1 item.
-    // Every mart the user added items to stays visible (no dominant-hide).
-    val active = data.stores.filter { (data.itemsByStore[it.id]?.size ?: 0) > 0 }
+    // 노출순서설정 wins (same rule as Large): user-picked marts, their order.
+    // Otherwise data.stores is item-count-desc; Active = has ≥1 item.
+    val active = if (data.largeStoreIds.isNotEmpty()) {
+        data.largeStoreIds.mapNotNull { id -> data.stores.find { it.id == id } }
+    } else {
+        data.stores.filter { (data.itemsByStore[it.id]?.size ?: 0) > 0 }
+    }
     val single = active.size <= 1
     if (single) {
         val s = active.firstOrNull() ?: data.stores.first()
