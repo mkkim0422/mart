@@ -106,6 +106,12 @@ fun HomeScreen(
     var showShareRequest by remember { mutableStateOf(false) }
     var showWidgetSizePicker by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Item?>(null) }
+    var deleteStoreTarget by remember {
+        mutableStateOf<com.rldjrgo.grocerynote.domain.model.Store?>(null)
+    }
+    // Tab-strip jiggle edit mode — hoisted here so tapping anywhere in the body
+    // (item list, FABs) also exits it, not just taps near the strip itself.
+    var storeEditMode by remember { mutableStateOf(false) }
     var moveTarget by remember { mutableStateOf<Item?>(null) }
     var deleteTarget by remember { mutableStateOf<Item?>(null) }
     var reminderTarget by remember { mutableStateOf<Item?>(null) }
@@ -294,6 +300,10 @@ fun HomeScreen(
                 onStoreClick = viewModel::selectStore,
                 onAddStoreClick = { showAddStore = true },
                 onManageStoresClick = onManageStores,
+                onDeleteStoreClick = { deleteStoreTarget = it },
+                onReorderStores = viewModel::reorderStores,
+                editMode = storeEditMode,
+                onEditModeChange = { storeEditMode = it },
                 newlyAddedStoreId = newlyAddedStoreId,
             )
             val storesL = state.stores
@@ -463,6 +473,21 @@ fun HomeScreen(
                         }
                     }
                 }
+                // While the tab strip is in jiggle edit mode, the whole body acts
+                // as a "tap to finish" scrim (invisible): first tap only exits
+                // edit mode and never reaches the list/FABs underneath.
+                if (storeEditMode) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable(
+                                interactionSource = remember {
+                                    androidx.compose.foundation.interaction.MutableInteractionSource()
+                                },
+                                indication = null,
+                            ) { storeEditMode = false },
+                    )
+                }
             }
         }
         AdBanner()
@@ -591,6 +616,20 @@ fun HomeScreen(
                 moveTarget = null
             },
             onDismiss = { moveTarget = null },
+        )
+    }
+
+    deleteStoreTarget?.let { target ->
+        ConfirmDialog(
+            title = "마트를 삭제할까요?",
+            message = "'${target.name}' 마트와 담긴 항목이 모두 삭제됩니다.",
+            confirmLabel = "삭제",
+            destructive = true,
+            onConfirm = {
+                viewModel.deleteStore(target.id)
+                deleteStoreTarget = null
+            },
+            onDismiss = { deleteStoreTarget = null },
         )
     }
 

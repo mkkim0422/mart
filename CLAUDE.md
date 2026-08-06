@@ -42,7 +42,7 @@ Widget → app flow: tapping a placed widget opens the app **with that mart pres
 3. **Per-mart separation is the spine**
 4. **Widget IS the app** — widget UX takes priority over in-app UX
 5. No signup, all local
-6. Single bottom banner ad (no interstitial, no native, no rewarded)
+6. Single bottom banner ad (no interstitial, no native, no rewarded) — **2026-08-06: 출시 초기엔 배너·광고제거IAP 모두 숨김** (`build.gradle.kts`의 `SHOW_ADS`/`SHOW_BILLING` BuildConfig 플래그 = false; 사용자 모이면 true로 복구)
 7. Smooth on budget Korean phones — minimize memory/battery/CPU
 8. Toss-style minimal — clean and trustworthy
 

@@ -13,10 +13,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.rldjrgo.grocerynote.data.local.DarkModePref
@@ -61,6 +63,16 @@ class MainActivity : ComponentActivity() {
                 DarkModePref.Off -> false
             }
             AppTheme(darkTheme = dark) {
+                // Status/nav-bar icon color must follow the APP theme, not the
+                // system one — enableEdgeToEdge's auto style reads only the
+                // system setting, so in-app dark mode left the clock/icons dark
+                // on a dark background (invisible).
+                SideEffect {
+                    WindowCompat.getInsetsController(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !dark
+                        isAppearanceLightNavigationBars = !dark
+                    }
+                }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = LocalAppColors.current.bgPrimary,
