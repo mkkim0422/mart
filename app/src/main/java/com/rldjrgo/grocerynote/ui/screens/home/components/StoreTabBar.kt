@@ -161,7 +161,17 @@ fun StoreTabBar(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
         ) {
             items(localStores, key = { it.id }) { store ->
-                ReorderableItem(reorderState, key = store.id) { isDragging ->
+                ReorderableItem(
+                    reorderState,
+                    key = store.id,
+                    // Placement animation ONLY while editing: the default
+                    // always-on animateItem() made pills entering the viewport
+                    // during a normal fling slide in late (briefly overlapping
+                    // neighbours) and cost frames — the reported scroll jank.
+                    animateItemModifier = if (editMode) {
+                        Modifier.animateItem()
+                    } else Modifier,
+                ) { isDragging ->
                     val selected = store.id == selectedStoreId
                     val isNew = store.id == newlyAddedStoreId
                     val count = itemCounts[store.id] ?: 0
@@ -192,16 +202,21 @@ fun StoreTabBar(
                                     if (editMode) Modifier.padding(top = 8.dp, end = 8.dp)
                                     else Modifier
                                 )
-                                .graphicsLayer {
-                                    rotationZ = jiggle
+                                // Extra render layer + shadow only while editing/
+                                // dragging — keeps normal-mode pills cheap to draw.
+                                .then(
+                                    if (editMode || isDragging) Modifier.graphicsLayer {
+                                        rotationZ = jiggle
+                                        if (isDragging) {
+                                            scaleX = 1.06f
+                                            scaleY = 1.06f
+                                        }
+                                    } else Modifier
+                                )
+                                .then(
                                     if (isDragging) {
-                                        scaleX = 1.06f
-                                        scaleY = 1.06f
-                                    }
-                                }
-                                .shadow(
-                                    elevation = if (isDragging) 6.dp else 0.dp,
-                                    shape = RoundedCornerShape(19.dp),
+                                        Modifier.shadow(6.dp, RoundedCornerShape(19.dp))
+                                    } else Modifier
                                 )
                                 .height(38.dp)
                                 .clip(RoundedCornerShape(19.dp))
