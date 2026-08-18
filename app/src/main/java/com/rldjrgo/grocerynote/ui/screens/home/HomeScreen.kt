@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -44,9 +45,12 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,6 +62,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -80,7 +85,9 @@ import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
 import com.rldjrgo.grocerynote.ui.components.WidgetSizePickerSheet
+import com.rldjrgo.grocerynote.ui.components.rememberTabSwipeBounce
 import com.rldjrgo.grocerynote.ui.components.swipeBetweenTabs
+import kotlin.math.roundToInt
 import com.rldjrgo.grocerynote.ui.screens.home.components.AddItemSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.AddStoreSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyItems
@@ -99,6 +106,14 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = AppTheme.colors
     val typo = AppTheme.typography
+
+    // 마트에서 리스트를 보며 체크하는 동안 화면이 꺼지지 않도록: 이 화면이
+    // 떠 있는 동안만 keep-screen-on, 다른 탭/백그라운드로 가면 해제.
+    val rootView = LocalView.current
+    DisposableEffect(rootView) {
+        rootView.keepScreenOn = true
+        onDispose { rootView.keepScreenOn = false }
+    }
 
     var showAddItem by remember { mutableStateOf(false) }
     var sharedDraft by remember { mutableStateOf("") }
@@ -293,6 +308,10 @@ fun HomeScreen(
         if (state.stores.isEmpty() && !state.isLoading) {
             EmptyStores(onAddStoreClick = { showAddStore = true }, modifier = Modifier.weight(1f))
         } else {
+            // 끝 마트에서 더 스와이프하면 탭 스트립과 본문이 함께 저항감 있게
+            // 살짝 밀렸다 스프링으로 돌아온다 — "여기가 끝"이라는 피드백만
+            // 주고 아무것도 열지 않는다 (추가 시트로 이어지지 않는 것은 의도).
+            val edgeBounce = rememberTabSwipeBounce()
             StoreTabBar(
                 stores = state.stores,
                 selectedStoreId = state.selectedStoreId,
@@ -305,9 +324,18 @@ fun HomeScreen(
                 editMode = storeEditMode,
                 onEditModeChange = { storeEditMode = it },
                 newlyAddedStoreId = newlyAddedStoreId,
+                modifier = Modifier.offset { IntOffset(edgeBounce.offsetPx.roundToInt(), 0) },
             )
             val storesL = state.stores
             val curIdx = storesL.indexOfFirst { it.id == state.selectedStoreId }
+            // 마트별 마지막 리스트 캐시. 탭 전환 슬라이드 중엔 나가는 화면과
+            // 들어오는 화면이 동시에 그려지는데 state.activeItems는 "지금 선택된
+            // 마트" 것 하나뿐이라, 캐시 없이는 슬라이드 도중 나가는 화면의
+            // 내용까지 새 마트 것으로 확 바뀌며 깜빡인다.
+            val itemsByStore = remember { mutableStateMapOf<Long, List<Item>>() }
+            SideEffect {
+                state.activeItemsStoreId?.let { itemsByStore[it] = state.activeItems }
+            }
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -321,6 +349,9 @@ fun HomeScreen(
                         onPrev = {
                             if (curIdx > 0) viewModel.selectStore(storesL[curIdx - 1].id)
                         },
+                        hasNext = curIdx in 0 until storesL.lastIndex,
+                        hasPrev = curIdx > 0,
+                        bounce = edgeBounce,
                     ),
             ) {
                 AnimatedContent(
@@ -345,14 +376,22 @@ fun HomeScreen(
                         }
                     },
                     label = "martSwitch",
-                    modifier = Modifier.fillMaxSize(),
-                ) { _ ->
-                    if (state.activeItems.isEmpty()) {
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset { IntOffset(edgeBounce.offsetPx.roundToInt(), 0) },
+                ) { pageStoreId ->
+                    // 이 페이지(마트)의 리스트: 최신 데이터가 내 것이면 그대로,
+                    // 아니면(전환 중인 반대편 화면) 마지막으로 본 캐시를 유지.
+                    val pageItems =
+                        if (pageStoreId == state.activeItemsStoreId) state.activeItems
+                        else pageStoreId?.let { itemsByStore[it] } ?: emptyList()
+                    val pageStore = storesL.firstOrNull { it.id == pageStoreId }
+                    if (pageItems.isEmpty()) {
                         EmptyItems(onAddClick = { showAddItem = true })
                     } else {
                         ItemList(
-                            items = state.activeItems,
-                            storeColor = selectedStore?.color ?: colors.brandPrimary,
+                            items = pageItems,
+                            storeColor = pageStore?.color ?: colors.brandPrimary,
                             highlightItemId = state.highlightItemId,
                             onCompleteAnimDone = viewModel::completeItem,
                             onRename = { renameTarget = it },

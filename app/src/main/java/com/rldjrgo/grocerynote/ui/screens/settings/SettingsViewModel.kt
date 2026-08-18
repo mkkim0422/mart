@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.rldjrgo.grocerynote.BuildConfig
 import com.rldjrgo.grocerynote.data.billing.BillingRepository
 import com.rldjrgo.grocerynote.data.local.AppDatabase
 import com.rldjrgo.grocerynote.data.local.DarkModePref
@@ -30,7 +31,8 @@ data class SettingsUiState(
     val hasAddedWidget: Boolean = false,
     val stores: List<Store> = emptyList(),
     val largeWidgetStoreIds: List<Long> = emptyList(),
-    val version: String = "1.0.0",
+    // 하드코딩 금지 — 빌드의 실제 versionName을 그대로 표시 (업데이트 때 자동 반영).
+    val version: String = BuildConfig.VERSION_NAME,
     val toast: String? = null,
 )
 

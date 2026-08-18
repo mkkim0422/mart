@@ -1,6 +1,8 @@
 package com.rldjrgo.grocerynote.ui.screens.home.components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
@@ -11,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +52,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -140,14 +144,39 @@ fun StoreTabBar(
         }
     }
     // Follow the selected mart: swiping to an off-screen tab must bring its pill
-    // into view so the user can see which mart they're on. Keyed on the id ONLY —
-    // keying on the stores list too made a drag-drop scroll-jump: persisting the
-    // new order re-emits stores, which re-ran this and yanked the strip back to
-    // the selected pill (= where the drag started). Never follow while editing.
+    // into view so the user can see which mart they're on. Scroll ONLY when the
+    // pill is actually cut off, and only by the minimum amount — the old
+    // animateScrollToItem always LEFT-ALIGNED the selected pill, so every swipe
+    // yanked the whole strip sideways and neighbour pills popped in/out of view
+    // (the reported tab-strip flicker). Keyed on the id ONLY — keying on the
+    // stores list too made a drag-drop scroll-jump: persisting the new order
+    // re-emits stores, which re-ran this and yanked the strip back to the
+    // selected pill (= where the drag started). Never follow while editing.
+    val edgeMarginPx = with(LocalDensity.current) { 16.dp.toPx() }
     LaunchedEffect(selectedStoreId) {
         if (dragging || editMode) return@LaunchedEffect
         val idx = localStores.indexOfFirst { it.id == selectedStoreId }
-        if (idx >= 0) listState.animateScrollToItem(idx)
+        if (idx < 0) return@LaunchedEffect
+        // 마지막 마트를 선택했을 땐 바로 옆 "+ 추가" 버튼"까지만" 노출 목표로
+        // 잡는다 — 선택 필까지만 보이게 하면 추가 버튼이 잘린 채 남고, 반대로
+        // 맨 끝(관리 버튼)까지 당기면 마지막 스와이프에서 스트립이 훅 끌려가는
+        // 느낌이 든다. 추가 버튼이 딱 보일 만큼만 최소로 움직인다.
+        val targetIdx = if (idx == localStores.lastIndex) localStores.size else idx
+        // 추가 버튼을 목표로 할 땐 여유 마진 없이 "딱 보일 만큼"만 이동.
+        val margin = if (targetIdx == idx) edgeMarginPx else 0f
+        val info = listState.layoutInfo
+        val pill = info.visibleItemsInfo.firstOrNull { it.index == targetIdx }
+        when {
+            // Not even composed (far off-screen) → regular scroll-to.
+            pill == null -> listState.animateScrollToItem(targetIdx)
+            // Cut off past the left edge → nudge right just enough.
+            pill.offset < info.viewportStartOffset + margin ->
+                listState.animateScrollBy(pill.offset - info.viewportStartOffset - margin)
+            // Cut off past the right edge → nudge left just enough.
+            pill.offset + pill.size > info.viewportEndOffset - margin ->
+                listState.animateScrollBy(pill.offset + pill.size - (info.viewportEndOffset - margin))
+            // Fully visible → leave the strip alone.
+        }
     }
 
     Column(modifier = modifier.fillMaxWidth().background(colors.bgPrimary)) {
@@ -175,6 +204,29 @@ fun StoreTabBar(
                     val selected = store.id == selectedStoreId
                     val isNew = store.id == newlyAddedStoreId
                     val count = itemCounts[store.id] ?: 0
+                    // Selection colors fade over 200ms instead of snapping in one
+                    // frame — the hard white↔martColor swap on every swipe read
+                    // as the strip "blinking" alongside the body slide.
+                    val pillFill by animateColorAsState(
+                        targetValue = if (selected) store.color else pillBg,
+                        animationSpec = tween(200, easing = FastOutSlowInEasing),
+                        label = "pillFill",
+                    )
+                    val pillTextColor by animateColorAsState(
+                        targetValue = if (selected) Color.White else colors.textPrimary,
+                        animationSpec = tween(200, easing = FastOutSlowInEasing),
+                        label = "pillText",
+                    )
+                    val badgeBg by animateColorAsState(
+                        targetValue = if (selected) Color.White.copy(alpha = 0.25f) else badgeOffBg,
+                        animationSpec = tween(200, easing = FastOutSlowInEasing),
+                        label = "badgeBg",
+                    )
+                    val badgeTextColor by animateColorAsState(
+                        targetValue = if (selected) Color.White else badgeOffText,
+                        animationSpec = tween(200, easing = FastOutSlowInEasing),
+                        label = "badgeText",
+                    )
                     // Jiggle rotation only exists while editing (no idle animation
                     // cost); the pill being dragged stays straight. Per-pill start
                     // offset desyncs the wiggle like iOS home icons.
@@ -220,7 +272,7 @@ fun StoreTabBar(
                                 )
                                 .height(38.dp)
                                 .clip(RoundedCornerShape(19.dp))
-                                .background(if (selected) store.color else pillBg)
+                                .background(pillFill)
                                 .then(
                                     when {
                                         isNew -> Modifier.border(2.dp, colors.brandPrimary, RoundedCornerShape(19.dp))
@@ -258,21 +310,19 @@ fun StoreTabBar(
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
                                 ),
-                                color = if (selected) Color.White else colors.textPrimary,
+                                color = pillTextColor,
                             )
                             Box(
                                 modifier = Modifier
                                     .padding(start = 2.dp)
                                     .clip(RoundedCornerShape(9.dp))
-                                    .background(
-                                        if (selected) Color.White.copy(alpha = 0.25f) else badgeOffBg
-                                    )
+                                    .background(badgeBg)
                                     .padding(horizontal = 6.dp, vertical = 1.dp),
                             ) {
                                 Text(
                                     text = count.toString(),
                                     style = AppTheme.typography.body.copy(fontSize = 11.sp),
-                                    color = if (selected) Color.White else badgeOffText,
+                                    color = badgeTextColor,
                                 )
                             }
                         }
