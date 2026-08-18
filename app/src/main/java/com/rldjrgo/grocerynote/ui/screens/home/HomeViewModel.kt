@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -29,6 +30,9 @@ data class HomeUiState(
     val stores: List<Store> = emptyList(),
     val selectedStoreId: Long? = null,
     val activeItems: List<Item> = emptyList(),
+    /** [activeItems]가 실제로 어느 마트의 리스트인지. 스와이프 직후 selectedStoreId만
+     *  먼저 바뀌고 아이템은 한두 프레임 늦게 도착하는 구간을 UI가 구분할 수 있게 한다. */
+    val activeItemsStoreId: Long? = null,
     val itemCounts: Map<Long, Int> = emptyMap(),
     val recentItemNames: List<String> = emptyList(),
     val highlightItemId: Long? = null,
@@ -64,7 +68,8 @@ class HomeViewModel @Inject constructor(
 
     private val storesFlow = storeRepo.observeActiveStores()
     private val activeItemsFlow = selectedStoreId.flatMapLatest { id ->
-        if (id == null) flowOf(emptyList()) else itemRepo.observeActiveItems(id)
+        if (id == null) flowOf<Pair<Long?, List<Item>>>(null to emptyList())
+        else itemRepo.observeActiveItems(id).map { id as Long? to it }
     }
     private val countsFlow = itemRepo.observeActiveCounts()
     private val bannerFlow = combine(
@@ -82,7 +87,8 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             stores = stores,
             selectedStoreId = selId ?: stores.firstOrNull()?.id,
-            activeItems = items,
+            activeItems = items.second,
+            activeItemsStoreId = items.first,
             recentItemNames = names,
             highlightItemId = hl,
             isLoading = false,

@@ -62,7 +62,10 @@ import androidx.compose.ui.unit.IntOffset
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
+import com.rldjrgo.grocerynote.ui.components.rememberTabSwipeBounce
 import com.rldjrgo.grocerynote.ui.components.swipeBetweenTabs
+import androidx.compose.foundation.layout.offset
+import kotlin.math.roundToInt
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.soft
 import java.util.Calendar
@@ -98,6 +101,9 @@ fun CompletedScreen(
     // Swipe left/right over the screen to move between filters (전체 + each mart).
     val filterIds = remember(state.stores) { listOf<Long?>(null) + state.stores.map { it.id } }
     val filterIdx = filterIds.indexOf(state.filterStoreId)
+    // 끝 필터에서 더 스와이프하면 본문이 살짝 밀렸다 돌아오는 러버밴드 피드백
+    // (홈 마트탭과 동일한 문법).
+    val edgeBounce = rememberTabSwipeBounce()
     Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
@@ -113,14 +119,20 @@ fun CompletedScreen(
                 onPrev = {
                     if (filterIdx > 0) viewModel.setFilter(filterIds[filterIdx - 1])
                 },
+                hasNext = filterIdx in 0 until filterIds.lastIndex,
+                hasPrev = filterIdx > 0,
+                bounce = edgeBounce,
             ),
     ) {
         // TopBar
         PageTitle(title = "완료")
 
         // Filter chips — same pill language as the active screen's StoreTabBar.
+        // 끝 필터 스와이프 시 본문과 함께 바운스.
         LazyRow(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(edgeBounce.offsetPx.roundToInt(), 0) },
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -192,7 +204,8 @@ fun CompletedScreen(
             label = "filterSwitch",
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .offset { IntOffset(edgeBounce.offsetPx.roundToInt(), 0) },
         ) { _ ->
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 grouped.forEach { (bucket, list) ->

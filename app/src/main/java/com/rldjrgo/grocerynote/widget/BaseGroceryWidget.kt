@@ -16,10 +16,9 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.rldjrgo.grocerynote.data.local.DarkModePref
 import com.rldjrgo.grocerynote.di.WidgetEntryPoint
 import com.rldjrgo.grocerynote.widget.common.AdaptiveContent
-import com.rldjrgo.grocerynote.widget.common.WidgetCard
 import com.rldjrgo.grocerynote.widget.common.widgetDataFlow
-import com.rldjrgo.grocerynote.widget.components.WidgetEmptyState
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.first
 
 /**
  * Shared base for all 5 widgets. Each placed widget is `SizeMode.Responsive`
@@ -37,6 +36,16 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
     override val stateDefinition = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        // Load data BEFORE composing. collectAsState(initial = null) used to push
+        // a "불러오는 중…" frame to the launcher first; if the process was then
+        // killed (boot, launcher restart, memory pressure) before the real data
+        // frame landed, that loading card stayed on the home screen until the
+        // next updateAll — potentially for a long time, since updatePeriodMillis=0
+        // means nothing auto-refreshes. Now the first pushed frame IS the data.
+        val entry = EntryPointAccessors
+            .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
+        val initialData = widgetDataFlow(context).first()
+        val initialDark = entry.settingsDataStore().darkMode.first()
         provideContent {
             val ctx = LocalContext.current
             // Resolve dark IN-PROCESS (not via Glance day/night → launcher) so One UI
@@ -47,7 +56,7 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
                     .fromApplication(ctx.applicationContext, WidgetEntryPoint::class.java)
                     .settingsDataStore()
                     .darkMode
-            }.collectAsState(initial = DarkModePref.Off)
+            }.collectAsState(initial = initialDark)
             val systemNight = (ctx.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
             val isDark = when (darkPref) {
@@ -58,14 +67,8 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
 
             CompositionLocalProvider(LocalWidgetDark provides isDark) {
                 val size = LocalSize.current
-                val data by widgetDataFlow(context).collectAsState(initial = null)
-                val d = data
-                if (d == null) {
-                    val mini = size.width < WidgetSizes.Medium.width && size.height <= WidgetSizes.Small.height
-                    WidgetCard { WidgetEmptyState(title = "", hint = "불러오는 중…", compact = mini) }
-                } else {
-                    AdaptiveContent(size, d)
-                }
+                val data by widgetDataFlow(context).collectAsState(initial = initialData)
+                AdaptiveContent(size, data)
             }
         }
     }

@@ -73,6 +73,9 @@ fun ReminderPickerSheet(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    // Past-time error must render INSIDE the sheet — a Snackbar would be hidden
+    // behind the ModalBottomSheet window, making "설정" look unresponsive.
+    var pastTimeError by remember { mutableStateOf(false) }
 
     val dateLabel = remember(year, month, day) {
         val c = Calendar.getInstance().apply { set(year, month, day, 0, 0, 0) }
@@ -107,14 +110,29 @@ fun ReminderPickerSheet(
             Spacer(Modifier.height(12.dp))
             PickerField(label = "시간", value = timeLabel) { showTimePicker = true }
 
-            Spacer(Modifier.height(24.dp))
+            if (pastTimeError) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "이미 지난 시간이에요. 다시 선택해주세요",
+                    style = typo.bodyS,
+                    color = colors.danger,
+                )
+                Spacer(Modifier.height(12.dp))
+            } else {
+                Spacer(Modifier.height(24.dp))
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .background(colors.brandPrimary, RoundedCornerShape(12.dp))
                     .clickable {
-                        onConfirm(localEpoch(year, month, day, hour, minute))
+                        val at = localEpoch(year, month, day, hour, minute)
+                        if (at <= System.currentTimeMillis()) {
+                            pastTimeError = true
+                        } else {
+                            onConfirm(at)
+                        }
                     },
                 contentAlignment = Alignment.Center,
             ) {
@@ -153,6 +171,7 @@ fun ReminderPickerSheet(
                         month = c.get(Calendar.MONTH)
                         day = c.get(Calendar.DAY_OF_MONTH)
                     }
+                    pastTimeError = false
                     showDatePicker = false
                 }) { Text("확인", color = colors.brandPrimary) }
             },
@@ -179,6 +198,7 @@ fun ReminderPickerSheet(
                 TextButton(onClick = {
                     hour = state.hour
                     minute = state.minute
+                    pastTimeError = false
                     showTimePicker = false
                 }) { Text("확인", color = colors.brandPrimary) }
             },
