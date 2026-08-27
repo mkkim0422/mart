@@ -58,6 +58,17 @@ class HomeViewModel @Inject constructor(
     private val _newlyAddedStoreId = MutableStateFlow<Long?>(null)
     val newlyAddedStoreId: StateFlow<Long?> = _newlyAddedStoreId
 
+    /** 첫 목록 작성 직후 1회성 위젯 유도 시트 표시 신호. */
+    private val _showWidgetNudge = MutableStateFlow(false)
+    val showWidgetNudge: StateFlow<Boolean> = _showWidgetNudge
+    private var nudgeChecked = false
+    private var hasAddedItemThisSession = false
+
+    private companion object {
+        /** 위젯 유도 시트 재노출 간격 — 보름. */
+        const val NUDGE_INTERVAL_MS = 15L * 24 * 60 * 60 * 1000
+    }
+
     private val selectedStoreId = MutableStateFlow<Long?>(null)
     private val highlightItemId = MutableStateFlow<Long?>(null)
     private val recentNames = MutableStateFlow<List<String>>(emptyList())
@@ -136,6 +147,7 @@ class HomeViewModel @Inject constructor(
 
     fun addItem(name: String) {
         if (name.isBlank()) return
+        hasAddedItemThisSession = true
         viewModelScope.launch {
             val stores = storesFlow.first()
             if (stores.isEmpty()) return@launch
@@ -158,6 +170,44 @@ class HomeViewModel @Inject constructor(
             _undoEvent.value = UndoInfo(itemId, itemName, System.currentTimeMillis())
             widgetUpdater.updateAll()
         }
+    }
+
+    /** 추가 흐름이 끝났을 때(추가 시트 닫힘 / 음성추가 종료) 호출 — 방금 항목을
+     *  등록했다면 위젯 유도 시트를 띄운다. "목록을 다 만든 직후"가 홈화면에서
+     *  보고 싶어지는 순간이라 여기가 유도 타이밍 (완료 체크는 보통 마트 안이라 부적절). */
+    fun onAddFlowFinished() {
+        if (!hasAddedItemThisSession) return
+        maybeShowWidgetNudge()
+    }
+
+    /** 위젯 유도 시트. 위젯이 이미 홈화면에 있으면 안 뜨고, 없으면 15일에
+     *  한 번(그리고 앱 세션당 최대 1회)만 재노출 — 남발 금지(§3 정신). */
+    private fun maybeShowWidgetNudge() {
+        if (nudgeChecked) return
+        nudgeChecked = true
+        viewModelScope.launch {
+            val last = settings.widgetNudgeLastShownAt.first()
+            if (System.currentTimeMillis() - last < NUDGE_INTERVAL_MS) return@launch
+            if (widgetPin.anyWidgetPlaced()) return@launch
+            // 추가 시트 닫힘 애니메이션이 끝난 뒤에 떠야 자연스럽다.
+            kotlinx.coroutines.delay(600)
+            if (widgetPin.anyWidgetPlaced()) return@launch
+            _showWidgetNudge.value = true
+        }
+    }
+
+    fun dismissWidgetNudge() {
+        _showWidgetNudge.value = false
+        viewModelScope.launch {
+            settings.setWidgetNudgeShownAt(System.currentTimeMillis())
+        }
+    }
+
+    /** 홈화면의 실제 위젯 설치 여부를 DataStore에 반영 — 유도 배너가 설치되면
+     *  자동으로 사라지고, 전부 제거되면(닫기 안 눌렀다면) 다시 나타난다. 런처에서
+     *  직접 추가/제거한 경우까지 잡기 위해 onResume마다 호출된다. */
+    fun syncWidgetPresence() {
+        viewModelScope.launch { settings.setHasAddedWidget(widgetPin.anyWidgetPlaced()) }
     }
 
     /** Set a one-shot purchase reminder at [atMillis] (epoch). Caller ensures the
