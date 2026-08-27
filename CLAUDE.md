@@ -42,7 +42,7 @@ Widget → app flow: tapping a placed widget opens the app **with that mart pres
 3. **Per-mart separation is the spine**
 4. **Widget IS the app** — widget UX takes priority over in-app UX
 5. No signup, all local
-6. Single bottom banner ad (no interstitial, no native, no rewarded) — **2026-08-06: 출시 초기엔 배너·광고제거IAP 모두 숨김** (`build.gradle.kts`의 `SHOW_ADS`/`SHOW_BILLING` BuildConfig 플래그 = false; 사용자 모이면 true로 복구)
+6. Single bottom banner ad (no interstitial, no native, no rewarded) — **2026-08-27: 배너 광고 복구** (`SHOW_ADS=true`); 광고제거 IAP는 Play Console 상품 미등록이라 계속 숨김 (`SHOW_BILLING=false`)
 7. Smooth on budget Korean phones — minimize memory/battery/CPU
 8. Toss-style minimal — clean and trustworthy
 
@@ -255,6 +255,8 @@ Empty states:
 - 0 items across all marts: "추가할 항목이 없어요" + "+" → tap = open app
 
 Onboarding last page: "위젯 추가하기" → `AppWidgetManager.requestPinAppWidget()` (Android 8+, depends on launcher); fallback hint: "홈화면을 길게 누르고 위젯 → 마트노트".
+
+**Widget-install nudging (2026-08-27)**: `WidgetPinHelper.anyWidgetPlaced()` = real presence check (`getAppWidgetIds` over the 5 receivers). Home `onResume`마다 `syncWidgetPresence()`가 `hasAddedWidget`을 실제 상태로 동기화 → 유도 배너는 위젯이 실제로 있으면 자동 숨김, 전부 제거되면(닫기 안 눌렀을 때) 복귀. 추가로 **항목 등록 후 추가 흐름이 끝날 때(추가 시트 닫힘/음성추가 종료) `WidgetNudgeSheet`** ("목록을 다 만든 직후"가 유도 타이밍 — 완료 체크는 마트 안이라 부적절, 사용자 피드백 2026-08-27; 0.6s 지연 후): Medium 미리보기 + "위젯 추가하기"→`WidgetSizePickerSheet`. 위젯 미설치면 **15일 간격 재노출**(`widgetNudgeLastShownAt`, 세션당 최대 1회; "평생 1회는 기회가 너무 없다" 사용자 피드백 2026-08-27), 설치돼 있으면 안 뜸. 첫 실행 강제 핀 팝업은 의도적으로 안 함(거부율·런처 편차).
 
 Widget visual (Toss):
 - bg `#FFFFFF` (dark `#1F1F23`), r 16dp
