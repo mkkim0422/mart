@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,6 +29,7 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val OnboardingCompletedCount = intPreferencesKey("onboarding_completed_count")
         val HasAddedWidget = booleanPreferencesKey("has_added_widget")
         val HasDismissedWidgetBanner = booleanPreferencesKey("has_dismissed_widget_banner")
+        val WidgetNudgeLastShownAt = longPreferencesKey("widget_nudge_last_shown_at")
         val LargeWidgetStoreIds = stringPreferencesKey("large_widget_store_ids")
         val HasSeenVoiceIntro = booleanPreferencesKey("has_seen_voice_intro")
     }
@@ -46,6 +48,11 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
 
     val hasDismissedWidgetBanner: Flow<Boolean> = context.dataStore.data
         .map { it[Keys.HasDismissedWidgetBanner] ?: false }
+
+    /** 위젯 유도 시트를 마지막으로 보여준 시각 (epoch millis, 0 = 아직 안 봄).
+     *  위젯 미설치 상태면 15일 간격으로 재노출된다. */
+    val widgetNudgeLastShownAt: Flow<Long> = context.dataStore.data
+        .map { it[Keys.WidgetNudgeLastShownAt] ?: 0L }
 
     /** First-time voice-add intro sheet: shown once, then suppressed. */
     val hasSeenVoiceIntro: Flow<Boolean> = context.dataStore.data
@@ -77,6 +84,10 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
 
     suspend fun setHasDismissedWidgetBanner(dismissed: Boolean) {
         context.dataStore.edit { it[Keys.HasDismissedWidgetBanner] = dismissed }
+    }
+
+    suspend fun setWidgetNudgeShownAt(atMillis: Long) {
+        context.dataStore.edit { it[Keys.WidgetNudgeLastShownAt] = atMillis }
     }
 
     suspend fun setVoiceIntroSeen() {

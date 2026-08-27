@@ -39,8 +39,8 @@ android {
         applicationId = "com.rldjrgo.grocerynote"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.0"
+        versionCode = 6
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -82,10 +82,9 @@ android {
             buildConfigField("String", "ADMOB_APP_ID", "\"$admobTestAppId\"")
             manifestPlaceholders["admobAppId"] = admobTestAppId
             // SHOW_BILLING=true → 광고 제거 IAP 행이 설정 화면에 노출됨 (BillingRepository v8 사용 중).
-            // 2026-08-06: 출시 초기엔 광고·결제 둘 다 숨김 (사용자 모이면 켤 것).
+            // 2026-08-27: 배너 광고 복구 (SHOW_ADS=true). IAP는 Play Console 상품 미등록이라 계속 숨김.
             buildConfigField("boolean", "SHOW_BILLING", "false")
-            // SHOW_ADS=false → 하단 배너 영역 자체를 그리지 않음 (AdMob 코드는 유지).
-            buildConfigField("boolean", "SHOW_ADS", "false")
+            buildConfigField("boolean", "SHOW_ADS", "true")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -99,7 +98,7 @@ android {
             buildConfigField("String", "ADMOB_APP_ID", "\"$admobRealAppId\"")
             manifestPlaceholders["admobAppId"] = admobRealAppId
             buildConfigField("boolean", "SHOW_BILLING", "false")
-            buildConfigField("boolean", "SHOW_ADS", "false")
+            buildConfigField("boolean", "SHOW_ADS", "true")
             // Sign release only if keystore.properties + .jks are present and valid.
             val rsc = signingConfigs.findByName("release")
             if (rsc?.storeFile?.exists() == true) signingConfig = rsc

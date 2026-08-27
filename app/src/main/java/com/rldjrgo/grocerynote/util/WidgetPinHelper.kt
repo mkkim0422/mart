@@ -25,6 +25,20 @@ class WidgetPinHelper @Inject constructor(
     fun isSupported(): Boolean =
         AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
 
+    /** 5개 사이즈 중 하나라도 홈화면에 실제로 놓여 있으면 true. */
+    fun anyWidgetPlaced(): Boolean = try {
+        val manager = AppWidgetManager.getInstance(context)
+        listOf(
+            GroceryWidget2x1Receiver::class.java,
+            GroceryWidgetSmallReceiver::class.java,
+            GroceryWidgetLongReceiver::class.java,
+            GroceryWidgetMediumReceiver::class.java,
+            GroceryWidgetLargeReceiver::class.java,
+        ).any { manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty() }
+    } catch (e: Exception) {
+        false
+    }
+
     /** @return true if a pin request was shown, false if the launcher doesn't support it. */
     fun pinWidget(size: WidgetSize): Boolean {
         return try {

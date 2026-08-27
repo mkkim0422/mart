@@ -79,6 +79,7 @@ import androidx.compose.ui.unit.IntOffset
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
+import com.rldjrgo.grocerynote.ui.components.WidgetNudgeSheet
 import com.rldjrgo.grocerynote.ui.components.WidgetSizePickerSheet
 import com.rldjrgo.grocerynote.ui.components.swipeBetweenTabs
 import com.rldjrgo.grocerynote.ui.screens.home.components.AddItemSheet
@@ -153,7 +154,8 @@ fun HomeScreen(
     ) { result ->
         val store = selectedStore
         when {
-            result.resultCode != Activity.RESULT_OK -> Unit // user backed out → stop
+            // user backed out → stop; the add flow is over, so nudge here too
+            result.resultCode != Activity.RESULT_OK -> viewModel.onAddFlowFinished()
             store == null -> Unit
             else -> {
                 val spoken = result.data
@@ -163,8 +165,10 @@ fun HomeScreen(
                 when {
                     // Spoken a stop word ("끝", "완료", "그만"…) → end the loop,
                     // do NOT add it and do NOT relaunch the recognizer.
-                    isVoiceStopWord(spoken) ->
+                    isVoiceStopWord(spoken) -> {
                         scope.launch { snackbarHostState.showSnackbar("🎤 음성 추가를 종료했어요") }
+                        viewModel.onAddFlowFinished()
+                    }
                     name.isEmpty() ->
                         scope.launch { snackbarHostState.showSnackbar("못 알아들었어요. 다시 시도해주세요") }
                     else -> {
@@ -199,6 +203,14 @@ fun HomeScreen(
     var lastShareAt by remember { mutableLongStateOf(0L) }
     val undo by viewModel.undoEvent.collectAsStateWithLifecycle()
     val newlyAddedStoreId by viewModel.newlyAddedStoreId.collectAsStateWithLifecycle()
+    val showWidgetNudge by viewModel.showWidgetNudge.collectAsStateWithLifecycle()
+
+    // 홈화면에서 위젯을 직접 추가/제거하고 돌아온 경우까지 잡아서 유도 배너를
+    // 실제 설치 상태와 맞춘다 (설치됨 → 배너 자동 숨김).
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.syncWidgetPresence()
+        onPauseOrDispose { }
+    }
     LaunchedEffect(undo) {
         val u = undo ?: return@LaunchedEffect
         val result = snackbarHostState.showSnackbar(
@@ -506,7 +518,11 @@ fun HomeScreen(
             recentItemNames = state.recentItemNames,
             onAdd = viewModel::addItem,
             onDeleteRecent = viewModel::deleteFrequentItem,
-            onDismiss = { showAddItem = false; sharedDraft = "" },
+            onDismiss = {
+                showAddItem = false
+                sharedDraft = ""
+                viewModel.onAddFlowFinished()
+            },
             initialText = sharedDraft,
         )
     }
@@ -558,6 +574,16 @@ fun HomeScreen(
         WidgetSizePickerSheet(
             onPick = viewModel::pinWidget,
             onDismiss = { showWidgetSizePicker = false },
+        )
+    }
+
+    if (showWidgetNudge) {
+        WidgetNudgeSheet(
+            onAddWidget = {
+                viewModel.dismissWidgetNudge()
+                showWidgetSizePicker = true
+            },
+            onDismiss = viewModel::dismissWidgetNudge,
         )
     }
 

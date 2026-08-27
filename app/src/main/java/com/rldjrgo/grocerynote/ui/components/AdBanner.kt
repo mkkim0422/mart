@@ -45,8 +45,7 @@ fun AdBanner(
     modifier: Modifier = Modifier,
     viewModel: AdBannerViewModel = hiltViewModel(),
 ) {
-    // 출시 초기: 광고 영역 자체를 숨김 (SHOW_ADS=false). 사용자 늘면 build.gradle
-    // 플래그만 true로 돌리면 그대로 복구된다.
+    // 배너 노출은 build.gradle의 SHOW_ADS 플래그 하나로 제어된다 (false면 영역 자체를 안 그림).
     if (!BuildConfig.SHOW_ADS) return
 
     val isAdRemoved by viewModel.isAdRemoved.collectAsStateWithLifecycle(initialValue = false)
