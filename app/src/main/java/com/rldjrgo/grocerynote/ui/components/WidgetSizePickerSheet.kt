@@ -230,8 +230,9 @@ private fun WidgetSizeOption(
 }
 
 // ── Faithful mini-render of the actual widget ──────────────────────
+// internal: WidgetNudgeSheet(첫 완료 후 유도 시트)에서도 같은 미리보기를 쓴다.
 @Composable
-private fun WidgetSamplePreview(size: WidgetSize) {
+internal fun WidgetSamplePreview(size: WidgetSize) {
     when (size) {
         WidgetSize.TWO_BY_ONE -> SampleCard(108.dp, 56.dp) {
             CountRow(Coupang, 3)
