@@ -30,6 +30,7 @@ import com.rldjrgo.grocerynote.ui.navigation.currentRouteOrNull
 import com.rldjrgo.grocerynote.ui.screens.onboarding.OnboardingScreen
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.LocalAppColors
+import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +39,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsDataStore
+    @Inject lateinit var widgetUpdater: WidgetUpdater
+
+    /**
+     * User is leaving the app → the next thing they see is the home screen.
+     * Push one more render now, while the process is still alive, so the
+     * widget count matches whatever they just did in the app. Cheap: no-op if
+     * no widget is placed, and if a widget session is already live it only
+     * refreshes Glance state (the session's own Flow already has the data).
+     */
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) widgetUpdater.updateAll()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()

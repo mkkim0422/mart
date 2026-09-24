@@ -16,6 +16,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.rldjrgo.grocerynote.data.local.DarkModePref
 import com.rldjrgo.grocerynote.di.WidgetEntryPoint
 import com.rldjrgo.grocerynote.widget.common.AdaptiveContent
+import com.rldjrgo.grocerynote.widget.common.WidgetData
 import com.rldjrgo.grocerynote.widget.common.widgetDataFlow
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
@@ -44,8 +45,16 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
         // means nothing auto-refreshes. Now the first pushed frame IS the data.
         val entry = EntryPointAccessors
             .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
-        val initialData = widgetDataFlow(context).first()
-        val initialDark = entry.settingsDataStore().darkMode.first()
+        // If the DB read fails outright, render the empty card rather than
+        // letting the Glance worker crash into the launcher's error layout.
+        val initialData = runCatching { widgetDataFlow(context).first() }
+            .getOrElse { WidgetData(emptyList(), emptyMap()) }
+        val initialDark = runCatching { entry.settingsDataStore().darkMode.first() }
+            .getOrDefault(DarkModePref.Off)
+        // ONE shared flow per session. Before, widgetDataFlow(context) was
+        // rebuilt on every recomposition, so collectAsState re-subscribed to
+        // Room ×5 breakpoints each time the data changed.
+        val liveData = widgetDataFlow(context)
         provideContent {
             val ctx = LocalContext.current
             // Resolve dark IN-PROCESS (not via Glance day/night → launcher) so One UI
@@ -67,7 +76,7 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
 
             CompositionLocalProvider(LocalWidgetDark provides isDark) {
                 val size = LocalSize.current
-                val data by widgetDataFlow(context).collectAsState(initial = initialData)
+                val data by liveData.collectAsState(initial = initialData)
                 AdaptiveContent(size, data)
             }
         }

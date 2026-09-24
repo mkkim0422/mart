@@ -39,9 +39,11 @@ import com.rldjrgo.grocerynote.widget.components.WidgetItemRow
 import com.rldjrgo.grocerynote.widget.components.WidgetStoreCountRow
 import com.rldjrgo.grocerynote.widget.components.WidgetStoreHeader
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.retryWhen
 
 /** Snapshot of what every widget renders: active stores (item-count desc) + their active items. */
 data class WidgetData(
@@ -98,7 +100,18 @@ fun widgetDataFlow(context: Context): Flow<WidgetData> {
         entry.settingsDataStore().largeWidgetStoreIds,
     ) { stores, allItems, largeIds ->
         buildWidgetData(stores, allItems, largeIds)
-    }.catch { emit(WidgetData(emptyList(), emptyMap())) }
+    }
+        // A transient Room/DataStore error used to complete the flow with an
+        // EMPTY snapshot — inside a live widget session that (a) replaced good
+        // data with "추가할 항목이 없어요" and (b) killed the collector, so every
+        // later in-app change was silently ignored until the session died.
+        // Retry a few times instead; if it still fails, log and keep the last
+        // good frame (provideGlance's initial load has its own fallback).
+        .retryWhen { cause, attempt ->
+            Log.w("WidgetUpdater", "widgetDataFlow failed (attempt $attempt)", cause)
+            if (attempt < 3) { delay(300L * (attempt + 1)); true } else false
+        }
+        .catch { Log.e("WidgetUpdater", "widgetDataFlow gave up — keeping last frame", it) }
 }
 
 @Composable

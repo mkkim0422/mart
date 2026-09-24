@@ -39,8 +39,8 @@ android {
         applicationId = "com.rldjrgo.grocerynote"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.2.0"
+        versionCode = 7
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -85,6 +85,9 @@ android {
             // 2026-08-27: 배너 광고 복구 (SHOW_ADS=true). IAP는 Play Console 상품 미등록이라 계속 숨김.
             buildConfigField("boolean", "SHOW_BILLING", "false")
             buildConfigField("boolean", "SHOW_ADS", "true")
+            // SHOW_BACKUP=true → 설정 화면에 "내보내기/가져오기" 행 노출.
+            // 테스트 기간 전용(재설치 시 목록 복원용) — 정식 출시 전 false로 내려 숨긴다 (2026-09-24).
+            buildConfigField("boolean", "SHOW_BACKUP", "false")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -99,6 +102,9 @@ android {
             manifestPlaceholders["admobAppId"] = admobRealAppId
             buildConfigField("boolean", "SHOW_BILLING", "false")
             buildConfigField("boolean", "SHOW_ADS", "true")
+            // SHOW_BACKUP=true → 설정 화면에 "내보내기/가져오기" 행 노출.
+            // 테스트 기간 전용(재설치 시 목록 복원용) — 정식 출시 전 false로 내려 숨긴다 (2026-09-24).
+            buildConfigField("boolean", "SHOW_BACKUP", "false")
             // Sign release only if keystore.properties + .jks are present and valid.
             val rsc = signingConfigs.findByName("release")
             if (rsc?.storeFile?.exists() == true) signingConfig = rsc

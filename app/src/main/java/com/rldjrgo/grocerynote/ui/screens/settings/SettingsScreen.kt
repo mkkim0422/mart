@@ -2,6 +2,8 @@ package com.rldjrgo.grocerynote.ui.screens.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +30,8 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Star
@@ -86,6 +90,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     var showFeedbackBridge by remember { mutableStateOf(false) }
     var showIntroPreview by remember { mutableStateOf(false) }
 
+    // 내보내기/가져오기 — 시스템 파일 선택기(SAF). 권한 불필요, 사용자가 위치를 고른다.
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> uri?.let(viewModel::exportTo) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let(viewModel::importFrom) }
+
     Column(modifier = Modifier.fillMaxSize().background(colors.bgPrimary).statusBarsPadding()) {
         PageTitle(title = "설정")
         LazyColumn(
@@ -138,6 +150,41 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
 
             item { SectionHeader("데이터") }
+            // 내보내기/가져오기 — 테스트 기간 전용(SHOW_BACKUP). 정식 출시 전 build.gradle.kts에서 false.
+            if (com.rldjrgo.grocerynote.BuildConfig.SHOW_BACKUP) item {
+                SettingRow(
+                    label = "내보내기",
+                    icon = Icons.Outlined.FileUpload,
+                    sub = "마트·항목을 파일로 저장 (기기 교체·재설치 대비)",
+                    onClick = {
+                        val stamp = java.text.SimpleDateFormat("yyyyMMdd_HHmm", java.util.Locale.KOREA)
+                            .format(java.util.Date())
+                        runCatching { exportLauncher.launch("마트노트_백업_$stamp.json") }
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = colors.textTertiary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            if (com.rldjrgo.grocerynote.BuildConfig.SHOW_BACKUP) item {
+                SettingRow(
+                    label = "가져오기",
+                    icon = Icons.Outlined.FileDownload,
+                    sub = "백업 파일의 마트·항목을 지금 목록에 추가 (중복 없음)",
+                    onClick = { runCatching { importLauncher.launch(arrayOf("*/*")) } },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = colors.textTertiary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
             item {
                 ActionRow("전체 삭제", icon = Icons.Outlined.DeleteForever, destructive = true) { confirmWipe1 = true }
             }

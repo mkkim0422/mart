@@ -24,6 +24,10 @@ interface StoreDao {
     @Query("SELECT * FROM stores WHERE id = :id LIMIT 1")
     suspend fun getStoreById(id: Long): StoreEntity?
 
+    /** Every store incl. archived — backup export / import merge. */
+    @Query("SELECT * FROM stores ORDER BY display_order ASC, id ASC")
+    suspend fun getAllStores(): List<StoreEntity>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertStore(store: StoreEntity): Long
 

@@ -61,6 +61,8 @@ class CompletedViewModel @Inject constructor(
         filterFlow,
         itemRepo.observeCompletedCounts(),
     ) { items, stores, filter, counts ->
+        // 필터 줄은 모든 마트 표시 (완료 0개 포함). "완료 있는 마트만"으로 잠깐
+        // 바꿨다가 "없으니까 허전하다"는 피드백으로 원복 (2026-09-24).
         CompletedUiState(
             items = items,
             stores = stores,

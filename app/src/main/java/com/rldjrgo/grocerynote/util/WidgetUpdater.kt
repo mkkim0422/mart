@@ -21,6 +21,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -83,6 +84,24 @@ class WidgetUpdater @Inject constructor(
                 .debounce(120)
                 .collect { renderAll("coalesced") }
         }
+        // Self-heal on EVERY process start. Glance keeps its widget session
+        // in memory only: if the process dies while a render is in flight
+        // (user swipes the app away / One UI kills it right after a change),
+        // the retried SessionWorker finds no session and returns WITHOUT
+        // rendering — and with updatePeriodMillis=0 nothing ever retries, so
+        // the home-screen count stays stale until the next DB write. Rendering
+        // once per process start (after the Activity's first frame) closes
+        // that gap: the moment the user opens the app, the widget catches up.
+        applicationScope.launch(Dispatchers.IO) {
+            delay(STARTUP_REFRESH_DELAY_MS)
+            Log.d(TAG, "process start → self-heal render")
+            trigger.tryEmit(Unit)
+        }
+    }
+
+    private companion object {
+        /** Let the Activity's cold-start frame land before the first widget render. */
+        const val STARTUP_REFRESH_DELAY_MS = 1_500L
     }
 
     /** Explicit trigger (ViewModels, CheckItemAction). Cheap, non-blocking. */
