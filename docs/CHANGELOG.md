@@ -5,6 +5,10 @@
 
 ## 미커밋 (워킹트리)
 
+- 2026-09-24 · **v1.2.1 (vc7)** 위젯 미표시 버그 수정: 릴리스 R8이 WorkManager `OverwritingInputMerger` 생성자를 제거해 Glance SessionWorker가 시작 즉시 실패 → 배치된 위젯이 실제 데이터를 한 번도 못 그리고 미리보기 견본(이마트 5/다이소 3)에 고정돼 있던 문제(스토어 1.2.0에도 존재, "위젯 카운트≠앱 카운트"의 진짜 원인). keep 규칙 추가 + 프로세스 시작·앱 이탈 시 자가 복구 렌더 + 위젯 데이터 Flow 재시도/세션당 1개 · `app/proguard-rules.pro`, `util/WidgetUpdater.kt`, `MainActivity.kt`, `widget/BaseGroceryWidget.kt`, `widget/common/WidgetCommon.kt`
+- 2026-09-24 · 완료 탭 필터 줄에 "선택 필 따라가기" 최소 스크롤 추가(맨 오른쪽 마트로 스와이프 시 필이 잘린 채 남던 문제). 필터 줄은 완료 0개 마트도 계속 표시(잠깐 숨겼다가 "허전하다"로 원복) · `ui/screens/completed/CompletedScreen.kt`
+- 2026-09-24 · (테스트 전용, 숨김) 설정→데이터 JSON 내보내기/가져오기(병합·중복 없음). `SHOW_BACKUP` 빌드 플래그(현재 false)로 노출 제어 — 정식 기능 아님 · `data/repository/BackupRepository.kt`(신규), `ui/screens/settings/{SettingsScreen,SettingsViewModel}.kt`, `data/local/{StoreDao,ItemDao}.kt`, `app/build.gradle.kts`
+
 - 2026-06-19 · Play 출시 자료 일괄 제작: 피처 그래픽 1024×500(`scripts/compose_feature_graphic.py`→`docs/playstore_assets/final/feature_graphic_1024x500.png`), 스토어 등록 복붙 문서(앱이름·짧은/긴 설명·데이터보안·콘텐츠등급·인앱상품 가이드 `docs/playstore_listing.md`), 릴리스 서명 키스토어 생성(`grocery-note-release.jks`, alias grocerynote, gitignore됨) + `keystore.properties` 채움 → **서명된 업로드용 AAB** 빌드(`app/build/outputs/bundle/release/app-release.aab`, 13.8MB, jar verified) · 신규 자료/스크립트
 
 - 2026-06-19 · 리스트 하단 항목이 음성추가/추가 FAB에 가려지던 문제 수정: `ItemList` LazyColumn 하단 contentPadding 8dp→92dp(FAB 56dp+여백)로 마지막 항목이 버튼 위로 스크롤됨. 실기기 확인 완료 · `ui/screens/home/components/ItemList.kt`

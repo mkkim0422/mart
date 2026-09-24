@@ -66,6 +66,10 @@ interface ItemDao {
     @Query("SELECT * FROM items WHERE id = :id LIMIT 1")
     suspend fun getItemById(id: Long): ItemEntity?
 
+    /** Every item (active + completed) — backup export / import merge. */
+    @Query("SELECT * FROM items ORDER BY store_id ASC, display_order ASC, id ASC")
+    suspend fun getAllItems(): List<ItemEntity>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertItem(item: ItemEntity): Long
 

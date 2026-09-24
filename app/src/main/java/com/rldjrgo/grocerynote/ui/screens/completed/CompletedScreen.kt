@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -129,7 +132,26 @@ fun CompletedScreen(
 
         // Filter chips — same pill language as the active screen's StoreTabBar.
         // 끝 필터 스와이프 시 본문과 함께 바운스.
+        val filterListState = rememberLazyListState()
+        // 선택된 필 따라가기 — 홈 StoreTabBar와 같은 규칙: 필이 실제로 잘렸을
+        // 때만, 딱 보일 만큼만 스크롤. (없던 탓에 마지막 마트로 스와이프하면
+        // 선택 필이 오른쪽에 잘린 채 남았다 — 사용자 리포트 2026-09-24.)
+        val edgeMarginPx = with(LocalDensity.current) { 16.dp.toPx() }
+        LaunchedEffect(state.filterStoreId, filterIds) {
+            val idx = filterIds.indexOf(state.filterStoreId)
+            if (idx < 0) return@LaunchedEffect
+            val info = filterListState.layoutInfo
+            val pill = info.visibleItemsInfo.firstOrNull { it.index == idx }
+            when {
+                pill == null -> filterListState.animateScrollToItem(idx)
+                pill.offset < info.viewportStartOffset + edgeMarginPx ->
+                    filterListState.animateScrollBy(pill.offset - info.viewportStartOffset - edgeMarginPx)
+                pill.offset + pill.size > info.viewportEndOffset - edgeMarginPx ->
+                    filterListState.animateScrollBy(pill.offset + pill.size - (info.viewportEndOffset - edgeMarginPx))
+            }
+        }
         LazyRow(
+            state = filterListState,
             modifier = Modifier
                 .fillMaxWidth()
                 .offset { IntOffset(edgeBounce.offsetPx.roundToInt(), 0) },

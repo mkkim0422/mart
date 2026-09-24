@@ -39,6 +39,18 @@
 -keepattributes SourceFile,LineNumberTable
 -keep public class * extends java.lang.Exception
 
+# --- WorkManager (Glance widget sessions run as a WorkManager worker) ---
+# R8 full mode stripped `OverwritingInputMerger.<init>()` (WorkManager builds it
+# by reflection) → "Could not create Input Merger" → the Glance SessionWorker
+# never ran → every placed widget stayed on its static preview layout
+# (이마트 5 / 다이소 3) forever. Found 2026-09-24; the Play 1.2.0 build had it too.
+-keep class androidx.work.OverwritingInputMerger { <init>(); }
+-keep class androidx.work.ArrayCreatingInputMerger { <init>(); }
+-keep class * extends androidx.work.InputMerger { <init>(); }
+-keep class * extends androidx.work.ListenableWorker {
+    <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+
 # --- Billing (Phase 6) ---
 -keep class com.android.billingclient.** { *; }
 
