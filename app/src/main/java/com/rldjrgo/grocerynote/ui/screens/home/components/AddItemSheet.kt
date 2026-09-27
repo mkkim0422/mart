@@ -184,6 +184,32 @@ fun AddItemSheet(
                     .fillMaxWidth()
                     .imePadding(),
             ) {
+            // 패널 높이는 고정. 입력 중 자동완성(0~5줄)은 패널 "안"이 아니라 패널
+            // "위"에 떠 있는 카드로 그린다 — 안에 넣으면 글자마다 줄 수가 바뀌며
+            // 아래 고정 패널의 윗부분이 위아래로 튀었다 (사용자 리포트 2026-09-27).
+            Column(modifier = Modifier.fillMaxWidth()) {
+            if (suggestions.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 8.dp)
+                        .background(colors.bgPrimary, RoundedCornerShape(12.dp))
+                        .padding(vertical = 4.dp),
+                ) {
+                    suggestions.forEach { s ->
+                        Text(
+                            text = s,
+                            style = typo.body,
+                            color = colors.textPrimary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { text = s }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                        )
+                    }
+                }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -364,28 +390,9 @@ fun AddItemSheet(
                         }
                     }
                 }
-                if (suggestions.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(colors.bgSecondary, RoundedCornerShape(12.dp))
-                            .padding(vertical = 4.dp),
-                    ) {
-                        suggestions.forEach { s ->
-                            Text(
-                                text = s,
-                                style = typo.body,
-                                color = colors.textPrimary,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { text = s }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                            )
-                        }
-                    }
-                }
-                if (chips.isNotEmpty()) {
+                // 칩 줄은 비어 있어도 같은 높이를 차지 — 첫 등록 순간 줄이 생기며
+                // 패널이 한 번 커지는 것(윗부분이 위로 튐)을 막는다.
+                run {
                     Spacer(Modifier.height(16.dp))
                     Text(
                         text = "최근 등록 상품",
@@ -393,7 +400,18 @@ fun AddItemSheet(
                         color = colors.textTertiary,
                     )
                     Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (chips.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(36.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            Text(
+                                text = "등록한 상품이 여기에 모여요",
+                                style = typo.bodyS,
+                                color = colors.textTertiary,
+                            )
+                        }
+                    } else LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(chips) { name ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -449,6 +467,7 @@ fun AddItemSheet(
                 Spacer(Modifier.height(16.dp))
                 Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
             }
+            } // wrapper Column (suggestion card + panel)
             // Issue 2: the confirmation now appears at the BOTTOM as an
             // overlay that COVERS the panel, then fades/slides away (it used
             // to be a top inset that pushed the content down).

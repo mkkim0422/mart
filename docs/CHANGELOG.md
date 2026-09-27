@@ -5,6 +5,8 @@
 
 ## 미커밋 (워킹트리)
 
+- 2026-09-27 · 추가 시트가 입력 중 위아래로 튀던 문제 수정: 자동완성(0~5줄)을 패널 안 대신 패널 위 떠 있는 카드로 분리(패널 높이 고정), "최근 등록 상품" 칩 줄은 비어 있어도 같은 높이 유지(첫 등록 시 한 번 커지던 것 제거) · `ui/screens/home/components/AddItemSheet.kt`
+
 - 2026-09-24 · **v1.2.1 (vc7)** 위젯 미표시 버그 수정: 릴리스 R8이 WorkManager `OverwritingInputMerger` 생성자를 제거해 Glance SessionWorker가 시작 즉시 실패 → 배치된 위젯이 실제 데이터를 한 번도 못 그리고 미리보기 견본(이마트 5/다이소 3)에 고정돼 있던 문제(스토어 1.2.0에도 존재, "위젯 카운트≠앱 카운트"의 진짜 원인). keep 규칙 추가 + 프로세스 시작·앱 이탈 시 자가 복구 렌더 + 위젯 데이터 Flow 재시도/세션당 1개 · `app/proguard-rules.pro`, `util/WidgetUpdater.kt`, `MainActivity.kt`, `widget/BaseGroceryWidget.kt`, `widget/common/WidgetCommon.kt`
 - 2026-09-24 · 완료 탭 필터 줄에 "선택 필 따라가기" 최소 스크롤 추가(맨 오른쪽 마트로 스와이프 시 필이 잘린 채 남던 문제). 필터 줄은 완료 0개 마트도 계속 표시(잠깐 숨겼다가 "허전하다"로 원복) · `ui/screens/completed/CompletedScreen.kt`
 - 2026-09-24 · (테스트 전용, 숨김) 설정→데이터 JSON 내보내기/가져오기(병합·중복 없음). `SHOW_BACKUP` 빌드 플래그(현재 false)로 노출 제어 — 정식 기능 아님 · `data/repository/BackupRepository.kt`(신규), `ui/screens/settings/{SettingsScreen,SettingsViewModel}.kt`, `data/local/{StoreDao,ItemDao}.kt`, `app/build.gradle.kts`
