@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -98,6 +99,8 @@ import com.rldjrgo.grocerynote.ui.screens.home.components.ReminderPickerSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.ShareRequestDialog
 import com.rldjrgo.grocerynote.ui.screens.home.components.StoreTabBar
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
+import com.rldjrgo.grocerynote.util.Analytics
+import com.rldjrgo.grocerynote.util.StoreSearch
 
 @Composable
 fun HomeScreen(
@@ -410,6 +413,22 @@ fun HomeScreen(
                             onMove = { moveTarget = it },
                             onDelete = { deleteTarget = it },
                             onSetReminder = { reminderTarget = it },
+                            // 쿠팡·컬리 탭: 항목을 그 앱의 검색 결과로 바로 열기.
+                            searchLabel = pageStore?.let { StoreSearch.targetFor(it.name)?.label },
+                            // One-time tip so people learn the 🔍 exists; gone after close or first use.
+                            searchHint = pageStore?.let { StoreSearch.targetFor(it.name)?.label }
+                                ?.takeIf { state.showSearchHint }
+                                ?.let { "항목 옆 🔍를 누르면 ${it} 앱에서 바로 검색돼요" },
+                            onSearchHintDismiss = viewModel::dismissSearchHint,
+                            onSearch = { item ->
+                                val store = pageStore ?: return@ItemList
+                                val target = StoreSearch.targetFor(store.name) ?: return@ItemList
+                                viewModel.dismissSearchHint()
+                                Analytics.storeSearch(target.label)
+                                if (!StoreSearch.open(context, store.name, item.name)) {
+                                    Toast.makeText(context, "${target.label}을(를) 열 수 없어요", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                         )
                     }
                 }

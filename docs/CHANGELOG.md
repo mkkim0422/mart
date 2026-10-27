@@ -5,7 +5,14 @@
 
 ## 미커밋 (워킹트리)
 
-- 2026-09-27 · 추가 시트가 입력 중 위아래로 튀던 문제 수정: 자동완성(0~5줄)을 패널 안 대신 패널 위 떠 있는 카드로 분리(패널 높이 고정), "최근 등록 상품" 칩 줄은 비어 있어도 같은 높이 유지(첫 등록 시 한 번 커지던 것 제거) · `ui/screens/home/components/AddItemSheet.kt`
+- 2026-10-27 · **v1.2.2 (vc8)** 위젯 다크 모드가 앱 안의 "다크 모드" 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 — 라이트 홈 화면에 검은 위젯(또는 그 반대)이 뜨던 문제. 폰 테마 전환 시 `App.onConfigurationChanged`가 위젯 재렌더 · `widget/BaseGroceryWidget.kt`, `App.kt`, `widget/WidgetColors.kt`, `app/build.gradle.kts`, `CLAUDE.md`
+- 2026-10-27 · **쿠팡·컬리 탭 "N에서 찾기"**: 온라인 마트(이름에 쿠팡/컬리 포함) 탭에서만 항목 줄에 🔍 아이콘 + ⋮ 메뉴 "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`, 실기기 S24+에서 검색 결과 화면 직행 확인) → 웹 검색(컬리만; 쿠팡 웹은 브라우저에 403) → Play 스토어 순으로 열기. 서버·가입 없음, Analytics `store_search`(target=쿠팡/컬리만) · `util/StoreSearch.kt`(신규), `ui/screens/home/components/{ItemRow,ItemList}.kt`, `ui/screens/home/HomeScreen.kt`, `util/Analytics.kt`
+- 2026-10-28 · **상품 키워드 사전 자동완성**: `data/local/ProductDictionary.kt`(신규, 실제 장보기·생활용품 키워드 767개, 카테고리별 흔한 순) — 입력 중 "비슷한 항목" 칩 = 이 마트의 최근 등록 상품(앞글자 일치) + 사전(앞글자 → 포함 순, 최대 8개). 다른 마트 기록은 쓰지 않음("3844" 같은 1회성 입력이 제안으로 뜨는 게 거슬린다는 피드백). 사전은 Phase 15 메뉴→재료 데이터의 재료명과 공유 예정 · `AddItemSheet.kt`
+- 2026-10-28 · 추가 시트 자동완성을 패널 위 떠 있는 카드(탭 줄 위에 반투명으로 겹쳐 가독성 나쁨)에서 **패널 안 "최근 등록 상품" 칩 줄 자리**로 이동: 입력 중 일치 항목이 있으면 그 줄이 "비슷한 항목 · 누르면 바로 추가" 파란 칩으로 바뀜(탭=바로 등록). 같은 36dp 줄이라 패널 높이 불변 · `ui/screens/home/components/AddItemSheet.kt`
+- 2026-10-28 · 🔍 아이콘을 마트 색 + 옅은 원 배경으로(회색이라 안 보인다는 피드백), 줄 컨트롤 간격 6→10dp, 온라인 마트 탭 첫 진입 시 1회 안내 카드 "항목 옆 🔍를 누르면 쿠팡 앱에서 바로 검색돼요"(닫기/첫 사용 시 종료, `has_seen_search_hint`) · `ItemRow.kt`, `ItemList.kt`, `HomeScreen.kt`, `HomeViewModel.kt`, `SettingsDataStore.kt`
+- 2026-10-27 · (코드 아님) `sample/` 시안 3종: 완료 애니메이션 20종+최종추천, 설치 직후 위젯 붙이기 흐름(온보딩 1장+2×2 개수형), Nemotron-Personas-Korea 150명 합성 사용자 시뮬레이션 결과 · `sample/*.html`
+
+- 2026-09-27 · 추가 시트가 입력 중 위아래로 튀던 문제 수정: 자동완성(0~5줄)을 패널 안 대신 패널 위 떠 있는 카드로 분리(패널 높이 고정), "최근 등록 상품" 칩 줄은 비어 있어도 같은 높이 유지(첫 등록 시 한 번 커지던 것 제거) · `ui/screens/home/components/AddItemSheet.kt` (커밋 a3a2491)
 
 - 2026-09-24 · **v1.2.1 (vc7)** 위젯 미표시 버그 수정: 릴리스 R8이 WorkManager `OverwritingInputMerger` 생성자를 제거해 Glance SessionWorker가 시작 즉시 실패 → 배치된 위젯이 실제 데이터를 한 번도 못 그리고 미리보기 견본(이마트 5/다이소 3)에 고정돼 있던 문제(스토어 1.2.0에도 존재, "위젯 카운트≠앱 카운트"의 진짜 원인). keep 규칙 추가 + 프로세스 시작·앱 이탈 시 자가 복구 렌더 + 위젯 데이터 Flow 재시도/세션당 1개 · `app/proguard-rules.pro`, `util/WidgetUpdater.kt`, `MainActivity.kt`, `widget/BaseGroceryWidget.kt`, `widget/common/WidgetCommon.kt`
 - 2026-09-24 · 완료 탭 필터 줄에 "선택 필 따라가기" 최소 스크롤 추가(맨 오른쪽 마트로 스와이프 시 필이 잘린 채 남던 문제). 필터 줄은 완료 0개 마트도 계속 표시(잠깐 숨겼다가 "허전하다"로 원복) · `ui/screens/completed/CompletedScreen.kt`

@@ -23,3 +23,7 @@ keystore.properties
 GoogleService-Info.plist
 .kotlin/
 out/
+
+# 실기기 스크린샷(개인정보) — 시안 HTML만 커밋
+sample/*.jpg
+sample/*.png

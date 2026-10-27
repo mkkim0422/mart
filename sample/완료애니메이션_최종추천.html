@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>완료 애니메이션 최종 추천</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F6; --card:#FFFFFF; --phone:#FAFAF7; --divider:#E5E8EB;
+  --text:#191F28; --text2:#4E5968; --text3:#8B95A1; --disabled:#C9CDD2;
+  --brand:#3182F6; --brandSoft:#E8F3FF; --success:#2BA471;
+  --ink:#24407F; --redpen:#E0453F; --line:#DCE6F2; --margin:#F3B4B4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111114; --card:#1F1F23; --phone:#17171B; --divider:#3A3D42;
+    --text:#F2F4F6; --text2:#A8B0BA; --text3:#6B7684; --disabled:#4E5968;
+    --brand:#4592FF; --brandSoft:#1A2D4D; --success:#3FBE85;
+    --ink:#9DB4FF; --redpen:#FF7A74; --line:#2A3140; --margin:#5A2E33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111114; --card:#1F1F23; --phone:#17171B; --divider:#3A3D42;
+  --text:#F2F4F6; --text2:#A8B0BA; --text3:#6B7684; --disabled:#4E5968;
+  --brand:#4592FF; --brandSoft:#1A2D4D; --success:#3FBE85;
+  --ink:#9DB4FF; --redpen:#FF7A74; --line:#2A3140; --margin:#5A2E33;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  letter-spacing:-0.02em; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:32px 16px 64px}
+header h1{font-size:24px; font-weight:700; margin:0 0 6px}
+header p{color:var(--text2); font-size:15px; margin:0}
+.toolbar{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 8px; position:sticky; top:0; z-index:20; background:var(--bg); padding:10px 0}
+.btn{
+  appearance:none; border:1px solid var(--divider); background:var(--card); color:var(--text2);
+  height:40px; padding:0 16px; border-radius:12px; font:inherit; font-size:14px; font-weight:500; cursor:pointer; transition:transform .15s;
+}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+.btn[aria-pressed="true"]{background:var(--brandSoft); color:var(--brand); border-color:var(--brand)}
+.section-title{font-size:20px; font-weight:700; margin:32px 0 4px}
+.section-sub{color:var(--text2); font-size:14px; margin:0 0 16px}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px}
+.card{background:var(--card); border:0.5px solid var(--divider); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:12px}
+.card.best{border:1.5px solid var(--brand)}
+.card-head{display:flex; align-items:center; gap:10px}
+.num{font-size:12px; font-weight:700; color:var(--brand); background:var(--brandSoft); border-radius:8px; padding:2px 8px; white-space:nowrap}
+.card-head h2{font-size:17px; font-weight:600; margin:0; flex:1}
+.reset{height:32px; padding:0 12px; font-size:13px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{font-size:12px; font-weight:500; color:var(--text2); background:var(--bg); border-radius:8px; padding:3px 8px}
+.desc{font-size:14px; color:var(--text2); margin:0}
+
+.phone{position:relative; background:var(--phone); border:0.5px solid var(--divider); border-radius:16px; overflow:hidden}
+.list{position:relative}
+.row{position:relative; height:56px; display:flex; align-items:center; gap:10px; padding:0 12px 0 20px; border-bottom:1px solid var(--divider); background:var(--phone)}
+.name-wrap{flex:1; min-width:0}
+.name{position:relative; display:inline-block}
+.txt{position:relative; z-index:1; display:inline-block; font-size:16px; color:var(--text); white-space:nowrap}
+.bell{width:20px; height:20px; color:var(--disabled); flex:none}
+.done{
+  flex:none; height:34px; padding:0 14px; border-radius:10px; border:1px solid var(--divider);
+  background:transparent; color:var(--text2); font:inherit; font-size:14px; cursor:pointer; transition:opacity .2s, transform .15s;
+}
+.done:active{transform:scale(.95)}
+.row.busy .done{opacity:.35; pointer-events:none}
+.more{flex:none; width:14px; color:var(--text3); font-size:18px; text-align:center; line-height:1}
+.ov{position:absolute; pointer-events:none; overflow:visible; z-index:2}
+.hand{position:absolute; z-index:3; top:50%; font-family:"Nanum Pen Script",cursive; font-size:25px; line-height:1; color:var(--redpen); white-space:nowrap; pointer-events:none; clip-path:inset(0 100% 0 0)}
+
+.empty{position:absolute; inset:0; display:none; align-items:center; justify-content:center; color:var(--text3); font-size:14px; text-align:center; z-index:3}
+.phone.is-empty .empty{display:flex}
+.toast{
+  position:absolute; left:12px; right:12px; bottom:12px; z-index:7; background:#2B2D31; color:#fff; border-radius:12px; padding:10px 14px; font-size:13px;
+  display:flex; align-items:center; justify-content:space-between; gap:8px; transform:translateY(240%); transition:transform .25s cubic-bezier(.4,0,.2,1);
+}
+.toast.show{transform:translateY(0)}
+.toast button{background:none; border:0; color:#8FB8FF; font:inherit; font-weight:600; cursor:pointer; padding:4px}
+
+.why{margin:0; padding-left:18px; font-size:13px; color:var(--text2)}
+.why li{margin:2px 0}
+.effort{font-size:13px; color:var(--text3)}
+.effort b{color:var(--text2); font-weight:500}
+
+/* 진행률 */
+.phead{height:48px; padding:0 20px; display:flex; flex-direction:column; justify-content:center; gap:6px; border-bottom:1px solid var(--divider); background:var(--card)}
+.ptext{font-size:13px; color:var(--text2); display:flex; gap:4px; align-items:center}
+.pcount{display:inline-block; height:19px; overflow:hidden; position:relative; font-weight:700; color:var(--brand); min-width:8px; text-align:center}
+.pcount span{display:block}
+.ptrack{height:6px; border-radius:3px; background:var(--divider); overflow:hidden}
+.pbar{height:100%; width:0; background:var(--brand); border-radius:3px; transition:width .5s cubic-bezier(.34,1.45,.64,1), background-color .3s}
+/* 하단 탭 */
+.mininav{position:absolute; left:0; right:0; bottom:0; height:52px; display:flex; border-top:1px solid var(--divider); background:var(--card); z-index:4}
+.mininav > div{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:11px; color:var(--text3); gap:1px; position:relative; transition:color .2s}
+.mininav > div.on{color:var(--brand)}
+.mininav svg{width:20px; height:20px}
+.badge{position:absolute; top:4px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#F04452; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; font-style:normal}
+.badge:empty{display:none}
+.flyer{position:absolute; z-index:6; pointer-events:none; transform-origin:left center}
+/* 스와이프 */
+.phone .row.swipeable{padding:0; background:var(--success)}
+.slide{position:absolute; inset:0; display:flex; align-items:center; gap:10px; padding:0 12px 0 20px; background:var(--phone); touch-action:pan-y; cursor:grab; z-index:1}
+.swipe-under{position:absolute; left:20px; top:50%; transform:translateY(-50%); color:#fff; display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; opacity:0}
+/* 피날레 */
+.confetti{position:absolute; z-index:6; width:7px; height:11px; border-radius:2px; pointer-events:none}
+.cele{display:flex; flex-direction:column; align-items:center; gap:2px}
+.cele .big{font-size:34px; line-height:1.2}
+.cele b{font-size:17px; color:var(--text)}
+.cele span{font-size:13px; color:var(--text2)}
+.goodjob{
+  width:112px; height:112px; border-radius:50%; border:4px solid var(--redpen); color:var(--redpen);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15;
+  box-shadow:inset 0 0 0 4px var(--phone), inset 0 0 0 6px var(--redpen); filter:url(#rough); margin-bottom:10px;
+}
+.goodjob small{font-size:15px; font-weight:700}
+.goodjob strong{font-size:21px; font-weight:800; letter-spacing:-.04em}
+.goodjob i{font-style:normal; font-size:14px; margin-top:2px}
+
+/* 노트 배경 */
+body.paper .phone{
+  background-image:
+    linear-gradient(90deg, transparent 33px, var(--margin) 33px, var(--margin) 35px, transparent 35px),
+    repeating-linear-gradient(180deg, transparent 0 55px, var(--line) 55px 56px);
+}
+body.paper .phone.has-head{background-position:0 0, 0 49px}
+body.paper .row{background:transparent; border-bottom-color:transparent; padding-left:46px}
+body.paper .slide{padding-left:46px}
+
+section.rec{margin-top:32px; background:var(--card); border:0.5px solid var(--divider); border-radius:16px; padding:24px 20px}
+section.rec h2{font-size:20px; margin:0 0 12px}
+section.rec p, section.rec li{font-size:15px; color:var(--text2)}
+section.rec b{color:var(--text)}
+@media (max-width:420px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>
+    <filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="1" seed="7"/><feDisplacementMap in="SourceGraphic" scale="1.1"/></filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>완료 애니메이션 최종 추천 6개</h1>
+    <p>단일 동작 3개와, 장점을 합친 조합 3개입니다. 조합은 마지막 항목까지 다 눌러봐야 전체 흐름이 보입니다.</p>
+  </header>
+  <div class="toolbar">
+    <button class="btn primary" id="playAll">전체 한 개씩 재생</button>
+    <button class="btn" id="resetAll">전체 다시</button>
+    <button class="btn" id="paperBtn" aria-pressed="false">줄노트 배경</button>
+    <button class="btn" id="themeBtn">다크 모드 전환</button>
+  </div>
+
+  <h2 class="section-title">가장 추천하는 단일 동작 3개</h2>
+  <p class="section-sub">"노트에 썼다가 완료한다"는 느낌을 가장 잘 살리는 순서입니다.</p>
+  <div class="grid" id="grid1"></div>
+
+  <h2 class="section-title">조합하면 좋은 3가지</h2>
+  <p class="section-sub">누를 때의 손맛, 진행감, 끝났을 때의 보상을 하나의 흐름으로 묶었습니다.</p>
+  <div class="grid" id="grid2"></div>
+
+  <section class="rec">
+    <h2>제 최종 선택</h2>
+    <p><b>조합 1 노트 완성형</b>을 가장 추천합니다. 펜으로 긋고 "샀다!"를 적는 손맛, 위쪽 진행률, 다 샀을 때 "참 잘했어요" 도장까지 전부 종이 노트라는 한 가지 이야기로 이어집니다. 30~50대에게 "참 잘했어요" 도장은 익숙하고 정겨운 보상이라 색종이보다 마트노트다운 마무리입니다.</p>
+    <p>한 번에 다 넣기 부담스러우면 <b>단일 2 볼펜 취소선</b>부터 바꾸고, 진행률, 여백 메모, 도장 순서로 하나씩 더하면 됩니다. 각 단계가 따로 완성된 상태라 중간에 멈춰도 괜찮습니다.</p>
+    <p>실제 앱에서는 손글씨 폰트를 통째로 넣지 않습니다. "샀다!" 같은 단어 몇 개와 도장만 벡터 그림으로 넣어서 앱 용량을 지킵니다.</p>
+  </section>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const EASE = "cubic-bezier(.4,0,.2,1)";
+const SPRING = "cubic-bezier(.34,1.56,.64,1)";
+const PALETTE = ["#3182F6", "#FFB800", "#F04452", "#2BA471", "#8B5CF6", "#F564A9", "#FF8A3D"];
+const ICON_LIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`;
+const ICON_DONE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>`;
+const ICON_GEAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 2.3"/></svg>`;
+const ICON_CHECK_W = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const BELL = `<svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`;
+const EMPTY_TEXT = "다 샀어요 · 다시를 눌러보세요";
+
+/* ---------- 그리기 도구 ---------- */
+function relRect(el, base) {
+  const a = el.getBoundingClientRect(), b = base.getBoundingClientRect();
+  return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height };
+}
+function overlay(row, pad = 8) {
+  const name = row.querySelector(".name"), t = row.querySelector(".txt");
+  const w = t.offsetWidth, h = t.offsetHeight;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "ov");
+  svg.setAttribute("width", w + pad * 2);
+  svg.setAttribute("height", h + pad * 2);
+  svg.setAttribute("viewBox", `0 0 ${w + pad * 2} ${h + pad * 2}`);
+  svg.style.left = -pad + "px";
+  svg.style.top = -pad + "px";
+  name.appendChild(svg);
+  return { svg, w, h, pad, t };
+}
+function stroke(svg, d, { color, width = 2.4, dur = 500, delay = 0, ease = "cubic-bezier(.3,.1,.3,1)" }) {
+  const p = document.createElementNS(NS, "path");
+  p.setAttribute("d", d);
+  p.setAttribute("fill", "none");
+  p.setAttribute("stroke", color);
+  p.setAttribute("stroke-width", width);
+  p.setAttribute("stroke-linecap", "round");
+  p.setAttribute("stroke-linejoin", "round");
+  p.setAttribute("filter", "url(#ink)");
+  svg.appendChild(p);
+  const L = p.getTotalLength() + 1;
+  p.style.strokeDasharray = L;
+  p.style.strokeDashoffset = L;
+  return p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, easing: ease, fill: "forwards" });
+}
+function wobble(x0, y0, x1, y1, amp = 1.3, seg = 4) {
+  let d = `M${x0.toFixed(1)},${y0.toFixed(1)}`;
+  for (let i = 1; i <= seg; i++) {
+    const t = i / seg, tm = (i - 0.5) / seg;
+    const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t + (i < seg ? rnd(-amp, amp) * 0.4 : 0);
+    const cx = x0 + (x1 - x0) * tm, cy = y0 + (y1 - y0) * tm + rnd(-amp, amp);
+    d += ` Q${cx.toFixed(1)},${cy.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;
+  }
+  return d;
+}
+function fadeText(row, delay = 0, dur = 300) {
+  row.querySelector(".txt").animate([{ color: cssVar("--text") }, { color: cssVar("--text3") }], { duration: dur, delay, easing: EASE, fill: "forwards" });
+}
+function strike(row, dur, delay = 0) {
+  const o = overlay(row);
+  const y = o.pad + o.h * 0.56;
+  stroke(o.svg, wobble(o.pad - 3, y + 1, o.pad + o.w + 4, y - 1.5), { color: cssVar("--ink"), dur, delay, width: 2.3 });
+}
+
+/* ---------- 누를 때 동작 3종 (fast = 조합에서 다른 동작과 이어질 때) ---------- */
+const PRESS = {
+  async margin(row, fast) {
+    strike(row, fast ? 340 : 440);
+    fadeText(row, fast ? 220 : 300);
+    const name = row.querySelector(".name"), t = row.querySelector(".txt");
+    const words = ["샀다!", "득템!", "OK ✓", "샀다!"];
+    const n = document.createElement("div");
+    n.className = "hand";
+    n.textContent = words[Math.floor(Math.random() * words.length)];
+    n.style.left = (t.offsetWidth + 10) + "px";
+    n.style.transform = `translateY(-55%) rotate(${rnd(-7, -3).toFixed(1)}deg)`;
+    name.appendChild(n);
+    n.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)" }], { duration: fast ? 300 : 380, delay: fast ? 320 : 460, easing: "cubic-bezier(.3,0,.4,1)", fill: "forwards" });
+    await wait(fast ? 720 : 1000);
+  },
+  async pen(row, fast) {
+    strike(row, fast ? 380 : 620);
+    fadeText(row, fast ? 250 : 420);
+    await wait(fast ? 480 : 1000);
+  },
+  async check(row, fast) {
+    const o = overlay(row, 8);
+    o.t.animate([{ transform: "translateX(0)" }, { transform: "translateX(30px)" }], { duration: 220, easing: EASE, fill: "forwards" });
+    const p = o.pad, h = o.h;
+    const d = `M${p + 1},${p + h * 0.52} Q${p + 5},${p + h * 0.68} ${p + 9},${p + h * 0.95} Q${p + 14},${p + h * 0.35} ${p + 25},${p - 2}`;
+    stroke(o.svg, d, { color: cssVar("--ink"), dur: 380, delay: 160, width: 2.7, ease: "cubic-bezier(.5,0,.3,1)" });
+    fadeText(row, 480, 320);
+    await wait(fast ? 760 : 1000);
+  }
+};
+
+/* ---------- 조합용 부품 ---------- */
+function addProgress(card) {
+  const total = card.items.length;
+  card.ptotal = total;
+  card.pdone = 0;
+  const head = document.createElement("div");
+  head.className = "phead inj";
+  head.innerHTML = `<div class="ptext"><span>쿠팡 ·</span><span class="pcount"><span>0</span></span><span class="plabel">/ ${total} 샀어요</span></div><div class="ptrack"><div class="pbar"></div></div>`;
+  const phone = card.querySelector(".phone");
+  phone.insertBefore(head, phone.querySelector(".list"));
+  phone.classList.add("has-head");
+}
+function setCount(card, n) {
+  const cont = card.querySelector(".pcount");
+  [...cont.children].slice(0, -1).forEach(el => el.remove());
+  const old = cont.lastElementChild;
+  const prev = old ? +old.textContent : 0;
+  const dir = n >= prev ? 1 : -1;
+  const neu = document.createElement("span");
+  neu.textContent = n;
+  if (old) {
+    Object.assign(old.style, { position: "absolute", left: 0, right: 0, top: 0 });
+    old.animate([{ transform: "translateY(0)", opacity: 1 }, { transform: `translateY(${-100 * dir}%)`, opacity: 0 }], { duration: 260, easing: EASE, fill: "forwards" }).finished.then(() => old.remove());
+  }
+  cont.appendChild(neu);
+  neu.animate([{ transform: `translateY(${100 * dir}%)`, opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: 320, easing: SPRING });
+  const total = card.ptotal, bar = card.querySelector(".pbar");
+  bar.style.width = (n / total * 100) + "%";
+  bar.style.backgroundColor = n === total ? cssVar("--success") : "";
+  card.querySelector(".plabel").textContent = n === total ? `/ ${total} 다 샀어요!` : `/ ${total} 샀어요`;
+}
+function addNav(card) {
+  const nav = document.createElement("div");
+  nav.className = "mininav inj";
+  nav.innerHTML = `<div class="on">${ICON_LIST}<span>구매예정</span></div><div class="tab-done">${ICON_DONE}<span>완료</span><i class="badge"></i></div><div>${ICON_GEAR}<span>설정</span></div>`;
+  card.querySelector(".phone").appendChild(nav);
+  card.querySelector(".toast").style.bottom = "64px";
+  card.doneN = 0;
+}
+async function flyToTab(row, card) {
+  const phone = card.querySelector(".phone"), name = row.querySelector(".name");
+  const tab = phone.querySelector(".tab-done"), icon = tab.querySelector("svg");
+  const a = relRect(name, phone), b = relRect(icon, phone);
+  const f = name.cloneNode(true);
+  f.classList.add("flyer");
+  f.style.left = a.x + "px";
+  f.style.top = a.y + "px";
+  phone.appendChild(f);
+  name.style.visibility = "hidden";
+  const dx = b.x + b.w / 2 - a.x - 4, dy = b.y + b.h / 2 - a.y - a.h / 2;
+  await f.animate([
+    { transform: "translate(0,0) scale(1)", opacity: 1 },
+    { transform: `translate(${dx * 0.4}px, ${Math.min(dy * 0.1, 0) - 34}px) scale(.85)`, opacity: 1, offset: 0.4 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0.3 }
+  ], { duration: 560, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" }).finished;
+  f.remove();
+  card.doneN++;
+  tab.querySelector(".badge").textContent = card.doneN;
+  tab.classList.add("on");
+  tab.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.95)" }, { transform: "scale(1)" }], { duration: 380, easing: "ease-out" });
+  setTimeout(() => tab.classList.remove("on"), 520);
+  vib(10);
+  await wait(200);
+}
+function makeSwipeable(row, card) {
+  row.classList.add("swipeable");
+  const slide = document.createElement("div");
+  slide.className = "slide";
+  while (row.firstChild) slide.appendChild(row.firstChild);
+  const under = document.createElement("div");
+  under.className = "swipe-under";
+  under.innerHTML = ICON_CHECK_W + "<span>완료</span>";
+  row.append(under, slide);
+  let x0 = null, dx = 0, W = 0, passed = false;
+  slide.addEventListener("pointerdown", e => {
+    if (e.target.closest(".done") || row.classList.contains("busy")) return;
+    x0 = e.clientX; W = row.offsetWidth; passed = false; dx = 0;
+    slide.setPointerCapture(e.pointerId);
+    slide.style.cursor = "grabbing";
+  });
+  slide.addEventListener("pointermove", e => {
+    if (x0 === null) return;
+    dx = Math.max(0, e.clientX - x0);
+    slide.style.transform = `translateX(${dx}px)`;
+    under.style.opacity = Math.min(1, dx / (W * 0.33));
+    const over = dx > W * 0.33;
+    if (over !== passed) {
+      passed = over;
+      vib(10);
+      under.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: `translateY(-50%) scale(${over ? 1.25 : 1})` }], { duration: 180, fill: "forwards", easing: SPRING });
+    }
+  });
+  const end = () => {
+    if (x0 === null) return;
+    x0 = null;
+    slide.style.cursor = "";
+    const from = dx;
+    slide.style.transform = "";
+    const back = slide.animate([{ transform: `translateX(${from}px)` }, { transform: "translateX(0)" }], { duration: passed ? 200 : 280, easing: passed ? EASE : SPRING });
+    back.finished.then(() => { under.style.opacity = 0; });
+    if (passed) setTimeout(() => complete(row, card), 180);
+  };
+  slide.addEventListener("pointerup", end);
+  slide.addEventListener("pointercancel", end);
+}
+function confetti(card) {
+  const phone = card.querySelector(".phone");
+  const W = phone.clientWidth, H = phone.clientHeight;
+  for (let i = 0; i < 42; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.background = PALETTE[i % PALETTE.length];
+    c.style.left = W / 2 + "px";
+    c.style.top = H * 0.5 + "px";
+    if (i % 3 === 0) c.style.borderRadius = "50%";
+    phone.appendChild(c);
+    const ang = rnd(-160, -20) * Math.PI / 180, sp = rnd(90, 170);
+    const vx = Math.cos(ang) * sp, vy = Math.sin(ang) * sp, rot = rnd(-540, 540);
+    c.animate([
+      { transform: "translate(0,0) rotate(0) scale(.6)", opacity: 1 },
+      { transform: `translate(${vx * 0.7}px, ${vy * 0.7}px) rotate(${rot * 0.5}deg) scale(1)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${vx}px, ${vy * 0.6 + 160}px) rotate(${rot}deg) scale(.9)`, opacity: 0 }
+    ], { duration: rnd(1000, 1400), easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" }).finished.then(() => c.remove());
+  }
+}
+const FINALE = {
+  confetti(card) {
+    const em = card.querySelector(".empty");
+    em.innerHTML = `<div class="cele"><div class="big">🎉</div><b>장보기 끝!</b><span>오늘 ${card.items.length}개 다 샀어요</span></div>`;
+    em.firstElementChild.animate([{ transform: "scale(.6)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }], { duration: 480, easing: SPRING });
+    confetti(card);
+    vib([12, 50, 12]);
+  },
+  stamp(card) {
+    const em = card.querySelector(".empty");
+    em.innerHTML = `<div class="cele"><div class="goodjob"><small>참</small><strong>잘했어요</strong><i>◡̈</i></div><b>장보기 끝!</b><span>오늘 ${card.items.length}개 다 샀어요</span></div>`;
+    const s = em.querySelector(".goodjob");
+    s.animate([
+      { transform: "scale(2.6) rotate(-16deg)", opacity: 0 },
+      { transform: "scale(.9) rotate(-12deg)", opacity: 1, offset: 0.6 },
+      { transform: "scale(1) rotate(-12deg)", opacity: 0.95 }
+    ], { duration: 380, easing: "cubic-bezier(.5,0,.8,.6)", fill: "forwards" });
+    [...em.querySelectorAll(".cele b, .cele span")].forEach((el, i) => el.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 300, delay: 360 + i * 80, fill: "both", easing: EASE }));
+    const phone = card.querySelector(".phone");
+    setTimeout(() => {
+      phone.animate([{ transform: "translateY(0)" }, { transform: "translateY(3px)" }, { transform: "translateY(-1px)" }, { transform: "translateY(0)" }], { duration: 180 });
+      vib(25);
+    }, 230);
+  }
+};
+
+/* ---------- 6개 시안 ---------- */
+const ITEMS4 = ["우유", "두부 한 모", "키친타월", "건전지 AA"];
+const ITEMS3 = ["대파", "계란 한 판", "식빵"];
+const DEMOS = [
+  {
+    group: 1, label: "추천 1위", title: "여백 메모 '샀다!'", press: "margin", items: ITEMS4,
+    chips: ["펜 취소선", "손글씨 한마디"],
+    desc: "펜으로 줄을 긋고 바로 옆 여백에 빨간 펜으로 '샀다!'나 '득템!'을 휘갈깁니다.",
+    why: ["진짜 장보기 메모지에서 하는 행동 그대로라 노트 느낌이 가장 강함", "매번 단어가 바뀌어서 지루하지 않고, 소소한 재미가 있음", "'샀다'라는 뜻을 글자로 직접 말해줘서 오해가 없음"],
+    effort: "보통 · 단어 4개를 벡터 그림으로 넣으면 용량 부담 없음"
+  },
+  {
+    group: 1, label: "추천 2위", title: "볼펜 취소선", press: "pen", items: ITEMS4,
+    chips: ["손으로 그은 펜 선"],
+    desc: "곧은 선 대신 살짝 떨리고 기울어진 볼펜 선을 긋습니다. 지금 동작에서 선 모양만 바뀝니다.",
+    why: ["가장 적게 바꾸고 노트 느낌을 바로 얻는 방법", "누구나 아는 '줄 긋기'라 50대도 설명이 필요 없음", "다른 어떤 조합의 기본 바탕으로도 쓸 수 있음"],
+    effort: "쉬움 · 지금 취소선 그리는 코드의 경로만 교체"
+  },
+  {
+    group: 1, label: "추천 3위", title: "손그림 체크", press: "check", items: ITEMS4,
+    chips: ["펜으로 그린 ✓"],
+    desc: "글자가 살짝 밀리면서 앞에 펜으로 ✓를 그립니다. 체크리스트 종이에 표시하는 느낌입니다.",
+    why: ["'완료'라는 뜻이 가장 분명함", "가장 차분해서 토스식 깔끔함과 잘 맞음", "글자를 지우지 않아서 끝까지 잘 읽힘"],
+    effort: "쉬움"
+  },
+  {
+    group: 2, label: "조합 1 · 최종 추천", best: true, title: "노트 완성형", press: "margin", progress: true, finale: "stamp", items: ITEMS3,
+    chips: ["여백 메모", "진행률", "참 잘했어요 도장"],
+    desc: "누르면 '샀다!'를 적고, 위쪽 숫자가 올라가고, 다 사면 '참 잘했어요' 도장이 쾅 찍힙니다. 3개를 다 눌러보세요.",
+    why: ["누르는 순간, 진행 중, 끝났을 때가 모두 '종이 노트' 하나의 이야기로 이어짐", "'참 잘했어요' 도장은 30~50대에게 익숙하고 정겨운 보상", "마트에서 몇 개 남았는지 위쪽에서 바로 보임"],
+    effort: "보통 · 단계별로 하나씩 넣어도 됨"
+  },
+  {
+    group: 2, label: "조합 2", title: "가벼운 기본형", press: "pen", progress: true, fly: true, items: ITEMS3,
+    chips: ["볼펜 취소선", "진행률", "완료 탭으로 쏙"],
+    desc: "줄을 그은 항목이 아래 '완료' 탭으로 날아 들어가고 배지가 올라갑니다. 위쪽 진행률도 같이 오릅니다.",
+    why: ["산 항목이 사라진 게 아니라 '완료'로 갔다는 걸 눈으로 알려줌", "처음 쓰는 분이 '어디 갔지?' 하고 헤매는 일이 줄어듦", "화려한 축하 없이 조용하고 깔끔함"],
+    effort: "보통"
+  },
+  {
+    group: 2, label: "조합 3", title: "한 손 장보기형", press: "check", progress: true, swipe: true, finale: "confetti", items: ITEMS3,
+    chips: ["밀어서 완료", "손그림 체크", "진행률", "색종이 축하"],
+    desc: "카트를 밀며 엄지로 줄을 오른쪽으로 쓱 밀면 체크가 그려집니다. 버튼도 됩니다. 다 사면 색종이가 터집니다.",
+    why: ["한 손으로 장볼 때 가장 편함", "밀기는 숨은 동작이라 버튼과 같이 둬서 누구나 쓸 수 있음", "마지막 축하로 장보기를 끝냈다는 기분이 확실함"],
+    effort: "보통 · 밀기 제스처 추가 필요"
+  }
+];
+
+/* ---------- 카드 구성 ---------- */
+DEMOS.forEach(demo => {
+  const card = document.createElement("article");
+  card.className = "card" + (demo.best ? " best" : "");
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="num">${demo.label}</span>
+      <h2>${demo.title}</h2>
+      <button class="btn reset">다시</button>
+    </div>
+    <div class="chips">${demo.chips.map(c => `<span class="chip">${c}</span>`).join("")}</div>
+    <p class="desc">${demo.desc}</p>
+    <div class="phone">
+      <div class="list"></div>
+      <div class="empty"></div>
+      <div class="toast"><span class="msg"></span><button type="button">되돌리기</button></div>
+    </div>
+    <ul class="why">${demo.why.map(w => `<li>${w}</li>`).join("")}</ul>
+    <div class="effort"><b>앱 구현</b> · ${demo.effort}</div>`;
+  card.demo = demo;
+  card.items = demo.items;
+  const h = demo.items.length * 56 + (demo.progress ? 49 : 0) + (demo.fly ? 52 : 0) + 28;
+  card.querySelector(".phone").style.height = Math.max(h, demo.finale ? 280 : 196) + "px";
+  document.getElementById("grid" + demo.group).appendChild(card);
+  card.querySelector(".reset").onclick = () => buildList(card);
+  buildList(card);
+});
+
+function makeRow(name, card) {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<div class="name-wrap"><span class="name"><span class="txt"></span></span></div>${BELL}<button class="done" type="button">완료</button><span class="more">⋮</span>`;
+  row.querySelector(".txt").textContent = name;
+  row.dataset.name = name;
+  row.querySelector(".done").onclick = () => complete(row, card);
+  if (card.demo.swipe) makeSwipeable(row, card);
+  return row;
+}
+function buildList(card) {
+  const phone = card.querySelector(".phone");
+  phone.querySelectorAll(".inj, .confetti, .flyer").forEach(el => el.remove());
+  phone.classList.remove("is-empty", "has-head");
+  const list = card.querySelector(".list");
+  list.innerHTML = "";
+  card.items.forEach(n => list.appendChild(makeRow(n, card)));
+  card.querySelector(".empty").textContent = EMPTY_TEXT;
+  const toast = card.querySelector(".toast");
+  toast.classList.remove("show");
+  toast.style.bottom = "";
+  if (card.demo.progress) addProgress(card);
+  if (card.demo.fly) addNav(card);
+}
+async function complete(row, card) {
+  if (row.classList.contains("busy")) return;
+  row.classList.add("busy");
+  row.setAttribute("aria-label", row.dataset.name + " 완료됨");
+  vib(12);
+  const d = card.demo;
+  const combo = d.group === 2;
+  if (!reduced) {
+    if (d.progress) setTimeout(() => { card.pdone++; setCount(card, card.pdone); }, 380);
+    await PRESS[d.press](row, d.fly);
+    if (d.fly) await flyToTab(row, card);
+  } else if (d.progress) { card.pdone++; setCount(card, card.pdone); }
+  const list = card.querySelector(".list");
+  const idx = [...list.children].indexOf(row);
+  const h = row.offsetHeight;
+  await row.animate([{ height: h + "px", opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 260, easing: EASE, fill: "forwards" }).finished;
+  row.remove();
+  const empty = !list.children.length;
+  if (empty) {
+    card.querySelector(".phone").classList.add("is-empty");
+    if (combo && d.finale) FINALE[d.finale](card);
+  }
+  showToast(card, row.dataset.name, idx);
+}
+function showToast(card, name, idx) {
+  const toast = card.querySelector(".toast");
+  toast.querySelector(".msg").textContent = `'${name}' 완료했어요`;
+  toast.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove("show"), 2600);
+  toast.querySelector("button").onclick = () => {
+    const list = card.querySelector(".list");
+    const r = makeRow(name, card);
+    list.insertBefore(r, list.children[idx] || null);
+    card.querySelector(".phone").classList.remove("is-empty");
+    card.querySelector(".empty").textContent = EMPTY_TEXT;
+    r.animate([{ height: "0px", opacity: 0 }, { height: "56px", opacity: 1 }], { duration: 220, easing: EASE });
+    if (card.demo.progress) { card.pdone = Math.max(0, card.pdone - 1); setCount(card, card.pdone); }
+    if (card.demo.fly) { card.doneN = Math.max(0, card.doneN - 1); card.querySelector(".badge").textContent = card.doneN || ""; }
+    toast.classList.remove("show");
+  };
+}
+
+/* ---------- 툴바 ---------- */
+document.getElementById("playAll").onclick = () => {
+  document.querySelectorAll(".card").forEach((card, i) => {
+    setTimeout(() => {
+      const row = card.querySelector(".row:not(.busy)");
+      row && complete(row, card);
+    }, i * 90);
+  });
+};
+document.getElementById("resetAll").onclick = () => document.querySelectorAll(".card").forEach(buildList);
+document.getElementById("paperBtn").onclick = e => {
+  const on = document.body.classList.toggle("paper");
+  e.currentTarget.setAttribute("aria-pressed", on);
+};
+document.getElementById("themeBtn").onclick = () => {
+  const root = document.documentElement;
+  const isDark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = isDark ? "light" : "dark";
+  document.querySelectorAll(".card").forEach(buildList);
+};
+</script>
+</body>
+</html>

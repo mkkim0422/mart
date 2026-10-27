@@ -32,6 +32,15 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val WidgetNudgeLastShownAt = longPreferencesKey("widget_nudge_last_shown_at")
         val LargeWidgetStoreIds = stringPreferencesKey("large_widget_store_ids")
         val HasSeenVoiceIntro = booleanPreferencesKey("has_seen_voice_intro")
+        val HasSeenSearchHint = booleanPreferencesKey("has_seen_search_hint")
+    }
+
+    /** One-time tip on online-mart tabs ("🔍 누르면 쿠팡에서 바로 검색"); cleared on dismiss or first use. */
+    val hasSeenSearchHint: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasSeenSearchHint] ?: false }
+
+    suspend fun setSearchHintSeen() {
+        context.dataStore.edit { it[Keys.HasSeenSearchHint] = true }
     }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data

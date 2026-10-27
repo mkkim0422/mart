@@ -11,10 +11,11 @@ import androidx.glance.unit.ColorProvider
  * We no longer use Glance's day/night [ColorProvider] (which defers the light/dark
  * decision to the LAUNCHER). Some launchers — notably One UI — render the widget in
  * dark even when the system is in light mode ("폰은 라이트인데 위젯만 다크"). Instead we
- * resolve `isDark` ONCE in [BaseGroceryWidget.provideGlance] (from the app's
- * DarkModePref, Auto→system night) and expose it via [LocalWidgetDark]; every color
- * below is baked as a STATIC provider in-process, so the launcher can't override the
- * theme and the widget always matches the app.
+ * resolve `isDark` ONCE in [BaseGroceryWidget.provideGlance] (from the PHONE's night
+ * mode only — the in-app 다크 모드 toggle does not affect the widget, 2026-10-27) and
+ * expose it via [LocalWidgetDark]; every color below is baked as a STATIC provider
+ * in-process, so the launcher can't override the theme and the widget always matches
+ * the home screen it sits on.
  */
 object WidgetColors {
     val LightBg = Color(0xFFFFFFFF)

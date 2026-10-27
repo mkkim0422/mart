@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import com.rldjrgo.grocerynote.data.local.ProductDictionary
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.domain.model.emoji
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
@@ -125,9 +126,15 @@ fun AddItemSheet(
 
     val suggestions = remember(text, recentItemNames) {
         val q = text.trim()
-        if (q.isEmpty()) emptyList() else recentItemNames
-            .filter { it.startsWith(q, ignoreCase = true) && it != q }
-            .take(5)
+        if (q.isEmpty()) emptyList() else {
+            // 1) This mart's own recents that start with the query (the chips the
+            //    user curates with ✕), 2) the built-in product dictionary
+            //    (ProductDictionary: real grocery keywords, prefix → contains).
+            // Other marts' history is NOT used: one-off entries like "3844"
+            // showing up as suggestions read as noise (user feedback 2026-10-28).
+            val mine = recentItemNames.filter { it != q && it.startsWith(q, ignoreCase = true) }
+            (mine + ProductDictionary.suggest(q, 8)).distinct().take(8)
+        }
     }
     val chips = remember(recentItemNames) { recentItemNames.take(10) }
 
@@ -184,32 +191,11 @@ fun AddItemSheet(
                     .fillMaxWidth()
                     .imePadding(),
             ) {
-            // 패널 높이는 고정. 입력 중 자동완성(0~5줄)은 패널 "안"이 아니라 패널
-            // "위"에 떠 있는 카드로 그린다 — 안에 넣으면 글자마다 줄 수가 바뀌며
-            // 아래 고정 패널의 윗부분이 위아래로 튀었다 (사용자 리포트 2026-09-27).
+            // 패널 높이는 고정. 입력 중 자동완성은 아래 "최근 등록 상품" 칩 줄을
+            // 그 자리에서 "비슷한 항목" 칩으로 바꿔 보여준다 (같은 36dp 줄이라 패널이
+            // 안 튄다). 2026-09-27엔 패널 위에 떠 있는 카드로 뺐었는데, 탭 줄 위에
+            // 반투명으로 겹쳐 읽기 힘들었다 (사용자 리포트 2026-10-28).
             Column(modifier = Modifier.fillMaxWidth()) {
-            if (suggestions.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 8.dp)
-                        .background(colors.bgPrimary, RoundedCornerShape(12.dp))
-                        .padding(vertical = 4.dp),
-                ) {
-                    suggestions.forEach { s ->
-                        Text(
-                            text = s,
-                            style = typo.body,
-                            color = colors.textPrimary,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { text = s }
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                        )
-                    }
-                }
-            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -393,14 +379,34 @@ fun AddItemSheet(
                 // 칩 줄은 비어 있어도 같은 높이를 차지 — 첫 등록 순간 줄이 생기며
                 // 패널이 한 번 커지는 것(윗부분이 위로 튐)을 막는다.
                 run {
+                    val suggesting = suggestions.isNotEmpty()
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        text = "최근 등록 상품",
+                        text = if (suggesting) "비슷한 항목 · 누르면 바로 추가" else "최근 등록 상품",
                         style = typo.bodyS,
-                        color = colors.textTertiary,
+                        color = if (suggesting) colors.brandPrimary else colors.textTertiary,
                     )
                     Spacer(Modifier.height(8.dp))
-                    if (chips.isEmpty()) {
+                    if (suggesting) {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(suggestions) { name ->
+                                Text(
+                                    text = name,
+                                    style = typo.bodyS.copy(fontWeight = FontWeight.Medium),
+                                    color = colors.brandPrimary,
+                                    modifier = Modifier
+                                        .height(36.dp)
+                                        .background(colors.brandPrimarySoft, RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            onAdd(name)
+                                            lastAdded = name
+                                            text = ""
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                )
+                            }
+                        }
+                    } else if (chips.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxWidth().height(36.dp),
                             contentAlignment = Alignment.CenterStart,

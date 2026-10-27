@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>완료 애니메이션 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F6; --card:#FFFFFF; --phone:#FAFAF7; --divider:#E5E8EB;
+  --text:#191F28; --text2:#4E5968; --text3:#8B95A1; --disabled:#C9CDD2;
+  --brand:#3182F6; --brandSoft:#E8F3FF; --success:#2BA471;
+  --successSoft:rgba(43,164,113,.10); --successFill:rgba(43,164,113,.24);
+  --ink:#24407F; --redpen:#E0453F; --hl:rgba(255,212,0,.55);
+  --line:#DCE6F2; --margin:#F3B4B4; --eraser:#F6A7B8; --eraserBand:#7DA7E8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111114; --card:#1F1F23; --phone:#17171B; --divider:#3A3D42;
+    --text:#F2F4F6; --text2:#A8B0BA; --text3:#6B7684; --disabled:#4E5968;
+    --brand:#4592FF; --brandSoft:#1A2D4D; --success:#3FBE85;
+    --successSoft:rgba(63,190,133,.14); --successFill:rgba(63,190,133,.30);
+    --ink:#9DB4FF; --redpen:#FF7A74; --hl:rgba(255,212,0,.35);
+    --line:#2A3140; --margin:#5A2E33; --eraser:#C9788A; --eraserBand:#5C7FC0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111114; --card:#1F1F23; --phone:#17171B; --divider:#3A3D42;
+  --text:#F2F4F6; --text2:#A8B0BA; --text3:#6B7684; --disabled:#4E5968;
+  --brand:#4592FF; --brandSoft:#1A2D4D; --success:#3FBE85;
+  --successSoft:rgba(63,190,133,.14); --successFill:rgba(63,190,133,.30);
+  --ink:#9DB4FF; --redpen:#FF7A74; --hl:rgba(255,212,0,.35);
+  --line:#2A3140; --margin:#5A2E33; --eraser:#C9788A; --eraserBand:#5C7FC0;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  letter-spacing:-0.02em; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:32px 16px 64px}
+header h1{font-size:24px; font-weight:700; margin:0 0 6px}
+header p{color:var(--text2); font-size:15px; margin:0}
+.toolbar{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 8px; position:sticky; top:0; z-index:20; background:var(--bg); padding:10px 0}
+.btn{
+  appearance:none; border:1px solid var(--divider); background:var(--card); color:var(--text2);
+  height:40px; padding:0 16px; border-radius:12px; font:inherit; font-size:14px; font-weight:500; cursor:pointer;
+  transition:transform .15s;
+}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+.btn[aria-pressed="true"]{background:var(--brandSoft); color:var(--brand); border-color:var(--brand)}
+.section-title{font-size:20px; font-weight:700; margin:32px 0 4px}
+.section-sub{color:var(--text2); font-size:14px; margin:0 0 16px}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px}
+.card{background:var(--card); border:0.5px solid var(--divider); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:12px}
+.card-head{display:flex; align-items:center; gap:10px}
+.num{font-size:12px; font-weight:700; color:var(--brand); background:var(--brandSoft); border-radius:8px; padding:2px 8px}
+.card-head h2{font-size:17px; font-weight:600; margin:0; flex:1}
+.reset{height:32px; padding:0 12px; font-size:13px}
+.desc{font-size:14px; color:var(--text2); margin:0; min-height:42px}
+
+.phone{position:relative; background:var(--phone); border:0.5px solid var(--divider); border-radius:16px; overflow:hidden; height:252px}
+.list{position:relative}
+.row{
+  position:relative; height:56px; display:flex; align-items:center; gap:10px;
+  padding:0 12px 0 20px; border-bottom:1px solid var(--divider); background:var(--phone); overflow:visible;
+}
+.name-wrap{flex:1; min-width:0}
+.name{position:relative; display:inline-block}
+.txt{position:relative; z-index:1; display:inline-block; font-size:16px; font-weight:400; color:var(--text); white-space:nowrap}
+.bell{width:20px; height:20px; color:var(--disabled); flex:none}
+.done{
+  flex:none; height:34px; padding:0 14px; border-radius:10px; border:1px solid var(--divider);
+  background:transparent; color:var(--text2); font:inherit; font-size:14px; cursor:pointer; transition:opacity .2s, transform .15s;
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+}
+.done:active{transform:scale(.95)}
+.row.busy .done{opacity:.35; pointer-events:none}
+.more{flex:none; width:14px; color:var(--text3); font-size:18px; text-align:center; line-height:1}
+.ov{position:absolute; pointer-events:none; overflow:visible}
+.ov.under{z-index:0}
+.ov.over{z-index:2}
+
+.empty{position:absolute; inset:0; display:none; align-items:center; justify-content:center; color:var(--text3); font-size:14px; text-align:center}
+.phone.is-empty .empty{display:flex}
+
+.toast{
+  position:absolute; left:12px; right:12px; bottom:12px; z-index:7;
+  background:#2B2D31; color:#fff; border-radius:12px; padding:10px 14px; font-size:13px;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  transform:translateY(240%); transition:transform .25s cubic-bezier(.4,0,.2,1);
+}
+.toast.show{transform:translateY(0)}
+.toast button{background:none; border:0; color:#8FB8FF; font:inherit; font-weight:600; cursor:pointer; padding:4px}
+
+.meta{display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:13px; color:var(--text2)}
+.meta dt{color:var(--text3); white-space:nowrap}
+.meta dd{margin:0}
+.stars{color:var(--brand); letter-spacing:1px}
+
+/* 노트 배경 모드 */
+body.paper .phone{
+  background-color:var(--phone);
+  background-image:
+    linear-gradient(90deg, transparent 33px, var(--margin) 33px, var(--margin) 35px, transparent 35px),
+    repeating-linear-gradient(180deg, transparent 0 55px, var(--line) 55px 56px);
+}
+body.paper .row{background:transparent; border-bottom-color:transparent; padding-left:46px}
+body.paper .row.lift{background:var(--phone)}
+
+/* 1차 소품 */
+.stamp{
+  position:absolute; z-index:3; top:50%; padding:1px 8px; border:2.5px solid var(--redpen); border-radius:7px;
+  color:var(--redpen); font-weight:700; font-size:15px; letter-spacing:.1em; white-space:nowrap;
+  filter:url(#rough); opacity:0; pointer-events:none;
+}
+.hand{
+  position:absolute; z-index:3; top:50%; font-family:"Nanum Pen Script",cursive; font-size:25px; line-height:1;
+  color:var(--redpen); white-space:nowrap; pointer-events:none; clip-path:inset(0 100% 0 0);
+}
+.eraser{
+  position:absolute; z-index:3; width:36px; height:20px; border-radius:4px; pointer-events:none;
+  background:linear-gradient(90deg, var(--eraser) 0 64%, var(--eraserBand) 64% 100%);
+  box-shadow:0 2px 4px rgba(0,0,0,.15);
+}
+.crumb{position:absolute; z-index:3; width:4px; height:3px; border-radius:2px; background:var(--eraser); pointer-events:none}
+
+/* 2차 소품 */
+.mininav{position:absolute; left:0; right:0; bottom:0; height:52px; display:flex; border-top:1px solid var(--divider); background:var(--card); z-index:4}
+.mininav > div{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:11px; color:var(--text3); gap:1px; position:relative; transition:color .2s}
+.mininav > div.on{color:var(--brand)}
+.mininav svg{width:20px; height:20px}
+.badge{position:absolute; top:4px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#F04452; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; font-style:normal}
+.badge:empty{display:none}
+.flyer{position:absolute; z-index:6; font-size:16px; color:var(--text); white-space:nowrap; pointer-events:none; transform-origin:left center}
+.phead{height:48px; padding:0 20px; display:flex; flex-direction:column; justify-content:center; gap:6px; border-bottom:1px solid var(--divider); background:var(--card)}
+.ptext{font-size:13px; color:var(--text2); display:flex; gap:4px; align-items:center}
+.pcount{display:inline-block; height:19px; overflow:hidden; position:relative; font-weight:700; color:var(--brand); min-width:8px; text-align:center}
+.pcount span{display:block}
+.ptrack{height:6px; border-radius:3px; background:var(--divider); overflow:hidden}
+.pbar{height:100%; width:0; background:var(--brand); border-radius:3px; transition:width .5s cubic-bezier(.34,1.45,.64,1), background-color .3s}
+.morph{position:absolute; z-index:3; border:1px solid var(--divider); pointer-events:none}
+.morph .ml{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text2)}
+.morph svg{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%)}
+.done.holdbtn{background:linear-gradient(90deg, var(--successFill) var(--pp,0%), transparent var(--pp,0%))}
+.done.holding{border-color:var(--success); color:var(--success)}
+.hint{position:absolute; z-index:8; right:30px; top:46px; background:#2B2D31; color:#fff; font-size:12px; padding:4px 10px; border-radius:8px; white-space:nowrap; pointer-events:none}
+.phone .row.swipeable{padding:0; background:var(--success)}
+.slide{position:absolute; inset:0; display:flex; align-items:center; gap:10px; padding:0 12px 0 20px; background:var(--phone); touch-action:pan-y; cursor:grab; z-index:1}
+body.paper .slide{padding-left:46px}
+.swipe-under{position:absolute; left:20px; top:50%; transform:translateY(-50%); color:#fff; display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; opacity:0}
+.dust{position:absolute; z-index:3; pointer-events:none}
+.lens{
+  position:absolute; z-index:3; left:0; top:5px; width:46px; height:46px; border-radius:50%; pointer-events:none;
+  backdrop-filter:blur(1.5px) saturate(1.9) brightness(1.06); -webkit-backdrop-filter:blur(1.5px) saturate(1.9) brightness(1.06);
+  background:radial-gradient(circle at 30% 26%, rgba(255,255,255,.9), rgba(255,255,255,.18) 30%, rgba(255,255,255,.04) 62%, rgba(255,255,255,.28) 100%);
+  border:1px solid rgba(255,255,255,.75);
+  box-shadow:0 6px 16px rgba(0,0,0,.14), inset 0 -4px 8px rgba(0,0,0,.06), inset 0 2px 3px rgba(255,255,255,.6);
+}
+.confetti{position:absolute; z-index:6; width:7px; height:11px; border-radius:2px; pointer-events:none}
+.emoji{position:absolute; z-index:6; font-size:24px; line-height:1; pointer-events:none}
+.ring{position:absolute; z-index:5; width:34px; height:34px; border-radius:50%; border:2px solid var(--success); pointer-events:none}
+.cele{display:flex; flex-direction:column; align-items:center; gap:2px}
+.cele .big{font-size:34px; line-height:1.2}
+.cele b{font-size:17px; color:var(--text)}
+.cele span{font-size:13px; color:var(--text2)}
+.row.checked{opacity:.55}
+.row.checked .done{opacity:1; pointer-events:auto}
+
+section.rec{margin-top:32px; background:var(--card); border:0.5px solid var(--divider); border-radius:16px; padding:24px 20px}
+section.rec h2{font-size:20px; margin:0 0 12px}
+section.rec h3{font-size:16px; margin:20px 0 6px}
+section.rec p, section.rec li{font-size:15px; color:var(--text2)}
+section.rec ol, section.rec ul{padding-left:20px; margin:6px 0}
+section.rec b{color:var(--text)}
+.combo{background:var(--brandSoft); border-radius:12px; padding:14px 16px; margin-top:8px}
+.combo p{margin:4px 0; color:var(--text)}
+@media (max-width:420px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>
+    <filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="1" seed="7"/><feDisplacementMap in="SourceGraphic" scale="1.1"/></filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>마트노트 완료 애니메이션 시안 20종</h1>
+    <p>각 카드에서 <b>완료</b>를 눌러보세요. 행이 접힌 뒤 되돌리기 안내가 뜹니다. 14번은 줄을 손가락이나 마우스로 오른쪽으로 밀어보세요.</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn primary" id="playAll">전체 한 번에 재생</button>
+    <button class="btn" id="resetAll">전체 다시</button>
+    <button class="btn" id="paperBtn" aria-pressed="false">줄노트 배경</button>
+    <button class="btn" id="themeBtn">다크 모드 전환</button>
+  </div>
+
+  <h2 class="section-title">A. 노트에 쓰고 지우는 느낌 · 01~10</h2>
+  <p class="section-sub">종이 메모지에 펜으로 표시하는 손맛에 집중했습니다.</p>
+  <div class="grid" id="grid1"></div>
+
+  <h2 class="section-title">B. 요즘 트렌드 · UX 관점 · 11~20</h2>
+  <p class="section-sub">2025~26년 앱에서 많이 쓰는 모션과, 마트에서 한 손으로 장보는 상황의 사용성을 기준으로 골랐습니다.</p>
+  <div class="grid" id="grid2"></div>
+
+  <section class="rec">
+    <h2>A 묶음 추천 · 노트 느낌</h2>
+    <p>기준은 다섯 가지입니다. 1초 규칙, "샀다"는 뜻이 바로 읽히는지, 30~50대 여성에게 친근한지, 토스식 깔끔함, 가볍게 만들 수 있는지.</p>
+    <ol>
+      <li><b>10번 여백 메모</b>가 종이 메모에 가장 가깝고 보상감도 있습니다. 실제 앱에서는 손글씨 폰트 대신 단어 몇 개를 벡터로 그려 넣어 용량을 지킵니다.</li>
+      <li><b>1번 볼펜 취소선</b>은 지금 동작에서 선 모양만 바꾸면 돼서 가장 안전합니다.</li>
+      <li><b>4번 체크</b>나 <b>7번 도장</b>은 뜻이 분명합니다. 도장은 진동과 같이 쓰면 손맛이 가장 강합니다.</li>
+    </ol>
+    <p>3번 낙서는 "잘못 적었다", 6번 형광펜은 "중요하다", 9번 지우개는 "삭제"로 읽혀서 권하지 않습니다.</p>
+
+    <h2 style="margin-top:28px">B 묶음 추천 · 트렌드와 UX</h2>
+    <ol>
+      <li><b>17번 진행률</b>은 다른 어떤 애니메이션과도 같이 쓸 수 있고, 비용 대비 효과가 가장 큽니다. 끝이 보일수록 끝까지 하고 싶어지는 효과가 있고, 마트에서 "몇 개 남았지"가 한눈에 보입니다.</li>
+      <li><b>18번 마지막 축하</b>는 사람은 경험의 끝을 가장 오래 기억한다는 원리를 씁니다. 매번 터지면 피곤하니 마지막 한 번만 터뜨립니다.</li>
+      <li><b>11번 장바구니로 쏙</b>은 산 항목이 사라진 게 아니라 완료 탭으로 갔다는 걸 보여줍니다. 50대 사용자가 "어디 갔지?" 하고 헤매는 일을 줄입니다.</li>
+      <li><b>14번 밀어서 완료</b>는 카트를 밀며 한 손으로 쓰기 좋습니다. 다만 숨겨진 동작이라 버튼을 없애면 안 되고, 버튼과 같이 둡니다.</li>
+      <li><b>12번 버튼 변신</b>은 토스 감성에 가장 가깝고, 피드백이 손가락 바로 아래에서 일어납니다.</li>
+    </ol>
+    <h3>트렌드지만 권하지 않는 것</h3>
+    <ul>
+      <li><b>16번 리퀴드 글래스</b>는 아이폰 감성이라 안드로이드에서 어색합니다. 실시간 흐림 효과는 안드로이드 12 미만에서 안 되고 저가폰에서 무겁습니다.</li>
+      <li><b>15번 먼지 효과</b>는 텔레그램 삭제 효과로 알려져 있어 "삭제"로 읽힙니다.</li>
+      <li><b>13번 꾹 누르기</b>는 실수는 막지만 1초 원칙을 깨고 답답합니다. "실수로 눌린다"는 리뷰가 많아지면 그때 고려합니다.</li>
+      <li><b>19번 이모지</b>는 재밌지만 두부·건전지처럼 이모지가 없는 물건이 많습니다.</li>
+    </ul>
+    <h3>따로 고민할 만한 것</h3>
+    <p><b>20번 아래로 내려가기</b>는 UX로는 가장 큰 개선이 될 수 있습니다. 장보는 중에 "이거 담았나?"를 바로 확인할 수 있기 때문입니다. 대신 산 항목이 바로 완료 탭으로 가는 지금 구조를 바꾸는 결정이라, 애니메이션과는 따로 판단하셔야 합니다.</p>
+
+    <h2 style="margin-top:28px">최종 조합 제안</h2>
+    <div class="combo">
+      <p><b>누를 때</b> · 10번 여백 메모 (가볍게 가려면 1번 볼펜 취소선)</p>
+      <p><b>위쪽</b> · 17번 진행률이 같이 차오름</p>
+      <p><b>마지막 하나</b> · 18번 축하</p>
+      <p><b>보조 동작</b> · 14번 밀어서 완료를 버튼과 함께</p>
+    </div>
+    <p>이렇게 묶으면 노트 느낌, 진행감, 마무리 보상이 하나의 흐름이 됩니다. 각각은 따로 넣어도 되고, 한 번에 다 넣을 필요는 없습니다.</p>
+  </section>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const ITEMS = ["우유", "두부 한 모", "키친타월", "건전지 AA"];
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const EASE = "cubic-bezier(.4,0,.2,1)";
+const SPRING = "cubic-bezier(.34,1.56,.64,1)";
+const PALETTE = ["#3182F6", "#FFB800", "#F04452", "#2BA471", "#8B5CF6", "#F564A9", "#FF8A3D"];
+
+const ICON_LIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`;
+const ICON_DONE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>`;
+const ICON_GEAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 2.3"/></svg>`;
+const ICON_CHECK_W = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+
+/* ---------- 공통 도구 ---------- */
+function relRect(el, base) {
+  const a = el.getBoundingClientRect(), b = base.getBoundingClientRect();
+  return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height };
+}
+function overlay(row, pad = 8, under = false) {
+  const name = row.querySelector(".name"), t = row.querySelector(".txt");
+  const w = t.offsetWidth, h = t.offsetHeight;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "ov " + (under ? "under" : "over"));
+  svg.setAttribute("width", w + pad * 2);
+  svg.setAttribute("height", h + pad * 2);
+  svg.setAttribute("viewBox", `0 0 ${w + pad * 2} ${h + pad * 2}`);
+  svg.style.left = -pad + "px";
+  svg.style.top = -pad + "px";
+  under ? name.prepend(svg) : name.appendChild(svg);
+  return { svg, w, h, pad, name, t };
+}
+function stroke(svg, d, { color, width = 2.4, dur = 500, delay = 0, ease = "cubic-bezier(.3,.1,.3,1)", cap = "round", filter = "url(#ink)", opacity = 1 }) {
+  const p = document.createElementNS(NS, "path");
+  p.setAttribute("d", d);
+  p.setAttribute("fill", "none");
+  p.setAttribute("stroke", color);
+  p.setAttribute("stroke-width", width);
+  p.setAttribute("stroke-linecap", cap);
+  p.setAttribute("stroke-linejoin", "round");
+  if (filter) p.setAttribute("filter", filter);
+  p.style.opacity = opacity;
+  svg.appendChild(p);
+  const L = p.getTotalLength() + 1;
+  p.style.strokeDasharray = L;
+  p.style.strokeDashoffset = L;
+  return p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, easing: ease, fill: "forwards" });
+}
+function wobble(x0, y0, x1, y1, amp = 1.3, seg = 4) {
+  let d = `M${x0.toFixed(1)},${y0.toFixed(1)}`;
+  for (let i = 1; i <= seg; i++) {
+    const t = i / seg, tm = (i - 0.5) / seg;
+    const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t + (i < seg ? rnd(-amp, amp) * 0.4 : 0);
+    const cx = x0 + (x1 - x0) * tm, cy = y0 + (y1 - y0) * tm + rnd(-amp, amp);
+    d += ` Q${cx.toFixed(1)},${cy.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;
+  }
+  return d;
+}
+function fadeText(row, delay = 0, dur = 300, to = null) {
+  const t = row.querySelector(".txt");
+  return t.animate([{ color: cssVar("--text") }, { color: to || cssVar("--text3") }], { duration: dur, delay, easing: EASE, fill: "forwards" });
+}
+function strike(row, { dur = 520, delay = 0, color = cssVar("--ink"), width = 2.3 } = {}) {
+  const o = overlay(row);
+  const y = o.pad + o.h * 0.56;
+  return stroke(o.svg, wobble(o.pad - 3, y + 1, o.pad + o.w + 4, y - 1.5), { color, dur, delay, width });
+}
+function rafFill(btn, ms) {
+  const from = parseFloat(btn.style.getPropertyValue("--pp")) || 0;
+  return new Promise(res => {
+    const t0 = performance.now();
+    const f = now => {
+      const k = Math.min(1, (now - t0) / ms);
+      btn.style.setProperty("--pp", (from + (100 - from) * k) + "%");
+      k < 1 ? requestAnimationFrame(f) : res();
+    };
+    requestAnimationFrame(f);
+  });
+}
+function showHint(row, text) {
+  row.querySelectorAll(".hint").forEach(h => h.remove());
+  const h = document.createElement("div");
+  h.className = "hint";
+  h.textContent = text;
+  row.style.zIndex = 6;
+  row.appendChild(h);
+  h.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], { duration: 160, fill: "forwards" });
+  setTimeout(() => { h.remove(); row.style.zIndex = ""; }, 1400);
+}
+function flip(list, mutate) {
+  const rows = [...list.children];
+  const first = new Map(rows.map(r => [r, r.getBoundingClientRect().top]));
+  mutate();
+  rows.forEach(r => {
+    const d = first.get(r) - r.getBoundingClientRect().top;
+    if (d) r.animate([{ transform: `translateY(${d}px)` }, { transform: "translateY(0)" }], { duration: 440, easing: "cubic-bezier(.34,1.3,.64,1)" });
+  });
+}
+function setCount(card, n) {
+  const cont = card.querySelector(".pcount");
+  [...cont.children].slice(0, -1).forEach(el => el.remove());
+  const old = cont.lastElementChild;
+  const prev = old ? +old.textContent : 0;
+  const dir = n >= prev ? 1 : -1;
+  const neu = document.createElement("span");
+  neu.textContent = n;
+  if (old) {
+    old.style.position = "absolute";
+    old.style.left = 0; old.style.right = 0; old.style.top = 0;
+    old.animate([{ transform: "translateY(0)", opacity: 1 }, { transform: `translateY(${-100 * dir}%)`, opacity: 0 }], { duration: 260, easing: EASE, fill: "forwards" }).finished.then(() => old.remove());
+  }
+  cont.appendChild(neu);
+  neu.animate([{ transform: `translateY(${100 * dir}%)`, opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: 320, easing: SPRING });
+  const total = card.ptotal;
+  const bar = card.querySelector(".pbar");
+  bar.style.width = (n / total * 100) + "%";
+  bar.style.backgroundColor = n === total ? cssVar("--success") : "";
+  card.querySelector(".plabel").textContent = n === total ? `/ ${total} 다 샀어요!` : `/ ${total} 샀어요`;
+}
+function confetti(card) {
+  const phone = card.querySelector(".phone");
+  const W = phone.clientWidth, H = phone.clientHeight;
+  for (let i = 0; i < 42; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.background = PALETTE[i % PALETTE.length];
+    c.style.left = W / 2 + "px";
+    c.style.top = H * 0.5 + "px";
+    if (i % 3 === 0) c.style.borderRadius = "50%";
+    phone.appendChild(c);
+    const ang = rnd(-160, -20) * Math.PI / 180, sp = rnd(90, 170);
+    const vx = Math.cos(ang) * sp, vy = Math.sin(ang) * sp, rot = rnd(-540, 540);
+    c.animate([
+      { transform: "translate(0,0) rotate(0) scale(.6)", opacity: 1 },
+      { transform: `translate(${vx * 0.7}px, ${vy * 0.7}px) rotate(${rot * 0.5}deg) scale(1)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${vx}px, ${vy * 0.6 + 160}px) rotate(${rot}deg) scale(.9)`, opacity: 0 }
+    ], { duration: rnd(1000, 1400), easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" }).finished.then(() => c.remove());
+  }
+}
+
+/* ---------- A 묶음: 노트 느낌 ---------- */
+const DEMOS = [
+  {
+    group: 1, title: "볼펜 취소선",
+    desc: "자를 대고 그은 곧은 선 대신, 손으로 슥 그은 살짝 떨리고 기울어진 볼펜 선. 지금 동작의 자연스러운 업그레이드.",
+    meta: { feel: 3, meaning: "아주 명확", effort: "쉬움 · 지금 코드 경로만 교체" },
+    async play(row) { strike(row, { dur: 620 }); fadeText(row, 420); await wait(1000); }
+  },
+  {
+    group: 1, title: "두 줄 쓱쓱",
+    desc: "왼쪽으로 한 번, 돌아오며 한 번 더. 메모지에서 확실히 지울 때 하는 왕복 두 줄.",
+    meta: { feel: 4, meaning: "명확", effort: "쉬움" },
+    async play(row) {
+      const o = overlay(row);
+      const y1 = o.pad + o.h * 0.46, y2 = o.pad + o.h * 0.66;
+      stroke(o.svg, wobble(o.pad - 3, y1 + 1, o.pad + o.w + 4, y1 - 1), { color: cssVar("--ink"), dur: 380, width: 2.1 });
+      stroke(o.svg, wobble(o.pad + o.w + 3, y2 - 1, o.pad - 4, y2 + 1.5), { color: cssVar("--ink"), dur: 360, delay: 400, width: 2.1 });
+      fadeText(row, 500);
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "낙서로 박박",
+    desc: "지그재그로 빠르게 덮어 지우기. 손맛은 강하지만 '틀렸다'는 느낌도 같이 남.",
+    meta: { feel: 4, meaning: "애매 · 오타 지우기로 읽힘", effort: "쉬움" },
+    async play(row) {
+      const o = overlay(row);
+      let d = `M${o.pad - 2},${o.pad + o.h * 0.55}`, up = true;
+      for (let x = o.pad + 3; x <= o.pad + o.w + 4; x += rnd(5.5, 7.5)) {
+        const y = o.pad + (up ? o.h * rnd(0.15, 0.3) : o.h * rnd(0.75, 0.92));
+        d += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+        up = !up;
+      }
+      stroke(o.svg, d, { color: cssVar("--ink"), dur: 720, width: 2, ease: "linear" });
+      o.t.animate([{ opacity: 1 }, { opacity: 0.35 }], { duration: 500, delay: 250, fill: "forwards" });
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "손그림 체크",
+    desc: "글자가 살짝 밀리면서 앞에 펜으로 ✓를 그림. 체크리스트 종이에 표시하는 느낌, 가장 차분함.",
+    meta: { feel: 4, meaning: "아주 명확", effort: "쉬움" },
+    async play(row) {
+      const o = overlay(row, 8);
+      o.t.animate([{ transform: "translateX(0)" }, { transform: "translateX(30px)" }], { duration: 220, easing: EASE, fill: "forwards" });
+      const p = o.pad, h = o.h;
+      const d = `M${p + 1},${p + h * 0.52} Q${p + 5},${p + h * 0.68} ${p + 9},${p + h * 0.95} Q${p + 14},${p + h * 0.35} ${p + 25},${p - 2}`;
+      stroke(o.svg, d, { color: cssVar("--ink"), dur: 380, delay: 160, width: 2.7, ease: "cubic-bezier(.5,0,.3,1)" });
+      fadeText(row, 520, 350);
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "동그라미 치기",
+    desc: "빨간 펜으로 단어에 동그라미. 끝이 살짝 겹치게 그려서 손으로 그린 티가 남. '찾았다!'의 기분.",
+    meta: { feel: 4, meaning: "보통 · 체크보다 약함", effort: "보통" },
+    async play(row) {
+      const o = overlay(row, 16);
+      const cx = o.pad + o.w / 2, cy = o.pad + o.h / 2, rx = o.w / 2 + 10, ry = o.h / 2 + 6;
+      const N = 30, a0 = Math.PI * 1.08, total = Math.PI * 2.2;
+      let d = "";
+      for (let i = 0; i <= N; i++) {
+        const a = a0 + total * i / N, k = 1 + rnd(-0.03, 0.03) - 0.07 * (i / N);
+        const x = cx + Math.cos(a) * rx * k, y = cy + Math.sin(a) * ry * k + (Math.cos(a) * rx) * -0.06;
+        d += (i ? " L" : "M") + x.toFixed(1) + "," + y.toFixed(1);
+      }
+      stroke(o.svg, d, { color: cssVar("--redpen"), dur: 640, width: 2.2, ease: "cubic-bezier(.35,.1,.3,1)" });
+      fadeText(row, 560);
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "형광펜 쓱",
+    desc: "노란 형광펜을 글자 뒤로 한 번에 긋기. 예쁘지만 형광펜은 원래 '중요'라는 표시라 의미가 헷갈릴 수 있음.",
+    meta: { feel: 3, meaning: "약함 · 중요 표시로 읽힘", effort: "쉬움" },
+    async play(row) {
+      const o = overlay(row, 8, true);
+      const y = o.pad + o.h * 0.6;
+      stroke(o.svg, wobble(o.pad - 4, y + 0.5, o.pad + o.w + 4, y - 0.8, 0.6, 3), { color: cssVar("--hl"), dur: 420, width: o.h * 0.62, cap: "butt", filter: "", ease: "cubic-bezier(.2,.6,.3,1)" });
+      fadeText(row, 600, 300);
+      o.svg.animate([{ opacity: 1 }, { opacity: 0.35 }], { duration: 300, delay: 650, fill: "forwards" });
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "완료 도장 쾅",
+    desc: "빨간 인주 도장이 위에서 쾅 찍히고 줄이 살짝 흔들림. 진동과 함께 쓰면 손맛이 가장 강함.",
+    meta: { feel: 4, meaning: "아주 명확", effort: "쉬움" },
+    async play(row) {
+      const name = row.querySelector(".name"), t = row.querySelector(".txt");
+      const s = document.createElement("div");
+      s.className = "stamp";
+      s.textContent = "완료";
+      s.style.left = Math.max(0, t.offsetWidth * 0.5 - 10) + "px";
+      name.appendChild(s);
+      s.animate([
+        { transform: "translateY(-50%) scale(2.4) rotate(-14deg)", opacity: 0 },
+        { transform: "translateY(-50%) scale(.9) rotate(-14deg)", opacity: 1, offset: 0.62 },
+        { transform: "translateY(-50%) scale(1) rotate(-14deg)", opacity: 0.92 }
+      ], { duration: 320, delay: 60, easing: "cubic-bezier(.5,0,.8,.6)", fill: "forwards" });
+      row.animate([{ transform: "translateY(0)" }, { transform: "translateY(2px)" }, { transform: "translateY(-1px)" }, { transform: "translateY(0)" }], { duration: 160, delay: 260 });
+      setTimeout(() => vib(18), 260);
+      fadeText(row, 300, 300);
+      await wait(1000);
+    }
+  },
+  {
+    group: 1, title: "메모지 떼어내기",
+    desc: "펜으로 쓱 그은 뒤, 그 줄이 포스트잇처럼 살짝 들렸다가 비스듬히 떨어져 나감.",
+    meta: { feel: 4, meaning: "명확", effort: "보통" },
+    async play(row) {
+      strike(row, { dur: 380 });
+      await wait(400);
+      row.classList.add("lift");
+      row.style.zIndex = 4;
+      row.style.transformOrigin = "left top";
+      await row.animate([
+        { transform: "none", boxShadow: "0 0 0 rgba(0,0,0,0)" },
+        { transform: "translateY(-3px) rotate(-1.2deg)", boxShadow: "0 8px 16px rgba(0,0,0,.14)", offset: 0.3 },
+        { transform: "translate(110%, 36px) rotate(14deg)", boxShadow: "0 8px 16px rgba(0,0,0,.14)", opacity: 0 }
+      ], { duration: 600, easing: "cubic-bezier(.45,0,.75,.4)", fill: "forwards" }).finished;
+    }
+  },
+  {
+    group: 1, title: "지우개로 쓱쓱",
+    desc: "지우개가 왔다 갔다 하며 글자가 점점 옅어지고, 지우개 가루가 떨어짐. 귀엽지만 '삭제'로 오해할 수 있음.",
+    meta: { feel: 5, meaning: "애매 · 삭제로 읽힘", effort: "보통" },
+    async play(row) {
+      const name = row.querySelector(".name"), t = row.querySelector(".txt");
+      const w = t.offsetWidth, h = t.offsetHeight;
+      const e = document.createElement("div");
+      e.className = "eraser";
+      e.style.top = (h / 2 - 12) + "px";
+      e.style.left = "-6px";
+      name.appendChild(e);
+      const span = Math.max(w - 26, 10);
+      const xs = [0, span, span * 0.15, span, span * 0.35, span * 0.9, span * 0.5];
+      e.animate(xs.map((x, i) => ({ transform: `translateX(${x}px) rotate(${i % 2 ? 8 : -8}deg)` })), { duration: 900, easing: "ease-in-out", fill: "forwards" });
+      t.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0.55, filter: "blur(.3px)" }, { opacity: 0.25, filter: "blur(.6px)" }, { opacity: 0.08, filter: "blur(.8px)" }], { duration: 900, fill: "forwards" });
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+          const c = document.createElement("div");
+          c.className = "crumb";
+          c.style.left = rnd(0, w) + "px";
+          c.style.top = (h * 0.8) + "px";
+          name.appendChild(c);
+          c.animate([{ transform: "translate(0,0) rotate(0)", opacity: 1 }, { transform: `translate(${rnd(-6, 6)}px, ${rnd(12, 20)}px) rotate(${rnd(-90, 90)}deg)`, opacity: 0 }], { duration: 450, easing: "cubic-bezier(.3,0,.8,.6)", fill: "forwards" });
+        }, 80 + i * 75);
+      }
+      await wait(1000);
+      e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: "forwards" });
+    }
+  },
+  {
+    group: 1, title: "여백 메모 '샀다!'",
+    desc: "펜으로 줄을 긋고 바로 옆 여백에 빨간 펜으로 '샀다!'를 휘갈김. 진짜 장보기 메모지에 가장 가까운 동작.",
+    meta: { feel: 5, meaning: "아주 명확 · 재미까지", effort: "보통 · 글자를 벡터로 그려 넣어야 함" },
+    async play(row) {
+      strike(row, { dur: 440 });
+      fadeText(row, 300);
+      const name = row.querySelector(".name"), t = row.querySelector(".txt");
+      const words = ["샀다!", "득템!", "OK ✓", "샀다!"];
+      const n = document.createElement("div");
+      n.className = "hand";
+      n.textContent = words[Math.floor(Math.random() * words.length)];
+      n.style.left = (t.offsetWidth + 10) + "px";
+      n.style.transform = `translateY(-55%) rotate(${rnd(-7, -3).toFixed(1)}deg)`;
+      name.appendChild(n);
+      n.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)" }], { duration: 380, delay: 460, easing: "cubic-bezier(.3,0,.4,1)", fill: "forwards" });
+      await wait(1000);
+    }
+  },
+
+  /* ---------- B 묶음: 트렌드 · UX ---------- */
+  {
+    group: 2, title: "장바구니로 쏙",
+    desc: "항목 이름이 포물선을 그리며 아래 '완료' 탭으로 날아 들어가고, 숫자 배지가 톡 올라감.",
+    metaRows: [["트렌드", "공간이 이어지는 모션 · 쇼핑앱 장바구니 담기"], ["UX 효과", "산 게 사라진 게 아니라 완료 탭으로 갔다는 걸 눈으로 보여줌. 처음 쓰는 분이 덜 헤맴"], ["앱 구현", "보통"]],
+    phoneH: 300,
+    setup(card) {
+      const nav = document.createElement("div");
+      nav.className = "mininav inj";
+      nav.innerHTML = `<div class="on">${ICON_LIST}<span>구매예정</span></div><div class="tab-done">${ICON_DONE}<span>완료</span><i class="badge"></i></div><div>${ICON_GEAR}<span>설정</span></div>`;
+      card.querySelector(".phone").appendChild(nav);
+      card.querySelector(".toast").style.bottom = "64px";
+      card.doneN = 0;
+    },
+    async play(row, card) {
+      const phone = card.querySelector(".phone"), t = row.querySelector(".txt");
+      const tab = phone.querySelector(".tab-done"), icon = tab.querySelector("svg");
+      const a = relRect(t, phone), b = relRect(icon, phone);
+      const f = document.createElement("div");
+      f.className = "flyer";
+      f.textContent = t.textContent;
+      f.style.left = a.x + "px";
+      f.style.top = a.y + "px";
+      phone.appendChild(f);
+      t.style.opacity = 0;
+      const dx = b.x + b.w / 2 - a.x - 4, dy = b.y + b.h / 2 - a.y - a.h / 2;
+      await f.animate([
+        { transform: "translate(0,0) scale(1)", opacity: 1 },
+        { transform: `translate(${dx * 0.4}px, ${Math.min(dy * 0.1, 0) - 34}px) scale(.85)`, opacity: 1, offset: 0.4 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0.3 }
+      ], { duration: 620, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" }).finished;
+      f.remove();
+      card.doneN++;
+      tab.querySelector(".badge").textContent = card.doneN;
+      tab.classList.add("on");
+      tab.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.95)" }, { transform: "scale(1)" }], { duration: 380, easing: "ease-out" });
+      setTimeout(() => tab.classList.remove("on"), 520);
+      vib(10);
+      await wait(260);
+    },
+    onUndo(card) {
+      card.doneN = Math.max(0, card.doneN - 1);
+      card.querySelector(".badge").textContent = card.doneN || "";
+    }
+  },
+  {
+    group: 2, title: "버튼이 체크로 변신",
+    desc: "누른 '완료' 버튼이 그 자리에서 초록 동그라미 ✓로 통통 튀며 변하고, 줄이 연한 초록으로 물듦.",
+    metaRows: [["트렌드", "모핑 버튼 · 스프링 모션 (토스·애플)"], ["UX 효과", "반응이 손가락 바로 아래에서 일어나서 눌렸는지 확실히 앎"], ["앱 구현", "쉬움 · 지금 V2와 가장 비슷"]],
+    async play(row) {
+      const btn = row.querySelector(".done");
+      const r = relRect(btn, row);
+      btn.style.visibility = "hidden";
+      const m = document.createElement("div");
+      m.className = "morph";
+      Object.assign(m.style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px", borderRadius: "10px" });
+      m.innerHTML = `<span class="ml">완료</span><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      row.appendChild(m);
+      const size = 32, nx = r.x + (r.w - size) / 2, ny = r.y + (r.h - size) / 2;
+      m.querySelector(".ml").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: "forwards" });
+      m.animate([
+        { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px", borderRadius: "10px", backgroundColor: "rgba(0,0,0,0)", borderColor: cssVar("--divider") },
+        { left: nx + "px", top: ny + "px", width: size + "px", height: size + "px", borderRadius: "16px", backgroundColor: cssVar("--success"), borderColor: cssVar("--success") }
+      ], { duration: 360, easing: SPRING, fill: "forwards" });
+      const path = m.querySelector("path"), L = path.getTotalLength() + 1;
+      path.style.strokeDasharray = L;
+      path.style.strokeDashoffset = L;
+      path.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 220, delay: 280, easing: EASE, fill: "forwards" });
+      row.animate([{ backgroundColor: getComputedStyle(row).backgroundColor }, { backgroundColor: cssVar("--successSoft") }], { duration: 300, delay: 200, fill: "forwards" });
+      setTimeout(() => vib(12), 300);
+      fadeText(row, 250);
+      await wait(1000);
+    }
+  },
+  {
+    group: 2, title: "꾹 눌러 완료",
+    desc: "버튼을 0.45초 꾹 누르면 초록으로 차오르며 완료. 짧게 톡 누르면 살짝 흔들리며 안내가 뜸.",
+    metaRows: [["트렌드", "홀드해서 확인 (결제·삭제 확인에서 유행)"], ["UX 효과", "카트 밀다가 실수로 눌리는 걸 막음. 대신 느리고 답답함"], ["앱 구현", "쉬움"]],
+    decorateRow(row, card) {
+      const b = row.querySelector(".done");
+      b.classList.add("holdbtn");
+      b.onclick = null;
+      b.oncontextmenu = e => e.preventDefault();
+      const HOLD = 450;
+      let raf = 0, start = 0;
+      const down = e => {
+        if (row.classList.contains("busy")) return;
+        e.preventDefault();
+        start = performance.now();
+        b.classList.add("holding");
+        const tick = now => {
+          if (!start) return;
+          const p = Math.min(1, (now - start) / HOLD);
+          b.style.setProperty("--pp", (p * 100) + "%");
+          if (p < 1) raf = requestAnimationFrame(tick);
+          else { start = 0; b.classList.remove("holding"); vib(15); complete(row, card); }
+        };
+        raf = requestAnimationFrame(tick);
+      };
+      const up = () => {
+        if (!start) return;
+        cancelAnimationFrame(raf);
+        start = 0;
+        b.classList.remove("holding");
+        b.style.setProperty("--pp", "0%");
+        b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-3px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }], { duration: 220 });
+        showHint(row, "꾹 누르고 있으면 완료돼요");
+      };
+      b.addEventListener("pointerdown", down);
+      ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, up));
+    },
+    async play(row) {
+      const b = row.querySelector(".done");
+      if (b.style.getPropertyValue("--pp") !== "100%") await rafFill(b, 300);
+      strike(row, { dur: 420 });
+      fadeText(row, 250);
+      await wait(650);
+    }
+  },
+  {
+    group: 2, title: "밀어서 완료",
+    desc: "줄을 오른쪽으로 쓱 밀면 초록 바탕의 ✓가 드러나고, 3분의 1을 넘기면 진동과 함께 완료. 직접 밀어보세요. 버튼도 됩니다.",
+    metaRows: [["트렌드", "스와이프 제스처 (Gmail·미리알림·Things)"], ["UX 효과", "한 손으로 카트 밀면서 엄지로 바로. 숨은 동작이라 버튼과 같이 둬야 함"], ["앱 구현", "보통"]],
+    decorateRow(row, card) {
+      row.classList.add("swipeable");
+      const slide = document.createElement("div");
+      slide.className = "slide";
+      while (row.firstChild) slide.appendChild(row.firstChild);
+      const under = document.createElement("div");
+      under.className = "swipe-under";
+      under.innerHTML = ICON_CHECK_W + "<span>완료</span>";
+      row.append(under, slide);
+      let x0 = null, dx = 0, W = 0, passed = false;
+      slide.addEventListener("pointerdown", e => {
+        if (e.target.closest(".done") || row.classList.contains("busy")) return;
+        x0 = e.clientX; W = row.offsetWidth; passed = false; dx = 0;
+        slide.setPointerCapture(e.pointerId);
+        slide.style.cursor = "grabbing";
+      });
+      slide.addEventListener("pointermove", e => {
+        if (x0 === null) return;
+        dx = Math.max(0, e.clientX - x0);
+        slide.style.transform = `translateX(${dx}px)`;
+        under.style.opacity = Math.min(1, dx / (W * 0.33));
+        const over = dx > W * 0.33;
+        if (over !== passed) {
+          passed = over;
+          vib(10);
+          under.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: `translateY(-50%) scale(${over ? 1.25 : 1})` }], { duration: 180, fill: "forwards", easing: SPRING });
+        }
+      });
+      const end = () => {
+        if (x0 === null) return;
+        x0 = null;
+        slide.style.cursor = "";
+        if (passed) { row.dataset.swiped = "1"; complete(row, card); }
+        else {
+          slide.animate([{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }], { duration: 280, easing: SPRING });
+          slide.style.transform = "";
+          under.style.opacity = 0;
+        }
+      };
+      slide.addEventListener("pointerup", end);
+      slide.addEventListener("pointercancel", end);
+    },
+    async play(row) {
+      const slide = row.querySelector(".slide"), under = row.querySelector(".swipe-under");
+      const W = row.offsetWidth;
+      const cur = new DOMMatrix(getComputedStyle(slide).transform).m41 || 0;
+      under.style.opacity = 1;
+      await slide.animate([{ transform: `translateX(${cur}px)` }, { transform: `translateX(${W}px)` }], { duration: row.dataset.swiped ? 200 : 440, easing: EASE, fill: "forwards" }).finished;
+      await wait(220);
+    }
+  },
+  {
+    group: 2, title: "먼지처럼 흩날리기",
+    desc: "글자가 왼쪽부터 작은 가루가 되어 오른쪽 위로 흩어짐. 텔레그램 삭제 효과로 유행한 연출.",
+    metaRows: [["트렌드", "파티클 분해 (텔레그램·iOS 메시지)"], ["UX 효과", "예쁘지만 '삭제됐다'로 읽힐 수 있음"], ["앱 구현", "어려움 · 저가폰 성능 확인 필요"]],
+    async play(row) {
+      const name = row.querySelector(".name"), t = row.querySelector(".txt");
+      const w = t.offsetWidth, h = t.offsetHeight;
+      const L = 6, TOP = 28, CW = w + 80, CH = h + 36;
+      const dpr = window.devicePixelRatio || 1;
+      const cv = document.createElement("canvas");
+      cv.className = "dust";
+      cv.width = Math.ceil(CW * dpr); cv.height = Math.ceil(CH * dpr);
+      cv.style.width = CW + "px"; cv.style.height = CH + "px";
+      cv.style.left = -L + "px"; cv.style.top = -TOP + "px";
+      name.appendChild(cv);
+      const ctx = cv.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const cs = getComputedStyle(t);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      if ("letterSpacing" in ctx) ctx.letterSpacing = cs.letterSpacing;
+      ctx.fillStyle = cs.color;
+      ctx.textBaseline = "middle";
+      ctx.fillText(t.textContent, L, TOP + h / 2);
+      const img = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      ctx.clearRect(0, 0, CW, CH);
+      const parts = [], step = Math.max(1, Math.round(1.6 * dpr));
+      for (let y = 0; y < cv.height; y += step) for (let x = 0; x < cv.width; x += step) {
+        if (img[(y * cv.width + x) * 4 + 3] > 100) {
+          const px = x / dpr, py = y / dpr;
+          parts.push({ x: px, y: py, vx: rnd(16, 58), vy: rnd(-30, -6), d: ((px - L) / w) * 380 + rnd(0, 70), s: rnd(1.1, 2) });
+        }
+      }
+      t.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 0 100%)" }], { duration: 400, easing: "linear", fill: "forwards" });
+      const T0 = performance.now(), DUR = 560;
+      await new Promise(res => {
+        const frame = now => {
+          const el = now - T0;
+          ctx.clearRect(0, 0, CW, CH);
+          let alive = false;
+          for (const p of parts) {
+            const k = (el - p.d) / DUR;
+            if (k < 0) { alive = true; continue; }
+            if (k > 1) continue;
+            alive = true;
+            const e = 1 - Math.pow(1 - k, 2);
+            ctx.globalAlpha = 1 - k;
+            const s = p.s * (1 - k * 0.5);
+            ctx.fillRect(p.x + p.vx * e, p.y + p.vy * e + 5 * k * k, s, s);
+          }
+          alive ? requestAnimationFrame(frame) : res();
+        };
+        requestAnimationFrame(frame);
+      });
+      cv.remove();
+    }
+  },
+  {
+    group: 2, title: "리퀴드 글래스",
+    desc: "유리 방울이 줄을 따라 미끄러지며 지나간 자리를 완료로 바꾸고, 버튼에 ✓를 남김. iOS 26 리퀴드 글래스 느낌.",
+    metaRows: [["트렌드", "가장 최신 (애플 리퀴드 글래스 2025~26)"], ["UX 효과", "화려하지만 뜻 전달은 보통. 안드로이드에선 아이폰 흉내로 보일 수 있음"], ["앱 구현", "어려움 · 안드로이드 12 미만은 흐림 효과 불가"]],
+    async play(row) {
+      const t = row.querySelector(".txt"), btn = row.querySelector(".done");
+      const a = relRect(t, row), b = relRect(btn, row);
+      const lens = document.createElement("div");
+      lens.className = "lens";
+      row.appendChild(lens);
+      const sx = a.x - 22, ex = b.x + b.w / 2 - 23;
+      lens.animate([
+        { transform: `translateX(${sx}px) scale(.5)`, opacity: 0 },
+        { transform: `translateX(${sx + 14}px) scale(1)`, opacity: 1, offset: 0.12 },
+        { transform: `translateX(${(sx + ex) / 2}px) scale(1.16,.88)`, opacity: 1, offset: 0.5 },
+        { transform: `translateX(${ex}px) scale(1)`, opacity: 1, offset: 0.82 },
+        { transform: `translateX(${ex}px) scale(.6)`, opacity: 0 }
+      ], { duration: 920, easing: "cubic-bezier(.45,0,.4,1)", fill: "forwards" });
+      strike(row, { dur: 360, delay: 120, color: cssVar("--text3"), width: 1.6 });
+      fadeText(row, 160, 300);
+      setTimeout(() => {
+        btn.textContent = "✓";
+        btn.style.color = cssVar("--success");
+        btn.style.borderColor = cssVar("--success");
+        btn.style.backgroundColor = cssVar("--successSoft");
+        btn.style.opacity = 1;
+        btn.animate([{ transform: "scale(.8)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 280, easing: SPRING });
+        vib(10);
+      }, 720);
+      await wait(1050);
+    }
+  },
+  {
+    group: 2, title: "진행률 같이 오르기",
+    desc: "체크할 때마다 위쪽 '1 / 4 샀어요' 숫자가 굴러 올라가고, 막대가 통통 차오름. 다 사면 초록으로 바뀜.",
+    metaRows: [["트렌드", "진행률 · 숫자 롤링 (토스 송금·운동앱)"], ["UX 효과", "끝이 보일수록 끝까지 하고 싶어짐. 마트에서 '몇 개 남았지'가 한눈에"], ["앱 구현", "쉬움 · 다른 애니메이션과 같이 쓸 수 있음"]],
+    phoneH: 290,
+    setup(card) {
+      const total = (card.demo.items || ITEMS).length;
+      card.ptotal = total;
+      card.pdone = 0;
+      const head = document.createElement("div");
+      head.className = "phead inj";
+      head.innerHTML = `<div class="ptext"><span>쿠팡 ·</span><span class="pcount"><span>0</span></span><span class="plabel">/ ${total} 샀어요</span></div><div class="ptrack"><div class="pbar"></div></div>`;
+      const phone = card.querySelector(".phone");
+      phone.insertBefore(head, phone.querySelector(".list"));
+    },
+    async play(row, card) {
+      strike(row, { dur: 450 });
+      fadeText(row, 300);
+      await wait(360);
+      card.pdone++;
+      setCount(card, card.pdone);
+      vib(10);
+      await wait(560);
+    },
+    onUndo(card) { card.pdone = Math.max(0, card.pdone - 1); setCount(card, card.pdone); }
+  },
+  {
+    group: 2, title: "다 사면 축하",
+    desc: "평소엔 조용히 줄만 긋고, 마지막 하나를 사면 색종이가 터지며 '장보기 끝!'. 3개를 다 눌러보세요.",
+    items: ["대파", "계란 한 판", "식빵"],
+    metaRows: [["트렌드", "절제된 축하 (듀오링고·토스)"], ["UX 효과", "매번 터지면 피곤하고, 끝날 때 한 번이 오래 기억에 남음"], ["앱 구현", "쉬움"]],
+    async play(row) { strike(row, { dur: 460 }); fadeText(row, 300); await wait(700); },
+    afterRemove(card, empty) {
+      if (!empty) return;
+      const em = card.querySelector(".empty");
+      em.innerHTML = `<div class="cele"><div class="big">🎉</div><b>장보기 끝!</b><span>오늘 ${card.demo.items.length}개 다 샀어요</span></div>`;
+      em.firstElementChild.animate([{ transform: "scale(.6)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }], { duration: 480, easing: SPRING });
+      confetti(card);
+      vib([12, 50, 12]);
+    }
+  },
+  {
+    group: 2, title: "이모지 톡",
+    desc: "버튼에서 그 물건의 이모지가 톡 튀어나와 이름 옆으로 뛰어감. 우유는 🥛, 계란은 🥚, 바나나는 🍌.",
+    items: ["우유", "계란", "바나나", "휴지"],
+    metaRows: [["트렌드", "이모지 리액션 · 플레이풀 UI"], ["UX 효과", "재밌지만 이모지가 없는 물건(두부·건전지)은 🛒로 대신해야 함"], ["앱 구현", "보통 · 단어→이모지 사전 필요"]],
+    async play(row) {
+      const MAP = { 우유: "🥛", 계란: "🥚", 바나나: "🍌", 휴지: "🧻", 사과: "🍎", 빵: "🍞", 식빵: "🍞", 치즈: "🧀", 고기: "🥩", 생선: "🐟", 라면: "🍜", 쌀: "🍚", 커피: "☕", 물: "💧", 당근: "🥕", 양파: "🧅", 마늘: "🧄", 감자: "🥔" };
+      const name = row.dataset.name;
+      const key = Object.keys(MAP).find(k => name.includes(k));
+      const emo = key ? MAP[key] : "🛒";
+      const t = row.querySelector(".txt"), btn = row.querySelector(".done");
+      const a = relRect(t, row), b = relRect(btn, row);
+      row.style.zIndex = 3;
+      const ring = document.createElement("div");
+      ring.className = "ring";
+      ring.style.left = (b.x + b.w / 2 - 17) + "px";
+      ring.style.top = (b.y + b.h / 2 - 17) + "px";
+      row.appendChild(ring);
+      ring.animate([{ transform: "scale(.5)", opacity: 0.9 }, { transform: "scale(1.7)", opacity: 0 }], { duration: 420, easing: "ease-out", fill: "forwards" });
+      const e = document.createElement("div");
+      e.className = "emoji";
+      e.textContent = emo;
+      const sx = b.x + b.w / 2 - 12, sy = b.y + b.h / 2 - 12;
+      e.style.left = sx + "px";
+      e.style.top = sy + "px";
+      row.appendChild(e);
+      const tx = a.x + a.w + 8 - sx;
+      e.animate([
+        { transform: "translate(0,0) scale(0) rotate(0)", opacity: 1 },
+        { transform: "translate(0,-6px) scale(1.35) rotate(-10deg)", opacity: 1, offset: 0.22 },
+        { transform: `translate(${tx * 0.55}px,-16px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(${tx}px,0) scale(1) rotate(0)`, opacity: 1, offset: 0.8 },
+        { transform: `translate(${tx}px,0) scale(1) rotate(0)`, opacity: 1 }
+      ], { duration: 820, easing: "cubic-bezier(.4,0,.3,1)", fill: "forwards" });
+      vib(10);
+      strike(row, { dur: 420, delay: 380 });
+      fadeText(row, 450);
+      await wait(1050);
+    }
+  },
+  {
+    group: 2, title: "아래로 내려가기",
+    desc: "산 항목이 사라지지 않고 흐려진 채 목록 맨 아래로 내려감. '취소'로 바로 제자리로 돌아옴.",
+    metaRows: [["트렌드", "체크 후 아래로 정렬 (애플 미리알림·Google Keep)"], ["UX 효과", "장보는 중 '이거 담았나?' 바로 확인 가능. 마트를 나설 때 완료 탭으로 정리. 단, 지금 구조를 바꾸는 큰 결정"], ["앱 구현", "보통"]],
+    async play(row, card) {
+      strike(row, { dur: 420 });
+      fadeText(row, 220);
+      await wait(480);
+      const list = row.parentNode;
+      row.dataset.idx = [...list.children].filter(r => !r.classList.contains("checked")).indexOf(row);
+      flip(list, () => list.appendChild(row));
+      row.classList.add("checked");
+      const b = row.querySelector(".done");
+      b.textContent = "취소";
+      b.onclick = () => uncheck(row, card);
+      return "keep";
+    }
+  }
+];
+
+function uncheck(row, card) {
+  const list = row.parentNode;
+  row.querySelectorAll(".ov").forEach(s => s.remove());
+  row.querySelector(".txt").getAnimations().forEach(a => a.cancel());
+  row.classList.remove("checked");
+  const b = row.querySelector(".done");
+  b.textContent = "완료";
+  b.onclick = () => complete(row, card);
+  flip(list, () => {
+    const unchecked = [...list.children].filter(r => !r.classList.contains("checked") && r !== row);
+    const idx = Math.min(+row.dataset.idx || 0, unchecked.length);
+    list.insertBefore(row, unchecked[idx] || list.querySelector(".row.checked") || null);
+  });
+}
+
+/* ---------- 카드·목록 구성 ---------- */
+const BELL = `<svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`;
+const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
+const EMPTY_TEXT = "다 샀어요 · 다시를 눌러보세요";
+
+DEMOS.forEach((demo, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  const rows = demo.metaRows || [["노트 느낌", `<span class="stars">${stars(demo.meta.feel)}</span>`], ["완료 의미", demo.meta.meaning], ["앱 구현", demo.meta.effort]];
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="num">${String(i + 1).padStart(2, "0")}</span>
+      <h2>${demo.title}</h2>
+      <button class="btn reset">다시</button>
+    </div>
+    <p class="desc">${demo.desc}</p>
+    <div class="phone" style="height:${demo.phoneH || 252}px">
+      <div class="list"></div>
+      <div class="empty"></div>
+      <div class="toast"><span class="msg"></span><button type="button">되돌리기</button></div>
+    </div>
+    <dl class="meta">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  card.demo = demo;
+  document.getElementById("grid" + demo.group).appendChild(card);
+  card.querySelector(".reset").onclick = () => buildList(card);
+  buildList(card);
+});
+
+function makeRow(name, card) {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<div class="name-wrap"><span class="name"><span class="txt"></span></span></div>${BELL}<button class="done" type="button">완료</button><span class="more">⋮</span>`;
+  row.querySelector(".txt").textContent = name;
+  row.dataset.name = name;
+  row.querySelector(".done").onclick = () => complete(row, card);
+  card.demo.decorateRow && card.demo.decorateRow(row, card);
+  return row;
+}
+function buildList(card) {
+  const phone = card.querySelector(".phone");
+  phone.querySelectorAll(".inj, .confetti, .flyer").forEach(el => el.remove());
+  const list = card.querySelector(".list");
+  list.innerHTML = "";
+  (card.demo.items || ITEMS).forEach(n => list.appendChild(makeRow(n, card)));
+  phone.classList.remove("is-empty");
+  card.querySelector(".empty").textContent = EMPTY_TEXT;
+  const toast = card.querySelector(".toast");
+  toast.classList.remove("show");
+  toast.style.bottom = "";
+  card.demo.setup && card.demo.setup(card);
+}
+async function complete(row, card) {
+  if (row.classList.contains("busy")) return;
+  row.classList.add("busy");
+  row.setAttribute("aria-label", row.dataset.name + " 완료됨");
+  vib(12);
+  let res;
+  if (!reduced) res = await card.demo.play(row, card);
+  if (res === "keep") { row.classList.remove("busy"); return; }
+  const list = card.querySelector(".list");
+  const idx = [...list.children].indexOf(row);
+  const h = row.offsetHeight;
+  await row.animate([{ height: h + "px", opacity: getComputedStyle(row).opacity }, { height: "0px", opacity: 0 }], { duration: 260, easing: EASE, fill: "forwards" }).finished;
+  row.remove();
+  const empty = !list.children.length;
+  if (empty) card.querySelector(".phone").classList.add("is-empty");
+  card.demo.afterRemove && card.demo.afterRemove(card, empty);
+  showToast(card, row.dataset.name, idx);
+}
+function showToast(card, name, idx) {
+  const toast = card.querySelector(".toast");
+  toast.querySelector(".msg").textContent = `'${name}' 완료했어요`;
+  toast.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove("show"), 2600);
+  toast.querySelector("button").onclick = () => {
+    const list = card.querySelector(".list");
+    const r = makeRow(name, card);
+    list.insertBefore(r, list.children[idx] || null);
+    const phone = card.querySelector(".phone");
+    phone.classList.remove("is-empty");
+    card.querySelector(".empty").textContent = EMPTY_TEXT;
+    r.animate([{ height: "0px", opacity: 0 }, { height: "56px", opacity: 1 }], { duration: 220, easing: EASE });
+    card.demo.onUndo && card.demo.onUndo(card);
+    toast.classList.remove("show");
+  };
+}
+
+/* ---------- 툴바 ---------- */
+document.getElementById("playAll").onclick = () => {
+  document.querySelectorAll(".card").forEach((card, i) => {
+    setTimeout(() => {
+      const row = card.querySelector(".row:not(.busy):not(.checked)");
+      row && complete(row, card);
+    }, i * 90);
+  });
+};
+document.getElementById("resetAll").onclick = () => document.querySelectorAll(".card").forEach(buildList);
+document.getElementById("paperBtn").onclick = e => {
+  const on = document.body.classList.toggle("paper");
+  e.currentTarget.setAttribute("aria-pressed", on);
+};
+document.getElementById("themeBtn").onclick = () => {
+  const root = document.documentElement;
+  const isDark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = isDark ? "light" : "dark";
+  document.querySelectorAll(".card").forEach(buildList);
+};
+</script>
+</body>
+</html>

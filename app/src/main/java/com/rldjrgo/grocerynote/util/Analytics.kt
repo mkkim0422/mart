@@ -21,6 +21,8 @@ object Analytics {
     fun itemCompleted(storeName: String, fromWidget: Boolean = false) =
         log(if (fromWidget) "item_completed_widget" else "item_completed", "store_type" to storeClass(storeName))
     fun widgetUsed() = log("widget_used")
+    /** "쿠팡에서 찾기" tapped. [target] is the mart app label (쿠팡/컬리), never the user's mart name. */
+    fun storeSearch(target: String) = log("store_search", "target" to target)
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")
 

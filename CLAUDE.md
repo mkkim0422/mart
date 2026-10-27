@@ -246,7 +246,7 @@ Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemR
 - `widgetFeatures="reconfigurable"`
 - description: "마트별 장보기 리스트"
 
-Dark mode auto via `GlanceTheme` + `ColorProviders`.
+**Widget dark mode = 폰(시스템) 다크 모드만 따른다 (2026-10-27).** `BaseGroceryWidget`이 `configuration.uiMode`로 in-process 판정해 `LocalWidgetDark`로 내려줌 (Glance day/night ColorProvider는 One UI가 라이트인데 위젯만 다크로 그리는 문제가 있어 안 씀). 앱 안의 설정 "다크 모드" 토글은 **앱 화면에만** 적용되고 위젯엔 영향 없음 — 위젯은 홈 화면 위에 있으니 다른 앱 위젯처럼 홈 화면 테마에 맞춰야 함 (이전엔 앱 설정을 따라가서 라이트 홈 화면에 검은 위젯이 뜨는 문제). 폰 테마가 바뀌면 `App.onConfigurationChanged`가 `WidgetUpdater.updateAll()`로 재렌더(프로세스 살아있을 때), 죽어 있으면 다음 앱 실행/DB 변경 때 따라잡음.
 
 App↔Widget sync: a process-lifetime `WidgetUpdater` (@Singleton, started in `App.onCreate`) subscribes to the items+stores Flows and, debounced 120ms, calls `GlanceAppWidget.updateAll(context)` on all 4 widget classes; every ViewModel mutation also pokes `WidgetUpdater.updateAll()`. Widget→App sync is automatic: widgets subscribe to `widgetDataFlow` via `collectAsState`.
 
@@ -321,6 +321,8 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 12 — Post-1.1.0 UX polish (still v1.1.0/vc2): reminder **entry moved to a bell icon on the item row** (outline=unset / filled mart-color=set, one tap → sheet; ⋮ menu reminder items removed) (commit `f2f0aec`); **vibration/sound fix** — channel given `enableVibration(true)`+pattern, channel id `item_reminders`→`item_reminders_v2` (channels are immutable once created) (commit `0deda0e`); `BootReceiver` `LOCKED_BOOT_COMPLETED` removed (Direct Boot can't reach the DB) (commit `0a34ae2`); **tab/filter swipe transition** — settled on **Nate-style horizontal slide** (body slides in the swipe direction, tab/filter strip stays fixed, 280ms slide+fade, bootstrap=fade-only) after trying remove-slide→crossfade→scale-fade (commit `c33ade6`). — 2026-06-16
 
 - [x] Phase 13 — **v1.2.1 (vc7)** 위젯 미표시 근본 원인 수정: 릴리스 R8이 WorkManager `OverwritingInputMerger` 생성자를 제거 → Glance SessionWorker 실패 → 위젯이 항상 미리보기 견본(이마트 5/다이소 3)만 표시(스토어 1.2.0 포함). `proguard-rules.pro` keep 규칙 + 프로세스 시작/앱 이탈 시 자가 복구 렌더. 완료 탭 필터 줄 선택 필 따라가기. 테스트 전용 JSON 내보내기/가져오기는 `SHOW_BACKUP=false`로 숨김 — 2026-09-24
+- [x] Phase 14 — **v1.2.2 (vc8)** ① 위젯 다크 모드가 앱 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 (§12). 폰 테마 전환 시 `App.onConfigurationChanged` → 위젯 재렌더. ② **온라인 마트 "N에서 찾기"** (`util/StoreSearch.kt`): 마트 이름에 쿠팡/컬리가 들어가면 그 탭의 항목 줄에 🔍 + ⋮ "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`; 둘 다 실기기에서 검색 결과 직행 확인 2026-10-28) → 웹 검색(컬리만; **쿠팡 웹 검색은 브라우저에 403이라 폴백 없음**) → Play 스토어 순. 오프라인 마트 탭은 변화 없음. 쿠팡 파트너스 링크 전환은 미정 — 2026-10-27
+- [ ] Phase 15 (다음, 사용자 확정 2026-10-27) — **메뉴 → 재료 자동 제안**: 추가 시트에 요리 이름("된장찌개")을 치면 재료가 칩으로 떠서 탭해 담음. 한국 요리 200~300종 재료표를 앱 내 번들(서버 없음). 완성 시 스토어 첫 스크린샷/홍보 문구를 "메뉴만 치면 장보기 끝"으로. 그 뒤 후보: "다시 살 때 됐어요" 칩(완료 주기, 알림 없음) → 가족 공유 6자리 코드(가입 없음 원칙 재검토 필요)
 
 > Note: an earlier **share** feature also exists (Home share SmallFAB above the add-FAB → `ShareRequestDialog` with a 200-char 부탁 문구, 15 rotating placeholders, footer "마트노트에서 보냄"; 심부름 pivot — no store link) and the **XLarge widget breakpoint** (320×320, up to 6 marts, adaptive-only). Both pre-date Phase 11 in the CHANGELOG (2026-05-26) and ship in v1.1.0.
 

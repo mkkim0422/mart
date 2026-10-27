@@ -37,6 +37,8 @@ data class HomeUiState(
     val recentItemNames: List<String> = emptyList(),
     val highlightItemId: Long? = null,
     val showWidgetBanner: Boolean = false,
+    /** One-time "🔍 = 쿠팡에서 바로 검색" tip on online-mart tabs. */
+    val showSearchHint: Boolean = false,
     val isLoading: Boolean = true,
 )
 
@@ -108,7 +110,14 @@ class HomeViewModel @Inject constructor(
         state.copy(itemCounts = counts)
     }.combine(bannerFlow) { state, showBanner ->
         state.copy(showWidgetBanner = showBanner)
+    }.combine(settings.hasSeenSearchHint) { state, seen ->
+        state.copy(showSearchHint = !seen)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUiState())
+
+    /** Called when the tip is closed or the 🔍 is used for the first time. */
+    fun dismissSearchHint() {
+        viewModelScope.launch { settings.setSearchHintSeen() }
+    }
 
     init {
         refreshRecentNames()

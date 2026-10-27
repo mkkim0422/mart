@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -69,6 +70,9 @@ fun ItemRow(
     onMove: () -> Unit,
     onDelete: () -> Unit,
     onSetReminder: () -> Unit,
+    /** Online marts only (쿠팡/컬리): label for "N에서 찾기". Null = offline mart, no search UI. */
+    searchLabel: String? = null,
+    onSearch: () -> Unit = {},
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -183,9 +187,31 @@ fun ItemRow(
                 }
             }
         }
+        // "쿠팡에서 찾기" — only on online-mart tabs. The icon's presence is the cue
+        // that this mart can be searched in its own app; offline tabs show nothing.
+        if (searchLabel != null) {
+            Spacer(Modifier.width(10.dp))
+            // Mart-colored on a soft tinted disc so it reads as "the 쿠팡 button",
+            // not as another grey row control (bell/⋮ are tertiary grey on purpose).
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(storeColor.copy(alpha = if (colors.isDark) 0.22f else 0.12f))
+                    .clickable(enabled = !triggered, onClick = onSearch),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = "${searchLabel}에서 찾기",
+                    tint = storeColor,
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+        }
         // Reminder bell — one tap opens the date/time picker. Outline = none set,
         // filled (mart color) = a reminder is armed. Disabled during the complete anim.
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(10.dp))
         val hasReminder = item.reminderAt != null
         Box(
             modifier = Modifier
@@ -202,7 +228,7 @@ fun ItemRow(
                 modifier = Modifier.size(20.dp),
             )
         }
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(10.dp))
         // "완료" affordance. Before tap: bordered button. After tap: a green
         // circle + white ✓ fades/scales in (0→250ms) and holds until 1000ms.
         Box(
@@ -260,6 +286,12 @@ fun ItemRow(
                 expanded = menuOpen && !triggered,
                 onDismissRequest = { menuOpen = false },
             ) {
+                if (searchLabel != null) {
+                    DropdownMenuItem(
+                        text = { Text("${searchLabel}에서 찾기", style = typo.body, color = colors.textPrimary) },
+                        onClick = { menuOpen = false; onSearch() },
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("이름 수정", style = typo.body, color = colors.textPrimary) },
                     onClick = { menuOpen = false; onRename() },
