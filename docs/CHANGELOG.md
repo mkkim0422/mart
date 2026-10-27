@@ -5,6 +5,10 @@
 
 ## 미커밋 (워킹트리)
 
+(없음)
+
+## 2026-10-27~28 · v1.2.2 (vc8) — 커밋 99225c0
+
 - 2026-10-27 · **v1.2.2 (vc8)** 위젯 다크 모드가 앱 안의 "다크 모드" 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 — 라이트 홈 화면에 검은 위젯(또는 그 반대)이 뜨던 문제. 폰 테마 전환 시 `App.onConfigurationChanged`가 위젯 재렌더 · `widget/BaseGroceryWidget.kt`, `App.kt`, `widget/WidgetColors.kt`, `app/build.gradle.kts`, `CLAUDE.md`
 - 2026-10-27 · **쿠팡·컬리 탭 "N에서 찾기"**: 온라인 마트(이름에 쿠팡/컬리 포함) 탭에서만 항목 줄에 🔍 아이콘 + ⋮ 메뉴 "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`, 실기기 S24+에서 검색 결과 화면 직행 확인) → 웹 검색(컬리만; 쿠팡 웹은 브라우저에 403) → Play 스토어 순으로 열기. 서버·가입 없음, Analytics `store_search`(target=쿠팡/컬리만) · `util/StoreSearch.kt`(신규), `ui/screens/home/components/{ItemRow,ItemList}.kt`, `ui/screens/home/HomeScreen.kt`, `util/Analytics.kt`
 - 2026-10-28 · **상품 키워드 사전 자동완성**: `data/local/ProductDictionary.kt`(신규, 실제 장보기·생활용품 키워드 767개, 카테고리별 흔한 순) — 입력 중 "비슷한 항목" 칩 = 이 마트의 최근 등록 상품(앞글자 일치) + 사전(앞글자 → 포함 순, 최대 8개). 다른 마트 기록은 쓰지 않음("3844" 같은 1회성 입력이 제안으로 뜨는 게 거슬린다는 피드백). 사전은 Phase 15 메뉴→재료 데이터의 재료명과 공유 예정 · `AddItemSheet.kt`
