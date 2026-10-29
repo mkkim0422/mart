@@ -7,7 +7,7 @@
 
 (없음)
 
-## 2026-10-28 · v1.3.0 (vc9) — 쇼핑몰 앱 바로가기
+## 2026-10-28 · v1.3.0 (vc9) — 쇼핑몰 앱 바로가기 — 커밋 7429b84
 
 - 2026-10-28 · **v1.3.0 (vc9)** 버전업 + 스토어 자료: 출시 노트·짧은 설명·자세한 설명(쇼핑 앱 바로가기 추가) `docs/playstore_listing.md`, 스크린샷 8장(01 메인·02 쇼핑 앱 검색 NEW·07 마트구분은 실기기 새 캡처, 나머지 번호만 이동) `docs/playstore_assets/final/`, 합성 스크립트 `scripts/compose_store_v3.py`, 새 원본 `raw/ss1_home.png`·`ss2_home.png`·`ss8_shop.png` · `app/build.gradle.kts`
 - 2026-10-28 · **위젯 "+" 버튼 전부 제거**(중간·세로·큰 위젯 마트 머리글 + 크기 선택 미리보기). 항목이 하나도 없을 때 위젯 전체를 덮던 "항목 추가 / 탭해서 추가하세요" 카드 제거 → 평소처럼 마트 줄/칸을 보여주고 빈 마트 칸엔 "아직 적은 게 없어요"(누르면 그 마트 추가 시트). 온보딩 마지막 장 그림·설명도 "+" 없이 "마트를 누르면 바로 그 목록이 열려요"로 · `widget/components/{WidgetStoreHeader,WidgetStoreCountRow}.kt`, `widget/common/WidgetCommon.kt`, `ui/components/WidgetSizePickerSheet.kt`, `ui/screens/onboarding/OnboardingScreen.kt`, `CLAUDE.md`
