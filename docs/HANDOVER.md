@@ -14,7 +14,7 @@
 | 한 줄 정의        | 마트별 장보기 리스트를 홈화면 위젯에서 보고, 앱에서 빠르게 체크하는 한국형 초심플 앱                                |
 | 패키지(영구)      | `com.rldjrgo.grocerynote` (Play 출시 후 변경 불가, 개명 후에도 패키지는 grocerynote 유지)                           |
 | 저장소            | https://github.com/mkkim0422/mart (브랜치 `main`)                                                                   |
-| 소유자            | mkkim0422 / help@sphinfo.co.kr                                                                                      |
+| 소유자            | mkkim0422 / mkkim850422@gmail.com                                                                                      |
 | 플랫폼            | Android 전용 (minSdk 26 / target·compileSdk 36)                                                                     |
 | 버전              | versionName `1.0.0`, versionCode `1`                                                                                |
 | 시작일            | 2026-05-14                                                                                                          |
@@ -217,7 +217,7 @@ Item (id PK auto, storeId FK→Store ON DELETE CASCADE, name, isCompleted,
 - **데이터**: "전체 삭제"(2단계 확인 → `db.clearAllTables()` → 쿠팡/다이소 재시드 → 토스트)
 - **결제**(`BuildConfig.SHOW_BILLING`일 때만, 현재 true): "광고 제거 (₩1,900)" / 구매 후 "광고 제거됨"
 - **정보**: 버전 표시 · "인트로 미리보기"(온보딩 Dialog) · "피드백 보내기"(브리지 시트 → `mailto:mkkim850422@gmail.com`) · "별점 주기"(`market://`) · "친구에게 추천"(공유 인텐트)
-- ⚠️ 피드백 주소(`mkkim850422@gmail.com`)와 스토어 문의(`help@sphinfo.co.kr`)가 불일치 — 의도 확인 필요.
+- 피드백·스토어 문의 이메일은 `mkkim850422@gmail.com` 하나로 통일.
 
 ### 7.7 마트 관리 (`ui/screens/store/StoreManageScreen.kt` + `StoreManageViewModel.kt`)
 
@@ -269,7 +269,7 @@ Item (id PK auto, storeId FK→Store ON DELETE CASCADE, name, isCompleted,
 - `AndroidManifest.xml`: `tools:targetApi="35"` vs build.gradle target/compile 36.
 - CLAUDE.md §14 Phase 표가 동일 항목을 [x]/[ ] 두 번 나열(중복 잔재).
 - 시드에서 이마트 제거됐으나 온보딩 1페이지 카피·`store_listing_ko.md`는 여전히 "이마트" 언급.
-- 피드백 메일(`mkkim850422@gmail.com`) vs 공식 문의(`help@sphinfo.co.kr`) 불일치.
+- (해결) 피드백·공식 문의 메일 `mkkim850422@gmail.com`으로 통일.
 - `SHOW_BILLING=true`(코드)인데 CLAUDE/주석은 "v1.5까지 결제 UI 숨김"이라 서술 → 현재 결제 행이 **노출**됨.
 - CLAUDE.md `Local: C:\mart` vs 실제 작업 경로 다름(영향 없음, 참고).
 

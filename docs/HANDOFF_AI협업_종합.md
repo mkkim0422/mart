@@ -32,7 +32,7 @@
 | 저장소 | https://github.com/mkkim0422/mart (브랜치 `main`) |
 | 로컬 경로 | `C:\mart` (Windows 11 Home) |
 | 소유자 | mkkim0422 |
-| 사용자 메일 | help@sphinfo.co.kr (스토어/공식 문의) · mkkim850422@gmail.com (앱 내 피드백 발신) |
+| 사용자 메일 | mkkim850422@gmail.com (스토어 문의 · 앱 내 피드백 공통) |
 | 시작일 | 2026-05-14 |
 | 현재 버전 | versionName `1.0.0`, versionCode `1` |
 | 빌드 산출물 기록 | Release APK 5.91MB, AAB 11.91MB (목표 APK ≤10MB 충족) |
@@ -578,7 +578,7 @@ signingConfigs {
 | AdMob ID 분리 | (단순 분리 언급) | **3계층 단일 소스 + manifestPlaceholders + ProGuard 로그 제거** | `7f3f51b` (2026-05-19) |
 | README targetSdk | "35 / Android 15" | **36 / Android 16** | README가 구버전 |
 | Manifest tools:targetApi | "35" | 36과 불일치 (코드 영향 없음) | — |
-| 피드백 메일 | 단일 명시 없음 | 앱 내 피드백 = `mkkim850422@gmail.com`, 공식 = `help@sphinfo.co.kr` (의도된 분리) | — |
+| 피드백 메일 | 단일 명시 없음 | 앱 내 피드백·공식 문의 모두 `mkkim850422@gmail.com` | — |
 | 위젯 항목 행 등 클릭 라우팅 | (모두 `storeId = -1L`) | **각 컴포넌트가 자기 `storeId`로 클릭 부착** → 그 마트로 라우팅 | 2026-05-25 (워킹트리 미커밋) |
 
 ### 13.1 Phase 진행 상황 (CLAUDE.md §14 갱신)
