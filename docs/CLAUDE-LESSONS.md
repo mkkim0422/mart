@@ -51,7 +51,7 @@
 | 잘못 | picker onClick에서 핀 요청 + **즉시** HOME 점프 |
 | 정답 | `requestPinAppWidget(provider, null, PendingIntent→성공Receiver)` → **성공 Receiver의 `onReceive`** 에서 `Intent.ACTION_MAIN + CATEGORY_HOME + FLAG_ACTIVITY_NEW_TASK` 발사. picker는 성공 시 그냥 시트만 닫고 **앱에 머무름.** |
 | 이 프로젝트 파일 | `widget/WidgetPinSuccessReceiver.kt`, `ui/components/WidgetSizePickerSheet.kt`, `util/WidgetPinHelper.kt` |
-| 커밋 | `5767e42 fix(widget): 위젯 핀 성공 후 홈화면 자동 이동` |
+| 커밋 | `aa07bb0 fix(widget): 위젯 핀 성공 후 홈화면 자동 이동` |
 
 ---
 

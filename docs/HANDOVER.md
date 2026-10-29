@@ -1,7 +1,7 @@
 # 마트노트(MartNote) 인수인계서
 
 > **이 문서의 목적**: 다른 Claude AI 세션(또는 사람)이 이 프로젝트를 처음부터 끝까지 교차검증할 수 있도록, "어떻게 시작했고 → 어떻게 지금까지 왔으며 → 현재 화면이 어떤 상태이고 → 다음에 무엇을 할지"를 코드 근거와 함께 빠짐없이 정리한 문서입니다.
-> **검증 기준일**: 2026-05-18 · **검증 커밋**: `987a26b` (main) · **작성**: 전체 60개 Kotlin 파일(약 7,152 LOC) 직접 정독 후 작성.
+> **검증 기준일**: 2026-05-18 · **검증 커밋**: `24eb07e` (main) · **작성**: 전체 60개 Kotlin 파일(약 7,152 LOC) 직접 정독 후 작성.
 > **읽는 순서**: 본 문서 → `CLAUDE.md`(영구 설계 헌장) → 코드. **단, 8장 "스펙↔코드 불일치"를 반드시 먼저 확인하세요. CLAUDE.md의 일부 핵심 서술이 현재 코드와 다릅니다.**
 
 ---
@@ -63,7 +63,7 @@
 
 git 히스토리 기준 4개 커밋으로 압축되어 있습니다.
 
-### 커밋 1 — `85f320d` (2026-05-14 22:46) · Phase 1
+### 커밋 1 — `94e3b4a` (2026-05-14 22:46) · Phase 1
 
 프로젝트 부트스트랩 + 토스 디자인 시스템.
 
@@ -71,7 +71,7 @@ git 히스토리 기준 4개 커밋으로 압축되어 있습니다.
 - **교훈 기록**: WebSearch가 라이브러리 버전을 환각(Hilt 2.57.1 등 실재하지 않음) → 이후 Maven 메타데이터 직접 조회로 버전 확정
 - 스택 고정: AGP 9.2.1, Kotlin 2.3.21, KSP 2.3.8, Hilt 2.59.2, Compose BOM 2026.05.00, Glance 1.1.1, Room 2.8.4, Nav 2.9.8 / JDK 21 → Java 17 바이트코드 / SDK 26~36
 
-### 커밋 2 — `43b245a` (2026-05-14 22:57) · Phase 2
+### 커밋 2 — `06934dd` (2026-05-14 22:57) · Phase 2
 
 Room 데이터 계층 + Hilt + 개발용 테스트 화면.
 
@@ -79,7 +79,7 @@ Room 데이터 계층 + Hilt + 개발용 테스트 화면.
 - `app/schemas/1.json` 내보내기(향후 마이그레이션 diff용)
 - DevTestScreen을 MainActivity에 임시 연결(폰에서 시드/추가/완료/삭제 검증용, Phase 3에서 교체 예정)
 
-### 커밋 3 — `e4d78cd` (2026-05-14 23:41) · Phase 3~6 일괄
+### 커밋 3 — `41dbcf1` (2026-05-14 23:41) · Phase 3~6 일괄
 
 앱 전체 + 위젯 + 광고/결제 + 릴리스를 한 번에.
 
@@ -88,7 +88,7 @@ Room 데이터 계층 + Hilt + 개발용 테스트 화면.
 - **Phase 5 완료/설정/온보딩**: 날짜 버킷 그룹핑, 마트 필터 칩, DataStore 기반 다크모드/온보딩 게이트, SAF JSON 내보내기, 2단계 전체삭제, 3페이지 온보딩
 - **Phase 6 광고/결제/릴리스**: AdMob 적응형 배너, BillingClient v8(remove_ads), Firebase Analytics/Crashlytics 자동 초기화, 조건부 서명(.jks 있을 때만 서명 → 키스토어 없이도 unsigned 릴리스 빌드 가능), ProGuard 규칙, APK 5.91MB
 
-### 커밋 4 — `987a26b` (2026-05-18 08:28) · 1차 대규모 리뉴얼 (현재 HEAD)
+### 커밋 4 — `24eb07e` (2026-05-18 08:28) · 1차 대규모 리뉴얼 (현재 HEAD)
 
 "rename to 마트노트, 4-size widgets, store management, UX polish"
 
@@ -256,7 +256,7 @@ Item (id PK auto, storeId FK→Store ON DELETE CASCADE, name, isCompleted,
 ### 8.1 [치명] 위젯 탭→체크 "킬러 기능"이 코드에서 제거됨
 
 - **CLAUDE.md 주장**(§2-3, §11-12, §22-30): "위젯 항목 탭 → 즉시 줄긋기 → 1초 후 사라짐 → 완료로 이동"이 **3대 차별점의 핵심**이며 `CheckItemAction`(Glance ActionCallback, API 31+)으로 구현.
-- **실제 코드**: 커밋 `987a26b`에서 `widget/actions/CheckItemAction.kt`(36줄)와 단일 `GroceryWidget.kt`(259줄) **삭제됨**. 현재 `widget/actions/`에는 `OpenStoreAction.kt`만 존재. `WidgetItemRow.kt` 주석: _"Simple read-only row"_ — 탭 시 앱만 열림.
+- **실제 코드**: 커밋 `24eb07e`에서 `widget/actions/CheckItemAction.kt`(36줄)와 단일 `GroceryWidget.kt`(259줄) **삭제됨**. 현재 `widget/actions/`에는 `OpenStoreAction.kt`만 존재. `WidgetItemRow.kt` 주석: _"Simple read-only row"_ — 탭 시 앱만 열림.
 - **결론**: **현재 위젯은 "표시 + 딥링크 전용"**. 위젯에서 직접 체크하는 기획상 1순위 차별점이 동작하지 않음. 의도된 제거인지(아키텍처 피벗) / 복구 대상인지 **사용자 확인 필수**. CLAUDE.md §2,3,11,12,14, 테스트 시나리오 3·4번이 현실과 어긋남.
 
 ### 8.2 인앱 체크 애니메이션 제거
