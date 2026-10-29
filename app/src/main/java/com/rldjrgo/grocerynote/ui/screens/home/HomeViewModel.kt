@@ -279,6 +279,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /** "쇼핑몰 앱 바로가기" switch at the top of a mart's list (per mart, default ON). */
+    fun setShopAppEnabled(storeId: Long, enabled: Boolean) {
+        viewModelScope.launch { storeRepo.setShopAppEnabled(storeId, enabled) }
+    }
+
     fun addStore(name: String, color: Color, iconKey: String) {
         if (name.isBlank()) return
         viewModelScope.launch {

@@ -103,25 +103,8 @@ fun WidgetStoreHeader(
                     )
                 }
             }
-            Spacer(GlanceModifier.width(8.dp))
-            // Per-mart quick "+" → opens the add-item sheet for this mart.
-            Box(
-                modifier = GlanceModifier
-                    .size(32.dp)
-                    .background(martSoftProvider(storeColor))
-                    .cornerRadius(9.dp)
-                    .clickable(OpenStoreAction.addToStore(storeId)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "+",
-                    style = TextStyle(
-                        color = staticProvider(storeColor),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                )
-            }
+            // (Per-mart "+" removed 2026-10-28 — user: "+버튼 그냥 다 빼". Tapping the
+            // header/column opens that mart's list instead.)
         }
         Box(
             modifier = GlanceModifier

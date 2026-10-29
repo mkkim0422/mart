@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [StoreEntity::class, ItemEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,6 +28,13 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE items ADD COLUMN reminder_at INTEGER")
+            }
+        }
+
+        /** v2 → v3: per-mart "쇼핑몰 앱 바로가기" switch, ON for every existing mart. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE stores ADD COLUMN shop_app_enabled INTEGER NOT NULL DEFAULT 1")
             }
         }
 
@@ -52,7 +59,7 @@ abstract class AppDatabase : RoomDatabase() {
                 DB_NAME,
             )
                 .addCallback(callback)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
             instanceHolder[0] = instance
             return instance

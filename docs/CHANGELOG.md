@@ -7,6 +7,19 @@
 
 (없음)
 
+## 2026-10-28 · v1.3.0 (vc9) — 쇼핑몰 앱 바로가기
+
+- 2026-10-28 · **v1.3.0 (vc9)** 버전업 + 스토어 자료: 출시 노트·짧은 설명·자세한 설명(쇼핑 앱 바로가기 추가) `docs/playstore_listing.md`, 스크린샷 8장(01 메인·02 쇼핑 앱 검색 NEW·07 마트구분은 실기기 새 캡처, 나머지 번호만 이동) `docs/playstore_assets/final/`, 합성 스크립트 `scripts/compose_store_v3.py`, 새 원본 `raw/ss1_home.png`·`ss2_home.png`·`ss8_shop.png` · `app/build.gradle.kts`
+- 2026-10-28 · **위젯 "+" 버튼 전부 제거**(중간·세로·큰 위젯 마트 머리글 + 크기 선택 미리보기). 항목이 하나도 없을 때 위젯 전체를 덮던 "항목 추가 / 탭해서 추가하세요" 카드 제거 → 평소처럼 마트 줄/칸을 보여주고 빈 마트 칸엔 "아직 적은 게 없어요"(누르면 그 마트 추가 시트). 온보딩 마지막 장 그림·설명도 "+" 없이 "마트를 누르면 바로 그 목록이 열려요"로 · `widget/components/{WidgetStoreHeader,WidgetStoreCountRow}.kt`, `widget/common/WidgetCommon.kt`, `ui/components/WidgetSizePickerSheet.kt`, `ui/screens/onboarding/OnboardingScreen.kt`, `CLAUDE.md`
+
+- 2026-10-28 · **온보딩 개편**: 1·2장 이미지를 현재 앱 실기기 캡처로 교체(예전 캡처는 앱 이름 없음·이마트 탭·추가 버튼 잘림; 새 1장 = 홈 쿠팡 탭+쇼핑앱 토글+FAB 전체, 2장 = 추가 시트) `res/drawable/onboarding_page{1,3}.png`. 다크 모드 장 삭제, "이름만 적으면 끝나요 / …빠르고 심플하게!", 새 3장 "적어둔 그대로 쇼핑 앱에서 검색"(쇼핑몰 앱 바로가기, 그림은 Compose로 그림 `ShopShortcutIllustration`), 마지막 장을 "생각날 때 바로 구매물품 추가해요"(그림 = 위젯 선택창 대신 **폰 홈 화면에 위젯이 놓인 모습**, `HomeWidgetIllustration`)로 바꾸고 하단을 **"위젯 추가하기" / "바로 시작하기" 같은 크기 두 버튼**으로(기존 작은 "위젯 추가 (선택)" 가독성 문제). 위젯 추가는 크기 선택 창을 먼저 띄우고, 추가 요청을 보낸 뒤(또는 창을 닫으면) 온보딩 완료 처리(먼저 완료 처리하면 AppRoot가 즉시 메인으로 바꿔 창이 안 뜨던 문제) · `ui/screens/onboarding/OnboardingScreen.kt`
+- 2026-10-28 · 🔍 검색어 오류 수정: 쇼핑 앱이 이미 켜져 있으면 새 검색어를 무시하고 이전 화면(예: "우유")을 띄우던 문제 → 검색 링크에 `FLAG_ACTIVITY_CLEAR_TASK`. S24+에서 직접 확인: 쿠팡·컬리·11번가·옥션(`auction://openwindow.v2?targeturl=`)·테무(`temu://…/search_result.html?search_key=`) 검색 결과, G마켓(`gmarket://search?type=page&keyword=`) 검색창에 입력된 상태 · `util/StoreSearch.kt`
+
+- 2026-10-28 · **"쇼핑몰 앱 바로가기"**: 마트 이름으로 쇼핑몰 앱을 정하고(쿠팡·컬리·이마트·다이소몰·홈플러스·롯데마트GO·하나로마트 등 24개, Play 스토어에서 패키지 확인), 그 마트 탭 목록 맨 위에 "○○ 앱 바로가기" 토글(마트별, 기본 ON). 🔍 → 앱(검색 링크는 아래 "검색어 오류 수정" 항목의 실기기 확인 결과 참고, 링크 없는 앱은 첫 화면), 앱 없으면 Play 스토어(웹사이트 폴백 제거). 같은 날 시안 단계였던 "마트 수정 창에서 쇼핑몰 고르기"는 넣지 않음. DB v2→v3(`stores.shop_app_enabled` 기본 1), 백업 JSON `shopAppEnabled`, 설정의 토글 스위치를 공용 컴포넌트로 이동, 1회 안내 카드는 토글 줄로 대체 · `util/StoreSearch.kt`, `data/local/{StoreEntity,StoreDao,AppDatabase}.kt`, `domain/model/Store.kt`, `data/repository/{StoreRepository,BackupRepository}.kt`, `ui/components/ToggleSwitch.kt`(신규), `HomeScreen.kt`, `HomeViewModel.kt`, `ItemRow.kt`, `SettingsScreen.kt`
+
+- 2026-10-28 · 홈 하단 버튼(공유·음성추가·추가) 색을 마트 색 → **브랜드 파랑 고정**(CLAUDE.md FAB 규칙과 맞춤, 탭마다 버튼 색이 바뀌는 게 어색하다는 피드백) · `ui/screens/home/HomeScreen.kt`
+- 2026-10-27~28 · (코드 아님) `sample/온보딩흐름_적고붙이기.html`: 온보딩 1장 → 바로 적기 → 적은 개수가 든 2×2 위젯을 홈 화면에 추가하는 첫 실행 흐름 시안 · `sample/온보딩흐름_적고붙이기.html`
+
 ## 2026-10-27~28 · v1.2.2 (vc8) — 커밋 99225c0
 
 - 2026-10-27 · **v1.2.2 (vc8)** 위젯 다크 모드가 앱 안의 "다크 모드" 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 — 라이트 홈 화면에 검은 위젯(또는 그 반대)이 뜨던 문제. 폰 테마 전환 시 `App.onConfigurationChanged`가 위젯 재렌더 · `widget/BaseGroceryWidget.kt`, `App.kt`, `widget/WidgetColors.kt`, `app/build.gradle.kts`, `CLAUDE.md`

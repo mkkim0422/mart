@@ -70,7 +70,7 @@ fun ItemRow(
     onMove: () -> Unit,
     onDelete: () -> Unit,
     onSetReminder: () -> Unit,
-    /** Online marts only (쿠팡/컬리): label for "N에서 찾기". Null = offline mart, no search UI. */
+    /** Full action text for 🔍 / ⋮ menu ("쿠팡에서 찾기" or "이마트 앱 열기") when 쇼핑몰 앱 바로가기 is on. Null = off, no UI. */
     searchLabel: String? = null,
     onSearch: () -> Unit = {},
 ) {
@@ -203,7 +203,7 @@ fun ItemRow(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
-                    contentDescription = "${searchLabel}에서 찾기",
+                    contentDescription = searchLabel,
                     tint = storeColor,
                     modifier = Modifier.size(19.dp),
                 )
@@ -288,7 +288,7 @@ fun ItemRow(
             ) {
                 if (searchLabel != null) {
                     DropdownMenuItem(
-                        text = { Text("${searchLabel}에서 찾기", style = typo.body, color = colors.textPrimary) },
+                        text = { Text(searchLabel, style = typo.body, color = colors.textPrimary) },
                         onClick = { menuOpen = false; onSearch() },
                     )
                 }

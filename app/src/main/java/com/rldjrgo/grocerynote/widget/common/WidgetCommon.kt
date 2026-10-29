@@ -128,24 +128,23 @@ fun WidgetCard(content: @Composable () -> Unit) {
     ) { content() }
 }
 
-private fun WidgetData.totalItems(): Int = itemsByStore.values.sumOf { it.size }
-
 @Composable
 private fun EmptyOr(
     data: WidgetData,
     compact: Boolean = false,
     body: @Composable () -> Unit,
 ) {
+    // No items yet is NOT an empty widget any more: the mart rows/columns render as
+    // usual (count "—", "아직 적은 게 없어요"); tapping a mart opens it. The old
+    // "항목 추가 / 탭해서 추가하세요" card said the same thing twice.
+    // Only "no marts at all" still gets the placeholder.
     when {
-        compact && (data.stores.isEmpty() || data.totalItems() == 0) -> WidgetCard {
+        compact && data.stores.isEmpty() -> WidgetCard {
             // 2x1: too short for a 3-line illustration → small cart + one hint.
-            WidgetEmptyState(title = "", hint = "탭해서 추가", compact = true)
+            WidgetEmptyState(title = "", hint = "마트를 추가해주세요", compact = true)
         }
         data.stores.isEmpty() -> WidgetCard {
             WidgetEmptyState(title = "마트를 추가해주세요", hint = "탭하면 앱이 열려요")
-        }
-        data.totalItems() == 0 -> WidgetCard {
-            WidgetEmptyState(title = "항목 추가", hint = "탭해서 추가하세요")
         }
         else -> WidgetCard { body() }
     }
@@ -357,7 +356,7 @@ fun LongContent(data: WidgetData) {
                     modifier = GlanceModifier
                         .fillMaxWidth()
                         .defaultWeight()
-                        .clickable(OpenStoreAction.forStore(storeId = target.id)),
+                        .clickable(OpenStoreAction.addToStore(target.id)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -367,7 +366,7 @@ fun LongContent(data: WidgetData) {
                         Text(text = "🛒", style = TextStyle(fontSize = 36.sp))
                         Spacer(GlanceModifier.height(8.dp))
                         Text(
-                            text = "항목 추가",
+                            text = "아직 적은 게 없어요",
                             maxLines = 1,
                             style = TextStyle(
                                 color = textPrimaryProvider(),
@@ -377,7 +376,7 @@ fun LongContent(data: WidgetData) {
                         )
                         Spacer(GlanceModifier.height(3.dp))
                         Text(
-                            text = "탭해서 추가하세요",
+                            text = "누르면 바로 적을 수 있어요",
                             maxLines = 1,
                             style = TextStyle(
                                 color = textTertiaryProvider(),
@@ -465,8 +464,15 @@ private fun MartColumn(
                 modifier = GlanceModifier
                     .fillMaxWidth()
                     .defaultWeight()
-                    .clickable(OpenStoreAction.forStore(storeId = store.id)),
-            ) {}
+                    .clickable(OpenStoreAction.addToStore(store.id)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "아직 적은 게 없어요",
+                    maxLines = 1,
+                    style = TextStyle(color = textTertiaryProvider(), fontSize = 11.sp),
+                )
+            }
         } else {
             // Plain Column (NOT LazyColumn): the Large 2x2 grid would otherwise
             // nest up to 4 LazyColumns (RemoteViews collection views) inside one

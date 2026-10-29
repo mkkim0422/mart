@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쇼핑몰 앱 바로가기 시안</title>
+<style>
+:root{
+  --bg:#F2F4F6; --card:#FFFFFF; --divider:#E5E8EB; --text:#191F28; --text2:#4E5968; --text3:#8B95A1;
+  --brand:#3182F6; --brandSoft:#E8F3FF;
+  --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); color:var(--text); font-family:var(--font); letter-spacing:-0.02em; line-height:1.5; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:28px 16px 64px}
+h1{font-size:24px; margin:0 0 6px}
+.lead{color:var(--text2); font-size:15px; margin:0 0 20px; max-width:72ch}
+.stage{display:grid; grid-template-columns:380px minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:820px){ .stage{grid-template-columns:minmax(0,1fr)} }
+
+.phone{width:min(360px,100%); height:740px; margin:0 auto; border-radius:36px; background:#111; padding:10px; box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.screen{width:100%; height:100%; border-radius:28px; overflow:hidden; position:relative; background:#FAFAF7; color:#191F28}
+.scr{position:absolute; inset:0; display:none; flex-direction:column; background:#FAFAF7}
+.scr.on{display:flex}
+.status{height:28px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-size:12px; opacity:.8}
+
+.ptitle{font-size:20px; font-weight:700; padding:12px 20px}
+.tabs{display:flex; gap:8px; padding:0 16px 12px; border-bottom:1px solid #EDEDE8; overflow-x:auto; scrollbar-width:none; flex:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none; height:38px; padding:0 14px; border-radius:19px; border:1px solid #E5E8EB; background:#fff; font-size:14px; font-weight:600; display:flex; gap:6px; align-items:center; cursor:pointer; user-select:none; white-space:nowrap}
+.tab .c{font-size:12px; font-weight:500; background:#F2F4F6; color:#6B7684; border-radius:10px; padding:0 7px}
+.tab.on{color:#fff; border-color:transparent}
+.tab.on .c{background:rgba(255,255,255,.28); color:#fff}
+.tab.ghost{border-style:dashed; color:#8B95A1; font-weight:500}
+
+.shoprow{display:flex; align-items:center; gap:10px; padding:10px 16px 4px 20px; font-size:13.5px; color:#4E5968; flex:none}
+.shoprow span{flex:1}
+.tg{width:44px; height:26px; border-radius:13px; background:#D5D2CB; position:relative; cursor:pointer; flex:none; transition:background .2s; border:0; padding:0}
+.tg::after{content:""; position:absolute; left:3px; top:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s}
+.tg[aria-checked="true"]{background:#3182F6}
+.tg[aria-checked="true"]::after{transform:translateX(18px)}
+
+.items{flex:1; overflow:auto; padding:2px 0 120px}
+.row{height:58px; display:flex; align-items:center; gap:10px; padding:0 14px 0 20px}
+.row .nm{flex:1; font-size:16px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.srch{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none}
+.srch:active{transform:scale(.9)}
+.srch svg{width:18px; height:18px}
+.done{height:34px; padding:0 14px; border:1px solid #E5E8EB; border-radius:10px; background:#fff; font-size:13px; color:#4E5968; display:flex; align-items:center; flex:none}
+.more{color:#B0B8C1; font-size:18px; width:12px; text-align:center; flex:none}
+.fabs{position:absolute; right:16px; bottom:16px; display:flex; gap:10px; z-index:4}
+.fab{height:52px; padding:0 18px; border-radius:18px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(0,0,0,.12); cursor:default}
+.fab.v{background:#fff; color:#3182F6; border:1.5px solid #3182F6}
+.fab.a{background:#3182F6; color:#fff}
+
+/* 열린 화면 */
+.obar{height:52px; flex:none; display:flex; align-items:center; gap:10px; padding:0 14px; color:#fff; font-weight:700}
+.obar .back{cursor:pointer; font-size:22px; font-weight:400; padding:0 4px}
+.osearch{margin:12px 14px; height:42px; border-radius:10px; background:#F2F4F6; display:flex; align-items:center; padding:0 12px; font-size:15px; gap:8px}
+.onote{margin:0 14px 10px; font-size:12.5px; color:#6B7684}
+.ogrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px; overflow:auto}
+.op{background:#fff; border:1px solid #EDEDE8; border-radius:12px; padding:8px}
+.op i{display:block; aspect-ratio:1; border-radius:8px; background:#EEF0F3; margin-bottom:6px}
+.op b{display:block; font-size:12px; font-weight:500}
+.op span{font-size:12px; color:#E0453F; font-weight:700}
+.ohome{padding:16px 14px; display:grid; gap:10px}
+.ohome .bn{height:120px; border-radius:14px; background:#EEF0F3}
+.ohome .ln{height:16px; border-radius:6px; background:#EEF0F3}
+.store{padding:20px; display:flex; flex-direction:column; gap:14px}
+.store .top{display:flex; gap:14px; align-items:center}
+.store .icon{width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:20px}
+.store b{font-size:18px; display:block}
+.store small{color:#2BA471; font-size:13px}
+.store .inst{height:44px; border-radius:22px; background:#0B57D0; color:#fff; font-weight:600; display:flex; align-items:center; justify-content:center}
+.store .shots{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.store .shots i{aspect-ratio:9/16; border-radius:10px; background:#EEF0F3}
+
+/* 마트 추가 시트 */
+.scrim{position:absolute; inset:0; background:rgba(0,0,0,.4); z-index:20; display:none}
+.scrim.on{display:block}
+.sheet{position:absolute; left:0; right:0; bottom:0; background:#FAFAF7; border-radius:22px 22px 0 0; padding:20px; z-index:21; display:none}
+.sheet.on{display:block}
+.sheet h3{font-size:18px; margin:0 0 14px}
+.inp{width:100%; height:52px; border:1.5px solid #3182F6; border-radius:12px; padding:0 16px; font:inherit; font-size:16px; background:#fff; outline:none}
+.pres{display:flex; gap:8px; overflow-x:auto; margin-top:12px; scrollbar-width:none}
+.pres div{flex:none; height:36px; padding:0 14px; border-radius:8px; background:#F0F1EE; color:#4E5968; font-size:13px; display:flex; align-items:center; cursor:pointer; white-space:nowrap}
+.match{font-size:13px; margin-top:12px; min-height:20px; color:#3182F6}
+.match.no{color:#8B95A1}
+.save{margin-top:16px; height:52px; border-radius:12px; background:#3182F6; color:#fff; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; cursor:pointer}
+.save.off{background:#E5E8EB; color:#B0B8C1; pointer-events:none}
+.toast{position:absolute; left:16px; right:16px; bottom:80px; background:#2B2D31; color:#fff; border-radius:12px; padding:11px 14px; font-size:13px; z-index:30; display:none}
+.toast.on{display:block}
+
+.panel{display:flex; flex-direction:column; gap:16px; min-width:0}
+.box{background:var(--card); border:0.5px solid var(--divider); border-radius:16px; padding:18px 20px}
+.box h2{font-size:16px; margin:0 0 10px}
+.note{margin:0; padding-left:20px; font-size:14px; color:var(--text2)}
+.note li{margin:6px 0}
+.note b{color:var(--text)}
+.apps{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px}
+.apps label{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text2); cursor:pointer}
+.apps input{width:18px; height:18px; accent-color:var(--brand)}
+.tblwrap{overflow-x:auto}
+.tbl{width:100%; border-collapse:collapse; font-size:13.5px}
+.tbl th{text-align:left; color:var(--text3); font-weight:500; padding:6px 8px; border-bottom:1px solid var(--divider); white-space:nowrap}
+.tbl td{padding:7px 8px; border-bottom:1px solid var(--divider); color:var(--text2)}
+.tbl td:first-child{color:var(--text); font-weight:600; white-space:nowrap}
+.btn{appearance:none; border:1px solid var(--divider); background:var(--card); color:var(--text2); height:38px; padding:0 14px; border-radius:10px; font:inherit; font-size:13px; cursor:pointer}
+.btn.main{background:var(--brand); color:#fff; border-color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>쇼핑몰 앱 바로가기</h1>
+  <p class="lead">마트 이름으로 쇼핑몰 앱이 정해집니다(쿠팡 → 쿠팡 앱, 이마트 → 이마트 앱). 그 마트 탭 목록 맨 위에 <b>"○○ 앱 바로가기"</b> 토글이 있고 기본은 켜짐입니다. 마트마다 따로 켜고 끕니다. 🔍를 누르면 앱이 있으면 앱, 없으면 Play 스토어가 열립니다.</p>
+
+  <div class="stage">
+    <div class="phone"><div class="screen">
+      <div class="scr on" id="home">
+        <div class="status"><span>9:41</span><span>▲ ▮ 100%</span></div>
+        <div class="ptitle">구매예정</div>
+        <div class="tabs" id="tabs"></div>
+        <div id="shopSlot"></div>
+        <div class="items" id="items"></div>
+        <div class="fabs"><div class="fab v">🎤 음성추가</div><div class="fab a">＋ 추가</div></div>
+        <div class="toast" id="toast"></div>
+      </div>
+      <div class="scr" id="opened" style="background:#fff">
+        <div class="status"><span>9:41</span><span>▲ ▮ 100%</span></div>
+        <div id="openedBody"></div>
+      </div>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="sheet">
+        <h3>새 마트 추가</h3>
+        <input class="inp" id="nameInp" type="text" placeholder="마트 이름 (예: 이마트)" autocomplete="off">
+        <div class="pres" id="pres"></div>
+        <div class="match" id="match"></div>
+        <div class="save off" id="saveBtn">추가하기</div>
+      </div>
+    </div></div>
+
+    <div class="panel">
+      <div class="box">
+        <h2>눌러볼 것</h2>
+        <ul class="note">
+          <li><b>쿠팡 탭</b> 🔍 → 쿠팡 앱이 그 항목 검색 결과로 열려요.</li>
+          <li><b>이마트 탭</b> 🔍 → 이마트 앱이 첫 화면으로 열려요(이마트는 검색 바로가기 주소를 공개하지 않아요). 아래에서 "이마트 앱 설치됨"을 끄고 누르면 Play 스토어가 열려요.</li>
+          <li><b>시장 탭</b> → 맞는 앱이 없어서 토글도 🔍도 없어요.</li>
+          <li>탭마다 토글을 따로 꺼보세요. 끈 탭만 🔍가 사라져요.</li>
+          <li><b>+ 추가</b>로 마트 이름을 적어보면, 어떤 앱이 연결되는지 바로 보여요.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h2>이 휴대폰에 깔린 앱 (시험용)</h2>
+        <div class="apps" id="apps"></div>
+      </div>
+      <div class="box">
+        <h2>마트 이름 → 연결되는 앱</h2>
+        <div class="tblwrap"><table class="tbl" id="map"></table></div>
+      </div>
+      <div><button class="btn main" id="resetBtn" type="button">처음 상태로</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+// 실제 앱(StoreSearch.kt)과 같은 순서: 더 구체적인 이름이 먼저
+const APPS = [
+  { label: "쿠팡", hints: ["쿠팡"], search: true, color: "#E0453F" },
+  { label: "컬리", hints: ["컬리"], search: true, color: "#5F0080" },
+  { label: "이마트24", hints: ["이마트24"], color: "#FFB800" },
+  { label: "이마트에브리데이", hints: ["이마트에브리데이", "이마트 에브리데이"], color: "#FFB800" },
+  { label: "이마트몰", hints: ["이마트몰"], color: "#FFB800" },
+  { label: "이마트", hints: ["이마트"], color: "#FFB800" },
+  { label: "SSG", hints: ["쓱", "SSG"], search: true, color: "#FF5452" },
+  { label: "홈플러스", hints: ["홈플러스"], search: true, color: "#E2231A" },
+  { label: "롯데마트", hints: ["롯데마트", "롯데슈퍼"], color: "#E60012" },
+  { label: "롯데ON", hints: ["롯데온", "롯데ON"], color: "#E60012" },
+  { label: "다이소몰", hints: ["다이소"], color: "#F04452" },
+  { label: "오아시스", hints: ["오아시스"], color: "#2BA471" },
+  { label: "하나로마트", hints: ["하나로", "농협"], color: "#0A8A3E" },
+  { label: "킴스클럽", hints: ["킴스클럽"], color: "#D7282F" },
+  { label: "우리동네GS", hints: ["GS25", "GS더프레시", "지에스"], color: "#00A0E2" },
+  { label: "포켓CU", hints: ["씨유"], exact: ["CU"], color: "#6B2C91" },
+  { label: "배민", hints: ["배민", "배달의민족", "B마트"], color: "#2AC1BC" },
+  { label: "올리브영", hints: ["올리브영"], color: "#9BCE26" },
+  { label: "11번가", hints: ["11번가"], search: true, color: "#FF0038" },
+  { label: "G마켓", hints: ["G마켓", "지마켓"], search: true, color: "#00A859" },
+  { label: "옥션", hints: ["옥션"], search: true, color: "#E31F26" },
+  { label: "무신사", hints: ["무신사"], color: "#000000" },
+  { label: "테무", hints: ["테무", "temu"], color: "#FB7701" },
+  { label: "알리", hints: ["알리", "aliexpress"], color: "#E62E04" }
+];
+const appFor = name => APPS.find(a => a.hints.some(h => name.toLowerCase().includes(h.toLowerCase())) || (a.exact || []).some(h => name.includes(h)));
+const PRESETS = ["이마트", "홈플러스", "롯데마트", "다이소", "쿠팡", "마켓컬리", "편의점", "시장", "약국"];
+const COLORS = ["#3182F6", "#F04452", "#2BA471", "#FF8A3D", "#8B5CF6", "#F564A9"];
+
+let state;
+function init() {
+  state = {
+    stores: [
+      { id: 1, name: "쿠팡", icon: "🚀", color: "#3182F6", on: true, items: ["생수 2L", "달걀", "두부", "라면"] },
+      { id: 2, name: "다이소", icon: "🏪", color: "#F04452", on: true, items: ["건전지 AA", "지퍼백", "수세미"] },
+      { id: 3, name: "이마트", icon: "🛒", color: "#FF8A3D", on: true, items: ["삼겹살", "양파", "우유"] },
+      { id: 4, name: "시장", icon: "🥬", color: "#2BA471", on: true, items: ["대파", "고등어"] }
+    ],
+    sel: 1, nextId: 5,
+    installed: { "쿠팡": true, "이마트": true, "다이소몰": false, "홈플러스": false, "컬리": false }
+  };
+}
+const cur = () => state.stores.find(s => s.id === state.sel);
+
+function renderHome() {
+  $("#tabs").innerHTML = state.stores.map(s =>
+    `<div class="tab${s.id === state.sel ? " on" : ""}" data-tab="${s.id}" style="${s.id === state.sel ? `background:${s.color}` : ""}">${s.icon} ${s.name}<span class="c">${s.items.length}</span></div>`
+  ).join("") + `<div class="tab ghost" data-act="add">+ 추가</div>`;
+  const s = cur(), a = appFor(s.name);
+  $("#shopSlot").innerHTML = a
+    ? `<div class="shoprow"><span>${a.label} 앱 바로가기</span><button class="tg" type="button" role="switch" aria-checked="${s.on}" aria-label="${a.label} 앱 바로가기" data-act="toggle"></button></div>`
+    : "";
+  const showSearch = a && s.on;
+  const label = a ? (a.search ? `${a.label}에서 찾기` : `${a.label} 앱 열기`) : "";
+  $("#items").innerHTML = s.items.map(i => `
+    <div class="row"><span class="nm">${i}</span>
+      ${showSearch ? `<span class="srch" data-open="${i}" title="${label}" style="background:${s.color}1F; color:${s.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></span>` : ""}
+      <span class="done">완료</span><span class="more">⋮</span></div>`).join("");
+}
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 2400); }
+
+function openApp(item) {
+  const a = appFor(cur().name);
+  const has = !!state.installed[a.label];
+  let html;
+  if (!has) {
+    html = `<div class="obar" style="background:#fff; color:#191F28"><span class="back" data-act="home">‹</span>Google Play</div>
+      <div class="store"><div class="top"><div class="icon" style="background:${a.color}">${a.label.slice(0, 2)}</div><div><b>${a.label}</b><small>앱이 없어서 Play 스토어가 열렸어요</small></div></div>
+      <div class="inst">설치</div><div class="shots"><i></i><i></i><i></i></div></div>`;
+  } else if (a.search) {
+    html = `<div class="obar" style="background:${a.color}"><span class="back" data-act="home">‹</span>${a.label} 앱</div>
+      <div class="osearch">🔍 ${item}</div><div class="onote">${a.label} 앱이 '${item}' 검색 결과로 바로 열렸어요</div>
+      <div class="ogrid">${[1, 2, 3, 4].map(n => `<div class="op"><i></i><b>${item} ${["1개", "묶음", "대용량", "특가"][n - 1]}</b><span>${["4,980", "7,900", "12,400", "3,200"][n - 1]}원</span></div>`).join("")}</div>`;
+  } else {
+    html = `<div class="obar" style="background:${a.color}"><span class="back" data-act="home">‹</span>${a.label} 앱</div>
+      <div class="onote" style="margin-top:12px">${a.label} 앱이 첫 화면으로 열렸어요. 이 앱은 검색 바로가기 주소가 공개돼 있지 않아서 항목 검색까지는 못 해요.</div>
+      <div class="ohome"><div class="bn"></div><div class="ln" style="width:70%"></div><div class="ln"></div><div class="ln" style="width:50%"></div><div class="bn" style="height:90px"></div></div>`;
+  }
+  $("#openedBody").innerHTML = html;
+  show("opened");
+}
+function show(id) { document.querySelectorAll(".scr").forEach(s => s.classList.toggle("on", s.id === id)); if (id === "home") renderHome(); }
+
+function openSheet() {
+  $("#nameInp").value = ""; updateMatch("");
+  $("#pres").innerHTML = PRESETS.map(p => `<div data-preset="${p}">${p}</div>`).join("");
+  $("#scrim").classList.add("on"); $("#sheet").classList.add("on");
+  setTimeout(() => $("#nameInp").focus(), 100);
+}
+function closeSheet() { $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); }
+function updateMatch(v) {
+  const a = v.trim() ? appFor(v) : null, m = $("#match");
+  m.className = "match" + (v.trim() && !a ? " no" : "");
+  m.textContent = !v.trim() ? "" : a ? `→ ${a.label} 앱 바로가기가 켜진 채로 추가돼요` : "→ 맞는 쇼핑몰 앱이 없어서 바로가기 없이 추가돼요";
+  $("#saveBtn").classList.toggle("off", !v.trim());
+}
+function addStore() {
+  const name = $("#nameInp").value.trim(); if (!name) return;
+  const s = { id: state.nextId++, name, icon: "🛒", color: COLORS[state.nextId % COLORS.length], on: true, items: ["우유", "식빵"] };
+  state.stores.push(s); state.sel = s.id; closeSheet(); renderHome();
+}
+
+function renderPanel() {
+  $("#apps").innerHTML = Object.keys(state.installed).map(k => `<label><input type="checkbox" data-inst="${k}" ${state.installed[k] ? "checked" : ""}> ${k} 앱 설치됨</label>`).join("");
+  $("#map").innerHTML = `<thead><tr><th>마트 이름에</th><th>열리는 앱</th><th>🔍 누르면</th></tr></thead><tbody>` +
+    APPS.map(a => `<tr><td>${[...a.hints, ...(a.exact || [])].slice(0, 2).join(", ")}</td><td>${a.label}</td><td>${a.search ? "그 항목 검색 결과" : "앱 첫 화면"}</td></tr>`).join("") + `</tbody>`;
+}
+
+document.addEventListener("click", e => {
+  const t = e.target;
+  const tab = t.closest("[data-tab]"); if (tab) { state.sel = +tab.dataset.tab; return renderHome(); }
+  const op = t.closest("[data-open]"); if (op) return openApp(op.dataset.open);
+  const pr = t.closest("[data-preset]"); if (pr) { $("#nameInp").value = pr.dataset.preset; return updateMatch(pr.dataset.preset); }
+  if (t.id === "scrim") return closeSheet();
+  if (t.id === "saveBtn") return addStore();
+  const a = t.closest("[data-act]"); if (!a) return;
+  if (a.dataset.act === "toggle") { const s = cur(); s.on = !s.on; renderHome(); toast(`${appFor(s.name).label} 앱 바로가기를 ${s.on ? "켰어요" : "껐어요"} · 이 마트에만 적용돼요`); }
+  else if (a.dataset.act === "home") show("home");
+  else if (a.dataset.act === "add") openSheet();
+});
+$("#nameInp").addEventListener("input", e => updateMatch(e.target.value));
+document.addEventListener("change", e => { const k = e.target.dataset.inst; if (k) state.installed[k] = e.target.checked; });
+$("#resetBtn").onclick = () => { init(); closeSheet(); renderPanel(); show("home"); };
+init(); renderPanel(); show("home");
+</script>
+</body>
+</html>

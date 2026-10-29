@@ -234,7 +234,7 @@ Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemR
 
 **Widget is display + deep-link only — it never mutates data (decided 2026-05-18).**
 - Item rows are **read-only** (dot + name). Tap → `OpenStoreAction.forStore(-1L)` → opens MainActivity (HomeScreen, that mart preselected) where the user completes via the §11 V2 animation.
-- Mart-header **"+"** → `OpenStoreAction.addToStore(storeId)` → opens straight into that mart's add-item sheet (via `DeepLinkBus`, `action=ADD_ITEM`).
+- **No "+" buttons on any widget (removed 2026-10-28, user: "+버튼 그냥 다 빼").** A mart with no items shows "아직 적은 게 없어요" in its area; tapping that empty area → `OpenStoreAction.addToStore(storeId)` (add-item sheet via `DeepLinkBus`, `action=ADD_ITEM`). Long widget empty: "아직 적은 게 없어요 / 누르면 바로 적을 수 있어요" (same action).
 - Tapping anywhere else on the card → opens the app.
 - **No API branching.** Identical on all supported APIs (26–36). No `CheckItemAction`, no `ActionCallback` (`CheckItemAction.kt` deleted in commit `987a26b`).
 
@@ -252,7 +252,7 @@ App↔Widget sync: a process-lifetime `WidgetUpdater` (@Singleton, started in `A
 
 Empty states:
 - 0 marts: "마트를 추가해주세요" → tap = open app
-- 0 items across all marts: "추가할 항목이 없어요" + "+" → tap = open app
+- 0 items across all marts: NO placeholder card any more — the normal mart rows/columns render (Small count "—", Medium/Large/Long "아직 적은 게 없어요") (2026-10-28; the old "항목 추가 / 탭해서 추가하세요" card was redundant)
 
 Onboarding last page: "위젯 추가하기" → `AppWidgetManager.requestPinAppWidget()` (Android 8+, depends on launcher); fallback hint: "홈화면을 길게 누르고 위젯 → 마트노트".
 
@@ -270,7 +270,7 @@ Test scenarios (verify each after Phase 4):
 1. Add widget from launcher
 2. App add → widget reflects instantly
 3. Widget item tap → app opens on Home with that mart preselected (check happens in-app)
-4. Widget header "+" tap → app opens straight into that mart's add-item sheet
+4. Empty mart area tap → app opens straight into that mart's add-item sheet
 5. Resize widget on home screen → auto-adapts between Mini/Small/Long/Medium/Large
 6. System dark toggle → widget colors flip
 7. 1 day usage → battery impact negligible
@@ -321,7 +321,9 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 12 — Post-1.1.0 UX polish (still v1.1.0/vc2): reminder **entry moved to a bell icon on the item row** (outline=unset / filled mart-color=set, one tap → sheet; ⋮ menu reminder items removed) (commit `f2f0aec`); **vibration/sound fix** — channel given `enableVibration(true)`+pattern, channel id `item_reminders`→`item_reminders_v2` (channels are immutable once created) (commit `0deda0e`); `BootReceiver` `LOCKED_BOOT_COMPLETED` removed (Direct Boot can't reach the DB) (commit `0a34ae2`); **tab/filter swipe transition** — settled on **Nate-style horizontal slide** (body slides in the swipe direction, tab/filter strip stays fixed, 280ms slide+fade, bootstrap=fade-only) after trying remove-slide→crossfade→scale-fade (commit `c33ade6`). — 2026-06-16
 
 - [x] Phase 13 — **v1.2.1 (vc7)** 위젯 미표시 근본 원인 수정: 릴리스 R8이 WorkManager `OverwritingInputMerger` 생성자를 제거 → Glance SessionWorker 실패 → 위젯이 항상 미리보기 견본(이마트 5/다이소 3)만 표시(스토어 1.2.0 포함). `proguard-rules.pro` keep 규칙 + 프로세스 시작/앱 이탈 시 자가 복구 렌더. 완료 탭 필터 줄 선택 필 따라가기. 테스트 전용 JSON 내보내기/가져오기는 `SHOW_BACKUP=false`로 숨김 — 2026-09-24
-- [x] Phase 14 — **v1.2.2 (vc8)** ① 위젯 다크 모드가 앱 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 (§12). 폰 테마 전환 시 `App.onConfigurationChanged` → 위젯 재렌더. ② **온라인 마트 "N에서 찾기"** (`util/StoreSearch.kt`): 마트 이름에 쿠팡/컬리가 들어가면 그 탭의 항목 줄에 🔍 + ⋮ "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`; 둘 다 실기기에서 검색 결과 직행 확인 2026-10-28) → 웹 검색(컬리만; **쿠팡 웹 검색은 브라우저에 403이라 폴백 없음**) → Play 스토어 순. 오프라인 마트 탭은 변화 없음. 쿠팡 파트너스 링크 전환은 미정 — 2026-10-27
+- [x] Phase 14 — **v1.2.2 (vc8)** ① 위젯 다크 모드가 앱 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 (§12). 폰 테마 전환 시 `App.onConfigurationChanged` → 위젯 재렌더. ② **온라인 마트 "N에서 찾기"** (`util/StoreSearch.kt`): 마트 이름에 쿠팡/컬리가 들어가면 그 탭의 항목 줄에 🔍 + ⋮ "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`; 둘 다 실기기에서 검색 결과 직행 확인 2026-10-28) → 웹 검색(**쿠팡 `coupang.com/np/search?q=`·컬리 둘 다** — 실제 브라우저에서 열림 확인 2026-10-28. 스크립트 접속은 쿠팡 봇 차단으로 403이 나와 예전에 "폴백 없음"으로 잘못 판단했었음) → Play 스토어(브라우저도 없을 때만) 순. 오프라인 마트 탭은 변화 없음.
+  - **2026-10-28 변경 → "쇼핑몰 앱 바로가기"**: 마트 **이름**으로 앱을 정함(`StoreSearch.appFor`: 쿠팡→쿠팡, 이마트→이마트 앱, 다이소→다이소몰, 홈플러스, 롯데마트GO, 하나로마트, 킴스클럽, 우리동네GS, 포켓CU, SSG, 이마트24/에브리데이/이마트몰, 배민, 올리브영, 11번가, G마켓, 옥션 등 — 패키지는 Play 스토어 KR에서 확인, 더 구체적인 이름이 먼저 매칭). 해당 마트 탭 **목록 맨 위에 "○○ 앱 바로가기" 토글**(마트별, **기본 ON**, DB v3 `stores.shop_app_enabled`). 켜져 있으면 항목 🔍: **항목 검색 결과로 여는 앱** [S24+ 실기기 확인 2026-10-28] = 쿠팡(`coupang://search?q=`), 컬리(`kurly://search?keyword=`), 11번가(`elevenst://loadurl?url=`+검색 URL), 옥션(`auction://openwindow.v2?targeturl=`+검색 URL), 테무(`temu://com.einnovation.temu/search_result.html?search_key=`), G마켓(`gmarket://search?type=page&keyword=` → 검색창에 입력된 상태까지). [APK 분석만, 실기기 미확인] 홈플러스(매니페스트가 `https://mfront.homeplus.co.kr/search`를 받음 → 패키지 지정), SSG(`ssg://execute?landingUrl=`). 검색 링크 Intent에는 **`FLAG_ACTIVITY_CLEAR_TASK`** 필수 — 없으면 이미 켜진 쇼핑 앱이 이전 화면을 그대로 띄움(컬리에서 "우유" 버그). 나머지는 앱 첫 화면으로(검색 링크를 못 찾음), **앱이 없으면 Play 스토어**(웹사이트로 가지 않음). 이름이 어떤 앱과도 안 맞는 마트(시장·약국)는 토글·🔍 없음. 백업 JSON `shopAppEnabled`. ⋮ 메뉴 문구: "쿠팡에서 찾기" / "이마트 앱 열기". 쿠팡 파트너스 링크 전환은 미정 — 2026-10-27
+- [x] Phase 14.5 — **v1.3.0 (vc9) 쇼핑몰 앱 바로가기** (마트 이름 → 쇼핑 앱, 목록 위 마트별 토글 기본 ON, 🔍 → 앱 검색/앱 열기/Play 스토어, DB v3) + 온보딩 개편(4장: 마트별·이름만·쇼핑앱·위젯, 마지막 장 두 버튼) + 위젯 "+" 제거·빈 상태 정리 + 홈 FAB 브랜드색 고정. 스토어 자료 `docs/playstore_listing.md` §0~2 — 2026-10-28
 - [ ] Phase 15 (다음, 사용자 확정 2026-10-27) — **메뉴 → 재료 자동 제안**: 추가 시트에 요리 이름("된장찌개")을 치면 재료가 칩으로 떠서 탭해 담음. 한국 요리 200~300종 재료표를 앱 내 번들(서버 없음). 완성 시 스토어 첫 스크린샷/홍보 문구를 "메뉴만 치면 장보기 끝"으로. 그 뒤 후보: "다시 살 때 됐어요" 칩(완료 주기, 알림 없음) → 가족 공유 6자리 코드(가입 없음 원칙 재검토 필요)
 
 > Note: an earlier **share** feature also exists (Home share SmallFAB above the add-FAB → `ShareRequestDialog` with a 200-char 부탁 문구, 15 rotating placeholders, footer "마트노트에서 보냄"; 심부름 pivot — no store link) and the **XLarge widget breakpoint** (320×320, up to 6 marts, adaptive-only). Both pre-date Phase 11 in the CHANGELOG (2026-05-26) and ship in v1.1.0.

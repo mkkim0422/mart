@@ -43,6 +43,9 @@ class StoreRepository @Inject constructor(
         )
     }
 
+    /** "쇼핑몰 앱 바로가기" switch at the top of this mart's list. */
+    suspend fun setShopAppEnabled(id: Long, enabled: Boolean) = dao.setShopAppEnabled(id, enabled)
+
     suspend fun archiveStore(id: Long) = dao.archiveStore(id, archived = true)
     suspend fun unarchiveStore(id: Long) = dao.archiveStore(id, archived = false)
 
@@ -62,4 +65,5 @@ internal fun StoreEntity.toDomain(): Store = Store(
     displayOrder = displayOrder,
     isArchived = isArchived,
     createdAt = createdAt,
+    shopAppEnabled = shopAppEnabled,
 )

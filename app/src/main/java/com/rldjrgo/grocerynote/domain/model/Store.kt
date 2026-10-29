@@ -14,6 +14,8 @@ data class Store(
     val displayOrder: Int,
     val isArchived: Boolean,
     val createdAt: Long,
+    /** "쇼핑몰 앱 바로가기" on for this mart (see `util/StoreSearch`). Default ON. */
+    val shopAppEnabled: Boolean = true,
 )
 
 /**

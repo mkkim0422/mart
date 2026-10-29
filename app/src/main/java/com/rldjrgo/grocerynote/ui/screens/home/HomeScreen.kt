@@ -84,6 +84,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.IntOffset
 import com.rldjrgo.grocerynote.ui.components.AdBanner
 import com.rldjrgo.grocerynote.ui.components.PageTitle
+import com.rldjrgo.grocerynote.ui.components.ToggleSwitch
 import com.rldjrgo.grocerynote.ui.components.UndoSnackbarHost
 import com.rldjrgo.grocerynote.ui.components.WidgetNudgeSheet
 import com.rldjrgo.grocerynote.ui.components.WidgetSizePickerSheet
@@ -138,7 +139,9 @@ fun HomeScreen(
     var pendingReminder by remember { mutableStateOf<Pair<Long, Long>?>(null) }
 
     val selectedStore = state.stores.firstOrNull { it.id == state.selectedStoreId }
-    val fabColor = selectedStore?.color ?: colors.brandPrimary
+    // Action buttons (공유 · 음성추가 · 추가) stay brand blue on every mart tab —
+    // the mart color lives in the tabs/rows only (CLAUDE.md: FAB #3182F6).
+    val fabColor = colors.brandPrimary
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -401,39 +404,63 @@ fun HomeScreen(
                         if (pageStoreId == state.activeItemsStoreId) state.activeItems
                         else pageStoreId?.let { itemsByStore[it] } ?: emptyList()
                     val pageStore = storesL.firstOrNull { it.id == pageStoreId }
-                    if (pageItems.isEmpty()) {
-                        EmptyItems(onAddClick = { showAddItem = true })
-                    } else {
-                        ItemList(
-                            items = pageItems,
-                            storeColor = pageStore?.color ?: colors.brandPrimary,
-                            highlightItemId = state.highlightItemId,
-                            onCompleteAnimDone = viewModel::completeItem,
-                            onRename = { renameTarget = it },
-                            onMove = { moveTarget = it },
-                            onDelete = { deleteTarget = it },
-                            onSetReminder = { reminderTarget = it },
-                            // 쿠팡·컬리 탭: 항목을 그 앱의 검색 결과로 바로 열기.
-                            searchLabel = pageStore?.let { StoreSearch.targetFor(it.name)?.label },
-                            // One-time tip so people learn the 🔍 exists; gone after close or first use.
-                            searchHint = pageStore?.let { StoreSearch.targetFor(it.name)?.label }
-                                ?.takeIf { state.showSearchHint }
-                                ?.let { "항목 옆 🔍를 누르면 ${it} 앱에서 바로 검색돼요" },
-                            onSearchHintDismiss = viewModel::dismissSearchHint,
-                            onSearch = { item ->
-                                val store = pageStore ?: return@ItemList
-                                val target = StoreSearch.targetFor(store.name) ?: return@ItemList
-                                viewModel.dismissSearchHint()
-                                Analytics.storeSearch(target.label)
-                                if (!StoreSearch.open(context, store.name, item.name)) {
-                                    Toast.makeText(context, "${target.label}을(를) 열 수 없어요", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                        )
+                    // 마트 이름으로 쇼핑몰 앱을 정함 (쿠팡 → 쿠팡 앱). 없으면 토글·🔍 없음.
+                    val shopApp = pageStore?.let { StoreSearch.appFor(it.name) }
+                    val searchTarget = shopApp?.takeIf { pageStore?.shopAppEnabled == true }
+                    Column(Modifier.fillMaxSize()) {
+                        // "○○ 앱 바로가기" — per-mart switch, default ON. Sits on top of
+                        // the list where 🔍 is used (not buried in 마트 관리).
+                        if (shopApp != null && pageStore != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 20.dp, end = 16.dp, top = 10.dp, bottom = 2.dp),
+                            ) {
+                                Text(
+                                    text = "${shopApp.label} 앱 바로가기",
+                                    style = typo.bodyS,
+                                    color = colors.textSecondary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                ToggleSwitch(
+                                    checked = pageStore.shopAppEnabled,
+                                    onToggle = { viewModel.setShopAppEnabled(pageStore.id, !pageStore.shopAppEnabled) },
+                                )
+                            }
+                        }
+                        if (pageItems.isEmpty()) {
+                            EmptyItems(onAddClick = { showAddItem = true })
+                        } else {
+                            ItemList(
+                                items = pageItems,
+                                storeColor = pageStore?.color ?: colors.brandPrimary,
+                                highlightItemId = state.highlightItemId,
+                                onCompleteAnimDone = viewModel::completeItem,
+                                onRename = { renameTarget = it },
+                                onMove = { moveTarget = it },
+                                onDelete = { deleteTarget = it },
+                                onSetReminder = { reminderTarget = it },
+                                // 바로가기 켜진 마트: 🔍 → 앱(쿠팡·컬리는 그 항목 검색 결과), 앱 없으면 Play 스토어.
+                                searchLabel = searchTarget?.let {
+                                    if (it.searchesItem) "${it.label}에서 찾기" else "${it.label} 앱 열기"
+                                },
+                                // The switch row above already explains the feature; no extra tip card.
+                                searchHint = null,
+                                onSearch = { item ->
+                                    val target = searchTarget ?: return@ItemList
+                                    viewModel.dismissSearchHint()
+                                    Analytics.storeSearch(target.label)
+                                    if (!StoreSearch.open(context, target, item.name)) {
+                                        Toast.makeText(context, "${target.label} 앱을 열 수 없어요", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
-                // FAB stack — share (small, mart-tinted, only when a mart is
-                // selected) above the 음성추가 + "추가" action row.
+                // FAB stack — share (small, only when a mart is selected)
+                // above the 음성추가 + "추가" action row.
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -513,8 +540,7 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        // Extended FAB — rounded rectangle filled with the current mart
-                        // color (Toss-blue fallback when no mart is selected).
+                        // Extended FAB — rounded rectangle, brand blue.
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier

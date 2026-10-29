@@ -61,6 +61,7 @@ class BackupRepository @Inject constructor(
                     .put("displayOrder", s.displayOrder)
                     .put("isArchived", s.isArchived)
                     .put("createdAt", s.createdAt)
+                    .put("shopAppEnabled", s.shopAppEnabled)
                     .put("items", itemsJson),
             )
         }
@@ -102,6 +103,8 @@ class BackupRepository @Inject constructor(
                         displayOrder = nextStoreOrder++,
                         isArchived = sj.optBoolean("isArchived", false),
                         createdAt = sj.optLong("createdAt", now),
+                        // Older backups have no "shopAppEnabled" → default ON.
+                        shopAppEnabled = sj.optBoolean("shopAppEnabled", true),
                     )
                     val id = storeDao.insertStore(entity)
                     storesAdded++

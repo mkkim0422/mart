@@ -40,6 +40,9 @@ interface StoreDao {
     @Query("UPDATE stores SET is_archived = :archived WHERE id = :id")
     suspend fun archiveStore(id: Long, archived: Boolean)
 
+    @Query("UPDATE stores SET shop_app_enabled = :enabled WHERE id = :id")
+    suspend fun setShopAppEnabled(id: Long, enabled: Boolean)
+
     @Query("SELECT COALESCE(MAX(display_order), -1) FROM stores")
     suspend fun getMaxOrder(): Int
 
