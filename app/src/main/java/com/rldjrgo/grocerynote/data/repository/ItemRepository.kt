@@ -59,6 +59,9 @@ class ItemRepository @Inject constructor(
 
     suspend fun completeItem(id: Long) = dao.markCompleted(id)
 
+    /** Persist a long-press drag reorder; [orderedIds] = top-to-bottom. */
+    suspend fun reorder(orderedIds: List<Long>) = dao.reorderItems(orderedIds)
+
     /** Set (or clear, when [at] is null) the one-shot reminder time of an item. */
     suspend fun setReminder(id: Long, at: Long?) = dao.setReminder(id, at)
 

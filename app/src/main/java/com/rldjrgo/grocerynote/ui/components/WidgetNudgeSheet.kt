@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
-import com.rldjrgo.grocerynote.util.WidgetSize
+import com.rldjrgo.grocerynote.util.WidgetKind
 
 /**
  * 위젯 유도 시트 — 항목 등록 후 추가 흐름이 끝날 때 뜬다. "목록을 다 만든 직후"가
@@ -65,7 +65,7 @@ fun WidgetNudgeSheet(
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(20.dp))
-            WidgetSamplePreview(WidgetSize.MEDIUM)
+            WidgetSamplePreview(WidgetKind.LIST)
             Spacer(Modifier.height(24.dp))
             Box(
                 modifier = Modifier

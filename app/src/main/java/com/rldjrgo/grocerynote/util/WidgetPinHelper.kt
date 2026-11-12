@@ -5,19 +5,18 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.rldjrgo.grocerynote.widget.GroceryWidget2x1Receiver
-import com.rldjrgo.grocerynote.widget.GroceryWidgetLargeReceiver
-import com.rldjrgo.grocerynote.widget.GroceryWidgetLongReceiver
 import com.rldjrgo.grocerynote.widget.GroceryWidgetMediumReceiver
-import com.rldjrgo.grocerynote.widget.GroceryWidgetSmallReceiver
 import com.rldjrgo.grocerynote.widget.WidgetPinSuccessReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class WidgetSize { TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE }
+/** The 2 widgets (2026-11-12). Enum order = picker order. */
+enum class WidgetKind { COUNT, LIST }
 
-/** Requests the launcher to pin a widget of the chosen size. */
+/** Requests the launcher to pin a widget. */
 @Singleton
 class WidgetPinHelper @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -25,45 +24,44 @@ class WidgetPinHelper @Inject constructor(
     fun isSupported(): Boolean =
         AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
 
-    /** 5개 사이즈 중 하나라도 홈화면에 실제로 놓여 있으면 true. */
+    /** 개수/목록 위젯 중 하나라도 홈화면에 실제로 놓여 있으면 true. */
     fun anyWidgetPlaced(): Boolean = try {
         val manager = AppWidgetManager.getInstance(context)
         listOf(
             GroceryWidget2x1Receiver::class.java,
-            GroceryWidgetSmallReceiver::class.java,
-            GroceryWidgetLongReceiver::class.java,
             GroceryWidgetMediumReceiver::class.java,
-            GroceryWidgetLargeReceiver::class.java,
         ).any { manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty() }
     } catch (e: Exception) {
         false
     }
 
-    /** @return true if a pin request was shown, false if the launcher doesn't support it. */
-    fun pinWidget(size: WidgetSize): Boolean {
+    /**
+     * @param martId LIST only: the mart picked in-app before pinning (or ALL_MARTS).
+     *   Handed to [WidgetPinSuccessReceiver] via the callback, which saves it for the
+     *   new widget id the launcher fills in.
+     * @return true if a pin request was shown, false if the launcher doesn't support it.
+     */
+    fun pinWidget(kind: WidgetKind, martId: Long? = null): Boolean {
         return try {
             val manager = AppWidgetManager.getInstance(context)
             if (!manager.isRequestPinAppWidgetSupported) return false
-            val receiver = when (size) {
-                WidgetSize.TWO_BY_ONE -> GroceryWidget2x1Receiver::class.java
-                WidgetSize.SMALL -> GroceryWidgetSmallReceiver::class.java
-                WidgetSize.LONG -> GroceryWidgetLongReceiver::class.java
-                WidgetSize.MEDIUM -> GroceryWidgetMediumReceiver::class.java
-                WidgetSize.LARGE -> GroceryWidgetLargeReceiver::class.java
+            val receiver = when (kind) {
+                WidgetKind.COUNT -> GroceryWidget2x1Receiver::class.java
+                WidgetKind.LIST -> GroceryWidgetMediumReceiver::class.java
             }
-            val provider = ComponentName(context, receiver)
+            val callbackIntent = Intent(context, WidgetPinSuccessReceiver::class.java)
+            if (martId != null) callbackIntent.putExtra(WidgetPinSuccessReceiver.EXTRA_MART_ID, martId)
+            // MUTABLE: the launcher must be able to add EXTRA_APPWIDGET_ID to it.
+            val mutable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
             val callback = PendingIntent.getBroadcast(
                 context,
                 0,
-                Intent(context, WidgetPinSuccessReceiver::class.java),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                callbackIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or mutable,
             )
-            manager.requestPinAppWidget(provider, null, callback)
+            manager.requestPinAppWidget(ComponentName(context, receiver), null, callback)
         } catch (e: Exception) {
             false
         }
     }
-
-    /** Back-compat: pin the recommended Medium widget. */
-    fun pinMediumWidget(): Boolean = pinWidget(WidgetSize.MEDIUM)
 }

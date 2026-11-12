@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -92,6 +93,18 @@ interface ItemDao {
     /** All items that still have a reminder pending — used to re-arm alarms after reboot. */
     @Query("SELECT * FROM items WHERE reminder_at IS NOT NULL")
     suspend fun getItemsWithReminder(): List<ItemEntity>
+
+    /**
+     * Reorder one mart's active list in a single transaction (long-press drag).
+     * [orderedIds] is the desired top-to-bottom order; index 0 → display_order 0.
+     */
+    @Transaction
+    suspend fun reorderItems(orderedIds: List<Long>) {
+        orderedIds.forEachIndexed { index, id -> setDisplayOrder(id, index) }
+    }
+
+    @Query("UPDATE items SET display_order = :order WHERE id = :id")
+    suspend fun setDisplayOrder(id: Long, order: Int)
 
     @Query(
         """

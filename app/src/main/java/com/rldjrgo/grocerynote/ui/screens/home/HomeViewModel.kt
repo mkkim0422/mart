@@ -10,6 +10,7 @@ import com.rldjrgo.grocerynote.data.repository.StoreRepository
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.reminder.ReminderScheduler
+import com.rldjrgo.grocerynote.util.Analytics
 import com.rldjrgo.grocerynote.util.WidgetPinHelper
 import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -153,8 +154,8 @@ class HomeViewModel @Inject constructor(
         highlightItemId.value = null
     }
 
-    fun pinWidget(size: com.rldjrgo.grocerynote.util.WidgetSize): Boolean =
-        widgetPin.pinWidget(size)
+    fun pinWidget(kind: com.rldjrgo.grocerynote.util.WidgetKind, martId: Long?): Boolean =
+        widgetPin.pinWidget(kind, martId)
 
     fun dismissWidgetBanner() {
         viewModelScope.launch { settings.setHasDismissedWidgetBanner(true) }
@@ -172,6 +173,31 @@ class HomeViewModel @Inject constructor(
             if (selectedStoreId.value != sid) selectedStoreId.value = sid
             itemRepo.addItem(sid, name)
             refreshRecentNames()
+            widgetUpdater.updateAll()
+        }
+    }
+
+    /** 공유받은 글(카톡 등)에서 뽑은 여러 항목을 [storeId] 마트에 한 번에 담는다. */
+    fun addItems(storeId: Long, names: List<String>) {
+        val clean = names.map { it.trim() }.filter { it.isNotEmpty() }
+        if (clean.isEmpty()) return
+        hasAddedItemThisSession = true
+        viewModelScope.launch {
+            val stores = storesFlow.first()
+            val sid = if (stores.any { it.id == storeId }) storeId else stores.firstOrNull()?.id ?: return@launch
+            selectedStoreId.value = sid
+            clean.forEach { itemRepo.addItem(sid, it) }
+            Analytics.sharedItemsAdded(clean.size)
+            refreshRecentNames()
+            widgetUpdater.updateAll()
+        }
+    }
+
+    /** Persist a long-press drag reorder of the current mart's list. */
+    fun reorderItems(orderedIds: List<Long>) {
+        viewModelScope.launch {
+            itemRepo.reorder(orderedIds)
+            Analytics.itemsReordered()
             widgetUpdater.updateAll()
         }
     }
@@ -231,6 +257,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             itemRepo.setReminder(itemId, atMillis)
             reminderScheduler.schedule(itemId, atMillis)
+            Analytics.reminderSet()
             widgetUpdater.updateAll()
         }
     }

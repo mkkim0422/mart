@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,15 +57,19 @@ import kotlinx.coroutines.launch
 class OnboardingViewModel @Inject constructor(
     private val settings: com.rldjrgo.grocerynote.data.local.SettingsDataStore,
     private val widgetPin: com.rldjrgo.grocerynote.util.WidgetPinHelper,
+    storeRepo: com.rldjrgo.grocerynote.data.repository.StoreRepository,
 ) : androidx.lifecycle.ViewModel() {
+    /** For the 목록 위젯 "어떤 마트를 보여줄까요?" step in the widget picker. */
+    val stores = storeRepo.observeActiveStores()
+
     fun markSeen() {
         viewModelScope.launch {
             settings.setOnboardingSeen()
         }
     }
 
-    fun pinWidget(size: com.rldjrgo.grocerynote.util.WidgetSize): Boolean =
-        widgetPin.pinWidget(size)
+    fun pinWidget(kind: com.rldjrgo.grocerynote.util.WidgetKind, martId: Long?): Boolean =
+        widgetPin.pinWidget(kind, martId)
 }
 
 private data class Page(
@@ -74,7 +80,7 @@ private data class Page(
     val drawn: Drawn? = null,
 )
 
-private enum class Drawn { SHOP_SHORTCUT, HOME_WIDGET }
+private enum class Drawn { HOME_WIDGET }
 
 private val pages = listOf(
     Page(
@@ -87,19 +93,19 @@ private val pages = listOf(
         "가격도 수량도 필요 없어요. 빠르고 심플하게!",
         R.drawable.onboarding_page3,
     ),
-    // v1.3 headline feature: 쇼핑몰 앱 바로가기. No screenshot asset yet → drawn in Compose.
+    // 쇼핑몰 앱 바로가기 — real capture + callout on the first 🔍 (was drawn in Compose and
+    // didn't match the real screen: narrow tabs, different 🔍 button; 2026-11-12).
     Page(
         "적어둔 그대로 쇼핑 앱에서 검색",
         "항목 옆 🔍를 누르면 쿠팡·컬리 앱에서 바로 찾아줘요. 앱이 없으면 설치 화면으로 가요",
-        null,
-        drawn = Drawn.SHOP_SHORTCUT,
+        R.drawable.onboarding_page_shop,
     ),
     // LAST page on purpose: the widget-or-start choice is rendered on
-    // pages.lastIndex, so the widget intro and its two equal buttons stay together.
-    // Picture = the widget sitting on a phone home screen (not the size picker).
+    // pages.lastIndex, so the widget intro and its buttons stay together.
+    // Picture = the 목록 위젯 (one mart, ○ check, one "+") on a phone home screen.
     Page(
-        "생각날 때 바로 구매물품 추가해요",
-        "홈 화면 위젯을 누르면 앱을 찾지 않아도 바로 그 마트가 열려요",
+        "홈 화면에서 보고, 바로 체크",
+        "위젯에서 동그라미만 누르면 앱을 안 열어도 체크돼요",
         null,
         drawn = Drawn.HOME_WIDGET,
     ),
@@ -171,7 +177,6 @@ fun OnboardingScreen(
                             modifier = frame,
                         )
                     } else when (p.drawn) {
-                        Drawn.SHOP_SHORTCUT -> ShopShortcutIllustration(frame)
                         Drawn.HOME_WIDGET -> HomeWidgetIllustration(frame)
                         null -> Unit
                     }
@@ -233,8 +238,20 @@ fun OnboardingScreen(
                     Text("다음", style = typo.title, color = colors.bgPrimary)
                 }
             } else {
-                // Last page: two equal choices side by side — add the widget, or just start.
-                // (Was a small soft "위젯 추가 (선택)" link above a big 시작하기 — hard to read.)
+                // Last page: the widget is the app's main strength → "위젯 추가하기" is the
+                // big primary button on the right; "바로 시작하기" is a quiet gray text
+                // button on the left (2026-11-12, was two equal blue buttons).
+                Box(
+                    modifier = Modifier
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = finish)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("바로 시작하기", style = typo.bodyS, color = colors.textTertiary)
+                }
+                Spacer(Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -245,29 +262,20 @@ fun OnboardingScreen(
                         .clickable { showSizePicker = true },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("위젯 추가하기", style = typo.title, color = colors.bgPrimary)
-                }
-                Spacer(Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp)
-                        .background(colors.brandPrimary, RoundedCornerShape(12.dp))
-                        .clickable(onClick = finish),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("바로 시작하기", style = typo.title, color = colors.bgPrimary)
+                    Text("위젯 추가하기", style = typo.title.copy(fontWeight = FontWeight.Bold), color = Color.White)
                 }
             }
         }
     }
 
     if (showSizePicker) {
+        val stores by viewModel.stores.collectAsStateWithLifecycle(initialValue = emptyList())
         WidgetSizePickerSheet(
-            onPick = { size ->
+            stores = stores,
+            onPick = { kind, martId ->
                 // Pin request sent → the system "홈 화면에 추가" dialog is on top, so it's
                 // now safe to finish onboarding (the main screen appears underneath).
-                viewModel.pinWidget(size).also { ok -> if (ok) viewModel.markSeen() }
+                viewModel.pinWidget(kind, martId).also { ok -> if (ok) viewModel.markSeen() }
             },
             // Closed without pinning (or after the manual guide) → onboarding is over too.
             onDismiss = { showSizePicker = false; finish() },
@@ -287,78 +295,9 @@ fun OnboardingScreen(
 }
 
 /**
- * Drawn stand-in for a screenshot of the 쇼핑몰 앱 바로가기 feature: a 쿠팡 tab with the
- * "쿠팡 앱 바로가기" switch on and 🔍 next to each item, plus a callout on the first 🔍.
- * Mirrors the real Home layout (PageTitle, pill tabs, ItemRow) at a small scale.
- */
-@Composable
-private fun ShopShortcutIllustration(modifier: Modifier) {
-    val colors = AppTheme.colors
-    val coupang = Color(0xFF3182F6)
-    val small = AppTheme.typography.bodyS.copy(fontSize = 12.sp)
-    Column(
-        modifier = modifier
-            .background(colors.bgPrimary)
-            .padding(horizontal = 12.dp, vertical = 16.dp),
-    ) {
-        Text("구매예정", style = AppTheme.typography.title.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold), color = colors.textPrimary)
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(Modifier.background(coupang, RoundedCornerShape(12.dp)).padding(horizontal = 9.dp, vertical = 4.dp)) {
-                Text("🚀 쿠팡 6", style = small.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
-            }
-            Box(Modifier.border(1.dp, colors.divider, RoundedCornerShape(12.dp)).padding(horizontal = 9.dp, vertical = 4.dp)) {
-                Text("🏪 다이소 2", style = small, color = colors.textSecondary)
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("쿠팡 앱 바로가기", style = small, color = colors.textSecondary, modifier = Modifier.weight(1f))
-            Box(
-                Modifier.width(30.dp).height(18.dp).background(colors.brandPrimary, RoundedCornerShape(9.dp)),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Box(Modifier.padding(end = 2.dp).size(14.dp).background(Color.White, CircleShape))
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        listOf("생수 2L", "달걀", "참치캔", "두부", "라면", "키친타월").forEachIndexed { i, name ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp),
-            ) {
-                Text(name, style = small.copy(fontSize = 14.sp), color = colors.textPrimary, modifier = Modifier.weight(1f))
-                Box(
-                    Modifier
-                        .size(22.dp)
-                        .background(coupang.copy(alpha = if (i == 0) 0.28f else 0.12f), CircleShape)
-                        .then(if (i == 0) Modifier.border(1.5.dp, coupang, CircleShape) else Modifier),
-                    contentAlignment = Alignment.Center,
-                ) { Text("🔍", style = small.copy(fontSize = 10.sp)) }
-                Spacer(Modifier.width(6.dp))
-                Box(Modifier.border(1.dp, colors.divider, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 3.dp)) {
-                    Text("완료", style = small.copy(fontSize = 10.sp), color = colors.textSecondary)
-                }
-            }
-            if (i == 0) {
-                // Callout: what the 🔍 does.
-                Box(
-                    Modifier
-                        .align(Alignment.End)
-                        .background(colors.textPrimary, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                ) {
-                    Text("쿠팡 앱에서 '생수 2L' 검색", style = small.copy(fontSize = 10.sp), color = colors.bgPrimary)
-                }
-            }
-        }
-    }
-}
-
-/**
- * Drawn phone home screen with the Medium (4x2) widget placed: wallpaper, app icons,
- * the widget (two marts, colored headers, count pills), dock.
- * Widget styling copies widget/components (WidgetStoreHeader, WidgetColors light).
+ * Drawn phone home screen with the 목록 위젯 placed: wallpaper, app icons, the widget
+ * (one mart header, ○ rows — the first mid-check with ✓ + strikethrough — and the
+ * "+"), dock. Styling copies widget/components (WidgetStoreHeader, WidgetItemRow).
  */
 @Composable
 private fun HomeWidgetIllustration(modifier: Modifier) {
@@ -378,24 +317,24 @@ private fun HomeWidgetIllustration(modifier: Modifier) {
         Spacer(Modifier.height(14.dp))
         AppIconRow(listOf("전화", "카카오톡", "네이버", "쿠팡"))
         Spacer(Modifier.height(14.dp))
-        // The widget
-        Row(
+        // The widget (목록 위젯 · 쿠팡)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White, RoundedCornerShape(16.dp))
-                .padding(10.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
-            WidgetMart(
-                modifier = Modifier.weight(1f),
+            ListWidgetSample(
                 emoji = "🚀", name = "쿠팡", color = Color(0xFF3182F6),
-                items = listOf("생수 2L", "달걀", "라면"), highlight = true,
+                items = listOf("생수 2L", "달걀", "두부", "라면"),
             )
-            Box(Modifier.padding(horizontal = 5.dp).width(1.dp).height(96.dp).background(Color(0xFFF0EEE9)))
-            WidgetMart(
-                modifier = Modifier.weight(1f),
-                emoji = "🏪", name = "다이소", color = Color(0xFFF04452),
-                items = listOf("건전지", "지퍼백"), highlight = false,
-            )
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(26.dp)
+                    .background(Color(0xFF3182F6), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Text("+", style = AppTheme.typography.title.copy(fontSize = 16.sp, lineHeight = 16.sp), color = Color.White) }
         }
         Spacer(Modifier.height(8.dp))
         Box(
@@ -404,7 +343,7 @@ private fun HomeWidgetIllustration(modifier: Modifier) {
                 .background(Color(0xFF191F28), RoundedCornerShape(8.dp))
                 .padding(horizontal = 9.dp, vertical = 5.dp),
         ) {
-            Text("마트를 누르면 바로 그 목록이 열려요", style = label.copy(fontSize = 10.sp), color = Color.White)
+            Text("○ 누르면 바로 체크, + 누르면 바로 추가", style = label.copy(fontSize = 10.sp), color = Color.White)
         }
         Spacer(Modifier.height(14.dp))
         AppIconRow(listOf("🛒 마트노트", "유튜브", "갤러리", "설정"))
@@ -436,35 +375,23 @@ private fun AppIconRow(names: List<String>) {
 }
 
 @Composable
-private fun WidgetMart(
-    modifier: Modifier,
+private fun ListWidgetSample(
     emoji: String,
     name: String,
     color: Color,
     items: List<String>,
-    highlight: Boolean,
 ) {
     val t = AppTheme.typography.bodyS
-    // highlight = the mart the callout points at (soft tint + outline, "tap here").
-    Column(
-        modifier
-            .then(if (highlight) Modifier.background(color.copy(alpha = 0.06f), RoundedCornerShape(10.dp)).border(1.5.dp, color.copy(alpha = 0.6f), RoundedCornerShape(10.dp)) else Modifier)
-            .padding(6.dp),
-    ) {
+    Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(18.dp).background(color.copy(alpha = 0.15f), RoundedCornerShape(5.dp)),
                 contentAlignment = Alignment.Center,
             ) { Text(emoji, style = t.copy(fontSize = 10.sp)) }
-            Spacer(Modifier.width(5.dp))
-            Text(name, style = t.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium), color = Color(0xFF191F28), maxLines = 1, softWrap = false, modifier = Modifier.weight(1f))
-            // Fixed 20×14 pill (wider than tall) like the real widget's count pill —
-            // padding-only sizing made a single digit render as a tall rectangle.
+            Spacer(Modifier.width(6.dp))
+            Text(name, style = t.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium), color = Color(0xFF191F28), modifier = Modifier.weight(1f))
             Box(
-                Modifier
-                    .width(20.dp)
-                    .height(14.dp)
-                    .background(color.copy(alpha = 0.15f), RoundedCornerShape(7.dp)),
+                Modifier.width(20.dp).height(14.dp).background(color.copy(alpha = 0.15f), RoundedCornerShape(7.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -476,12 +403,31 @@ private fun WidgetMart(
         }
         Spacer(Modifier.height(6.dp))
         Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF0EEE9)))
-        Spacer(Modifier.height(5.dp))
-        items.forEach { item ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
-                Box(Modifier.size(4.dp).background(Color(0xFFD5D2CB), CircleShape))
-                Spacer(Modifier.width(6.dp))
-                Text(item, style = t.copy(fontSize = 10.sp), color = Color(0xFF191F28))
+        Spacer(Modifier.height(4.dp))
+        items.forEachIndexed { i, item ->
+            // First row = mid-check (green ✓ + strikethrough), like the real widget.
+            val checking = i == 0
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                Box(
+                    Modifier
+                        .size(13.dp)
+                        .then(
+                            if (checking) Modifier.background(Color(0xFF2BA471), CircleShape)
+                            else Modifier.border(1.dp, Color(0xFFC9CDD2), CircleShape),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (checking) Text("✓", style = t.copy(fontSize = 8.sp, lineHeight = 8.sp), color = Color.White)
+                }
+                Spacer(Modifier.width(7.dp))
+                Text(
+                    item,
+                    style = t.copy(
+                        fontSize = 11.sp,
+                        textDecoration = if (checking) TextDecoration.LineThrough else null,
+                    ),
+                    color = if (checking) Color(0xFF8B95A1) else Color(0xFF191F28),
+                )
             }
         }
     }

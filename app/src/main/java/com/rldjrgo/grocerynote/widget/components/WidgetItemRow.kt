@@ -1,65 +1,79 @@
 package com.rldjrgo.grocerynote.widget.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.background
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
-import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextDecoration
 import androidx.glance.text.TextStyle
+import com.rldjrgo.grocerynote.R
+import com.rldjrgo.grocerynote.widget.actions.CheckItemAction
 import com.rldjrgo.grocerynote.widget.actions.OpenStoreAction
-import com.rldjrgo.grocerynote.widget.checkboxBorderProvider
 import com.rldjrgo.grocerynote.widget.textPrimaryProvider
+import com.rldjrgo.grocerynote.widget.textTertiaryProvider
 
 /**
- * Simple read-only row: dot + item name. Has its own "open app" click because
- * inside a Glance LazyColumn (RemoteViews ListView) the parent card click does
- * NOT reach list rows — without this, tapping items would do nothing.
+ * List-widget row: ○ + item name.
+ * - ○ (32dp touch target) → [CheckItemAction]: completes the item in place.
+ * - name → open the app on that mart (same as before).
+ * Each part has its own click: inside a Glance LazyColumn (RemoteViews ListView)
+ * a parent click never reaches list rows.
  */
 @Composable
 fun WidgetItemRow(
     storeId: Long,
     itemId: Long,
     name: String,
-    checkboxSize: Dp = 16.dp,
-    nameSize: TextUnit = 14.sp,
+    checking: Boolean,
 ) {
     Row(
-        modifier = GlanceModifier
-            .fillMaxWidth()
-            .clickable(OpenStoreAction.forStore(storeId = storeId))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = GlanceModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = GlanceModifier
-                .size(6.dp)
-                .background(checkboxBorderProvider())
-                .cornerRadius(3.dp),
-        ) {}
-        Spacer(GlanceModifier.width(10.dp))
+                .size(36.dp)
+                .clickable(
+                    actionRunCallback<CheckItemAction>(
+                        actionParametersOf(CheckItemAction.ItemIdKey to itemId),
+                    ),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                provider = ImageProvider(
+                    if (checking) R.drawable.widget_check_on else R.drawable.widget_check_off,
+                ),
+                contentDescription = if (checking) "완료됨" else "$name 완료",
+                modifier = GlanceModifier.size(20.dp),
+            )
+        }
         Text(
             text = name,
             style = TextStyle(
-                color = textPrimaryProvider(),
-                fontSize = nameSize,
+                color = if (checking) textTertiaryProvider() else textPrimaryProvider(),
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
+                textDecoration = if (checking) TextDecoration.LineThrough else TextDecoration.None,
             ),
-            modifier = GlanceModifier.defaultWeight(),
             maxLines = 1,
+            modifier = GlanceModifier
+                .defaultWeight()
+                .clickable(OpenStoreAction.forStore(storeId = storeId))
+                .padding(start = 2.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         )
     }
 }

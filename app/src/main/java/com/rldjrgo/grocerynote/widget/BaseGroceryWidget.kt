@@ -2,35 +2,31 @@ package com.rldjrgo.grocerynote.widget
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.glance.GlanceId
 import androidx.glance.LocalContext
-import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.state.PreferencesGlanceStateDefinition
-import com.rldjrgo.grocerynote.widget.common.AdaptiveContent
 import com.rldjrgo.grocerynote.widget.common.WidgetData
 import com.rldjrgo.grocerynote.widget.common.widgetDataFlow
 import kotlinx.coroutines.flow.first
 
 /**
- * Shared base for all 5 widgets. Each placed widget is `SizeMode.Responsive`
- * over the 5 breakpoints, so once on the home screen it auto-adapts between
- * Mini / Small / Long / Medium / Large as the user resizes it.
- *
- * The 5 concrete subclasses still exist on purpose: the add-widget picker pins
- * a specific INITIAL size (via each subclass's xml `targetCell*`), and existing
- * users' placed widgets keep working (class names/packages are unchanged).
- * After placement they all behave identically through [AdaptiveContent].
+ * Shared base for the 2 widgets (2026-11-12): [GroceryWidget2x1] = 개수 위젯,
+ * [GroceryWidgetMedium] = 목록 위젯. Loads data, resolves dark mode, then hands
+ * off to [Content]. Per-widget settings (which mart, items mid-check) live in
+ * Glance's per-widget Preferences state.
  */
 abstract class BaseGroceryWidget : GlanceAppWidget() {
 
-    override val sizeMode: SizeMode = SizeMode.Responsive(WidgetSizes.responsiveSet)
     override val stateDefinition = PreferencesGlanceStateDefinition
+
+    @Composable
+    protected abstract fun Content(data: WidgetData)
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // Load data BEFORE composing. collectAsState(initial = null) used to push
@@ -61,9 +57,8 @@ abstract class BaseGroceryWidget : GlanceAppWidget() {
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
             CompositionLocalProvider(LocalWidgetDark provides isDark) {
-                val size = LocalSize.current
                 val data by liveData.collectAsState(initial = initialData)
-                AdaptiveContent(size, data)
+                Content(data)
             }
         }
     }

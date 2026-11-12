@@ -268,6 +268,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
     if (showWidgetSizePicker) {
         WidgetSizePickerSheet(
+            stores = state.stores,
             onPick = viewModel::pinWidget,
             onDismiss = { showWidgetSizePicker = false },
         )

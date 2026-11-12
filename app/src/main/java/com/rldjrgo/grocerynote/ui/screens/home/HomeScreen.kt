@@ -98,9 +98,11 @@ import com.rldjrgo.grocerynote.ui.screens.home.components.EmptyStores
 import com.rldjrgo.grocerynote.ui.screens.home.components.ItemList
 import com.rldjrgo.grocerynote.ui.screens.home.components.ReminderPickerSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.ShareRequestDialog
+import com.rldjrgo.grocerynote.ui.screens.home.components.SharedItemsSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.StoreTabBar
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.util.Analytics
+import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.StoreSearch
 
 @Composable
@@ -122,6 +124,8 @@ fun HomeScreen(
 
     var showAddItem by remember { mutableStateOf(false) }
     var sharedDraft by remember { mutableStateOf("") }
+    /** 여러 줄 공유(카톡 메모 등) → 줄별 항목 후보. null = 시트 닫힘. */
+    var sharedItems by remember { mutableStateOf<List<String>?>(null) }
     var showAddStore by remember { mutableStateOf(false) }
     var showShareRequest by remember { mutableStateOf(false) }
     var showWidgetSizePicker by remember { mutableStateOf(false) }
@@ -252,8 +256,15 @@ fun HomeScreen(
         val payload = deepLink ?: return@LaunchedEffect
         viewModel.handleDeepLink(payload.storeId, payload.itemId)
         if (payload.openAddItem) {
-            sharedDraft = payload.sharedText ?: ""
-            showAddItem = true
+            val shared = payload.sharedText.orEmpty()
+            val parsed = SharedTextParser.parse(shared)
+            if (parsed.size >= 2) {
+                // 여러 줄 → 확인 시트에서 한 번에 담기.
+                sharedItems = parsed
+            } else {
+                sharedDraft = (parsed.firstOrNull() ?: shared).take(100)
+                showAddItem = true
+            }
         }
         com.rldjrgo.grocerynote.DeepLinkBus.flow.value = null
     }
@@ -441,6 +452,7 @@ fun HomeScreen(
                                 onMove = { moveTarget = it },
                                 onDelete = { deleteTarget = it },
                                 onSetReminder = { reminderTarget = it },
+                                onReorder = viewModel::reorderItems,
                                 // 바로가기 켜진 마트: 🔍 → 앱(쿠팡·컬리는 그 항목 검색 결과), 앱 없으면 Play 스토어.
                                 searchLabel = searchTarget?.let {
                                     if (it.searchesItem) "${it.label}에서 찾기" else "${it.label} 앱 열기"
@@ -610,6 +622,23 @@ fun HomeScreen(
             initialText = sharedDraft,
         )
     }
+    sharedItems?.let { names ->
+        val target = selectedStore ?: state.stores.firstOrNull()
+        if (target != null) {
+            SharedItemsSheet(
+                names = names,
+                stores = state.stores,
+                initialStoreId = target.id,
+                onAdd = { storeId, picked ->
+                    viewModel.addItems(storeId, picked)
+                    sharedItems = null
+                    scope.launch { snackbarHostState.showSnackbar("${picked.size}개를 담았어요") }
+                    viewModel.onAddFlowFinished()
+                },
+                onDismiss = { sharedItems = null },
+            )
+        }
+    }
     if (showAddStore) {
         AddStoreSheet(
             onAdd = { name, color, iconKey ->
@@ -656,6 +685,8 @@ fun HomeScreen(
 
     if (showWidgetSizePicker) {
         WidgetSizePickerSheet(
+            stores = state.stores,
+            counts = state.itemCounts,
             onPick = viewModel::pinWidget,
             onDismiss = { showWidgetSizePicker = false },
         )
@@ -863,25 +894,20 @@ private fun MoveItemDialog(
     )
 }
 
+private const val PLAY_STORE_URL =
+    "https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote"
+
 /**
  * 공유용 텍스트 빌더.
  *
  * 사용자가 부탁 문구를 적었으면 맨 위에 한 줄로 얹고 빈 줄로 띄움. 아이템
- * 이름은 trim + `\n` 치환으로 한 줄 보장. 푸터는 마트노트 워터마크.
- *
- * 향후 확장 자리 (사용자 요청, 2026-05-26):
- *   - 받는 사람 OS에 따라 마트노트 설치 링크 첨부.
- *     예) installLinks: SharePlatforms? = null,
- *         SharePlatforms.Both → Android(Play) + iOS(App Store) 두 줄
- *         SharePlatforms.AndroidOnly → Play 링크만
- *     iOS 앱이 아직 존재하지 않으므로([[handoff-master]] §1) iOS 분기는 앱
- *     출시 후 다시 결정. 시그니처만 열어둠 — 기본값 null이라 호출부 변경 없음.
+ * 이름은 trim + `\n` 치환으로 한 줄 보장. 푸터는 마트노트 워터마크 + Play 설치
+ * 링크 (iOS 앱은 아직 없으므로 Android 링크만).
  */
 private fun buildShareText(
     storeName: String,
     items: List<Item>,
     requestNote: String,
-    // installLinks: SharePlatforms? = null,   // 향후 확장 자리
 ): String = buildString {
     val note = requestNote.trim().replace('\n', ' ')
     if (note.isNotEmpty()) {
@@ -898,7 +924,12 @@ private fun buildShareText(
         append('\n')
     }
     append("\n📝 마트노트에서 보냄")
-    // 향후 자리: if (installLinks != null) { append("\n👉 ...") }
+    // 받은 사람이 바로 설치할 수 있게 — 공유 = 무료 홍보 (2026-11-12).
+    // 보내는 쪽은 받는 사람 폰이 아이폰인지 알 수 없다(카톡 공유창은 그 정보를 안 줌).
+    // iOS 앱이 없으니 "갤럭시용"임을 문구로 밝혀 아이폰 사용자가 헛걸음하지 않게 한다.
+    // 📝/👉 줄은 받은 리스트를 다시 마트노트로 공유할 때 SharedTextParser가 걸러낸다.
+    append("\n👉 갤럭시(안드로이드)라면 마트노트 받기: ")
+    append(PLAY_STORE_URL)
 }
 
 /**

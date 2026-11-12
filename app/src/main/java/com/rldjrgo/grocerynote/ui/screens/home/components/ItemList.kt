@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,13 +26,23 @@ import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.rldjrgo.grocerynote.domain.model.Item
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun ItemList(
@@ -49,9 +60,37 @@ fun ItemList(
     /** One-time tip shown above the list on online-mart tabs; null = hidden. */
     searchHint: String? = null,
     onSearchHintDismiss: () -> Unit = {},
+    /** Long-press-drag reorder finished → persist this top-to-bottom id order. */
+    onReorder: (List<Long>) -> Unit = {},
 ) {
     val colors = AppTheme.colors
+    val haptics = LocalHapticFeedback.current
+
+    // Local working copy so the drag is instant (same merge pattern as
+    // StoreTabBar): keep local order for surviving ids so a just-finished drag
+    // doesn't snap back before the DB write lands; drop removed, append new.
+    var localItems by remember { mutableStateOf(items) }
+    var dragging by remember { mutableStateOf(false) }
+    LaunchedEffect(items, dragging) {
+        if (dragging) return@LaunchedEffect
+        val byId = items.associateBy { it.id }
+        val kept = localItems.mapNotNull { byId[it.id] }
+        val keptIds = kept.mapTo(HashSet()) { it.id }
+        localItems = kept + items.filter { it.id !in keptIds }
+    }
+
+    val listState = rememberLazyListState()
+    val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+        // Keys, not indices — the optional hint card shifts indices by one.
+        val fromIdx = localItems.indexOfFirst { it.id == from.key }
+        val toIdx = localItems.indexOfFirst { it.id == to.key }
+        if (fromIdx >= 0 && toIdx >= 0) {
+            localItems = localItems.toMutableList().apply { add(toIdx, removeAt(fromIdx)) }
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .background(colors.bgPrimary),
@@ -69,19 +108,40 @@ fun ItemList(
                 )
             }
         }
-        items(items, key = { it.id }) { item ->
-            ItemRow(
-                item = item,
-                storeColor = storeColor,
-                highlighted = item.id == highlightItemId,
-                onCompleteAnimDone = { onCompleteAnimDone(item.id, item.name) },
-                onRename = { onRename(item) },
-                onMove = { onMove(item) },
-                onDelete = { onDelete(item) },
-                onSetReminder = { onSetReminder(item) },
-                searchLabel = searchLabel,
-                onSearch = { onSearch(item) },
-            )
+        items(localItems, key = { it.id }) { item ->
+            ReorderableItem(reorderState, key = item.id) { isDragging ->
+                ItemRow(
+                    item = item,
+                    storeColor = storeColor,
+                    highlighted = item.id == highlightItemId,
+                    onCompleteAnimDone = { onCompleteAnimDone(item.id, item.name) },
+                    onRename = { onRename(item) },
+                    onMove = { onMove(item) },
+                    onDelete = { onDelete(item) },
+                    onSetReminder = { onSetReminder(item) },
+                    searchLabel = searchLabel,
+                    onSearch = { onSearch(item) },
+                    // Hold a row → lift (haptic) → drag up/down to reorder.
+                    dragModifier = Modifier
+                        .graphicsLayer {
+                            if (isDragging) {
+                                shadowElevation = 8.dp.toPx()
+                                scaleX = 1.02f
+                                scaleY = 1.02f
+                            }
+                        }
+                        .longPressDraggableHandle(
+                            onDragStarted = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                dragging = true
+                            },
+                            onDragStopped = {
+                                dragging = false
+                                onReorder(localItems.map { it.id })
+                            },
+                        ),
+                )
+            }
         }
     }
 }

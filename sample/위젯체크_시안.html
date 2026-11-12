@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>위젯 체크 시안</title>
+<style>
+  :root {
+    --text: #191F28; --text2: #4E5968; --text3: #8B95A1; --disabled: #C9CDD2;
+    --divider: #E5E8EB; --brand: #3182F6; --success: #2BA471; --bg: #F2F4F6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Pretendard", "Malgun Gothic", sans-serif;
+    letter-spacing: -0.02em;
+  }
+  header { max-width: 1100px; margin: 0 auto; padding: 28px 16px 8px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  header p { margin: 0; color: var(--text2); font-size: 15px; line-height: 1.6; }
+  .opts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .opt {
+    border: 1px solid var(--divider); background: #fff; border-radius: 999px;
+    padding: 8px 14px; font-size: 14px; cursor: pointer; color: var(--text2);
+  }
+  .opt.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button.reset { border: 0; background: none; color: var(--brand); font-size: 14px; cursor: pointer; padding: 8px 4px; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid;
+         grid-template-columns: 400px 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  /* phone */
+  .phone {
+    width: 100%; max-width: 400px; aspect-ratio: 9 / 19.5; margin: 0 auto;
+    border: 10px solid #111418; border-radius: 46px; overflow: hidden; position: relative;
+    background: linear-gradient(180deg, #7C9CCB, #B98FB4);
+    padding: 54px 14px 20px;
+  }
+  .clock { position: absolute; top: 14px; left: 22px; color: #fff; font-weight: 700; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .span2 { grid-column: span 2; }
+
+  .w { background: #fff; border-radius: 22px; padding: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+  .split { display: grid; grid-template-columns: 1fr 1px 1fr; }
+  .vdiv { background: var(--divider); margin: 10px 0; }
+  .col { padding: 10px; min-width: 0; }
+
+  .hdr {
+    display: flex; align-items: center; gap: 8px; padding: 2px 0 10px;
+    border-bottom: 1px solid var(--divider); cursor: pointer; border-radius: 8px;
+  }
+  .hdr:hover { background: #F9FAFB; }
+  .badge { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-size: 14px; flex: none; }
+  .name { font-weight: 700; font-size: 13px; color: var(--text2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 7px; min-width: 22px; text-align: center; }
+
+  ul { list-style: none; margin: 6px 0 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 2px; height: 30px; transition: opacity .25s, height .25s .55s, margin .25s .55s; overflow: hidden; }
+  li.gone { opacity: 0; height: 0; }
+  .chk {
+    width: 30px; height: 30px; display: grid; place-items: center; flex: none; cursor: pointer;
+    border-radius: 50%;
+  }
+  .chk span {
+    width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--disabled);
+    display: grid; place-items: center; transition: background .15s, border-color .15s;
+  }
+  .chk:hover span { border-color: var(--brand); }
+  li.done .chk span { background: var(--success); border-color: var(--success); }
+  li.done .chk span::after { content: "✓"; color: #fff; font-size: 11px; font-weight: 700; }
+  .iname {
+    font-size: 14px; cursor: pointer; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    position: relative; padding: 4px 2px; border-radius: 6px;
+  }
+  .iname:hover { background: #F9FAFB; }
+  li.done .iname { color: var(--text3); text-decoration: line-through; }
+  .more { font-size: 12px; color: var(--text3); padding: 4px 0 0 32px; }
+  .w { position: relative; }
+  .fab {
+    position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--brand); color: #fff; font-size: 22px; line-height: 1; display: grid; place-items: center;
+    cursor: pointer; box-shadow: 0 2px 6px rgba(49,130,246,.35); user-select: none;
+  }
+  .fab:hover { background: #1B64DA; }
+  .counts { padding-bottom: 50px; }
+  .empty { font-size: 12px; color: var(--text3); padding: 18px 0; text-align: center; cursor: pointer; }
+
+  .counts .row { display: flex; align-items: center; gap: 8px; padding: 9px 8px; cursor: pointer; border-radius: 10px; }
+  .counts .row:hover { background: #F9FAFB; }
+
+  .apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 24px; }
+  .app { aspect-ratio: 1; border-radius: 30%; background: rgba(255,255,255,.35); }
+
+  /* toast = what would happen */
+  .toast {
+    position: absolute; left: 50%; bottom: 26px; transform: translate(-50%, 20px);
+    background: rgba(25,31,40,.92); color: #fff; font-size: 13px; padding: 10px 14px; border-radius: 12px;
+    opacity: 0; transition: .2s; white-space: nowrap; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* scrollable list (one per widget) */
+  .scroll { overflow-y: auto; scrollbar-width: thin; padding: 0 10px 44px; }
+  .scroll::-webkit-scrollbar { width: 4px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--disabled); border-radius: 4px; }
+  [data-w="large"] .scroll { height: 400px; }
+  [data-w="single"] .scroll { height: 196px; }
+  .sec .hdr { position: sticky; top: 0; background: #fff; z-index: 1; padding-top: 10px; }
+  .sec + .sec { margin-top: 4px; }
+  .sec .empty { padding: 10px 0; text-align: left; padding-left: 32px; }
+  .hint { position: absolute; left: 8px; right: 8px; bottom: 8px; height: 36px; border-radius: 0 0 18px 18px;
+          background: linear-gradient(rgba(255,255,255,0), #fff); pointer-events: none; }
+  .home2 { display: none; }
+  .show2 .home1 { display: none; }
+  .show2 .home2 { display: block; }
+
+  /* legend */
+  .card { background: #fff; border-radius: 16px; padding: 20px; border: .5px solid var(--divider); }
+  .card + .card { margin-top: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 10px 6px; border-top: 1px solid var(--divider); vertical-align: top; line-height: 1.5; }
+  td:first-child { white-space: nowrap; font-weight: 600; width: 1%; }
+  .note { font-size: 14px; color: var(--text2); line-height: 1.7; margin: 0; padding-left: 18px; }
+  .log { font-size: 13px; color: var(--text2); min-height: 60px; line-height: 1.7; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>위젯에서 체크하기 · 시안</h1>
+  <p>왼쪽 폰의 위젯을 직접 눌러 보세요. 동그라미 = 체크, 이름 = 앱 열기, 위젯마다 하나 있는 <b style="color:#3182F6">+</b> = 추가 창.</p>
+  <div class="opts">
+    <button class="opt on" data-home="1">홈 화면 ① 중간·작은·한 마트 위젯</button>
+    <button class="opt" data-home="2">홈 화면 ② 큰 위젯 (스크롤)</button>
+    <button class="reset" id="reset">처음 상태로</button>
+  </div>
+</header>
+
+<main>
+  <div class="phone" id="phone">
+    <div class="clock">9:41</div>
+    <div class="grid home1">
+      <!-- 4x2 Medium: 2 marts side by side — no scroll (2 lists would break), "+N개 더" -->
+      <div class="w span2 split" data-w="medium"></div>
+      <!-- 2x2 Small: counts -->
+      <div class="w counts" data-w="small"></div>
+      <!-- 2x2 single mart: ONE scrollable list -->
+      <div class="w" data-w="single"></div>
+    </div>
+    <div class="home2">
+      <!-- 4x4 Large: every mart in ONE scrollable list (section per mart) -->
+      <div class="w" data-w="large"></div>
+    </div>
+    <div class="apps"><div class="app"></div><div class="app"></div><div class="app"></div><div class="app"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>누르는 곳마다 하는 일</h2>
+      <table>
+        <tr><td>○ 동그라미</td><td>그 자리에서 체크. 초록 ✓ + 줄 긋기 후 0.8초 뒤 위젯에서 빠지고 앱의 '완료' 탭으로 가요.</td></tr>
+        <tr><td>항목 이름</td><td>앱이 열리고 그 마트 목록이 보여요 (지금과 같음).</td></tr>
+        <tr><td>마트 이름 줄</td><td>항목 이름과 같아요 — 그 마트 목록 열기.</td></tr>
+        <tr><td><b style="color:#3182F6">+</b> (위젯당 1개)</td><td>추가 창이 바로 열려요. 마트는 <b>위젯 맨 왼쪽/맨 위 마트</b>로 골라진 채 열리고, 창 위쪽 마트 고르기로 바꿀 수 있어요. 한 마트만 보이는 위젯은 그 마트.</td></tr>
+        <tr><td>스크롤</td><td><b>목록이 하나인 위젯</b>(한 마트 위젯, 큰 위젯)은 손가락으로 위아래 스크롤. 큰 위젯은 마트를 칸으로 나누지 않고 <b>한 목록에 마트별로 이어서</b> 보여줘요 — 위젯 하나에 스크롤 목록이 여러 개면 위젯이 깨지는 문제(2026-05) 때문. 마트 이름 줄은 스크롤해도 위에 붙어 있어요.</td></tr>
+        <tr><td>두 마트 나란히 (4x2)</td><td>스크롤 없음. 지금처럼 "+ N개 더".</td></tr>
+        <tr><td>개수만 보이는 작은 위젯</td><td>체크 없음. 마트 줄 = 그 마트 목록, + = 추가 창.</td></tr>
+        <tr><td>빈 마트 칸</td><td>"아직 적은 게 없어요" → 그 마트 추가 창 (지금과 같음).</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>방금 누른 것</h2>
+      <div class="log" id="log">아직 아무것도 안 눌렀어요.</div>
+    </div>
+    <div class="card">
+      <h2>정해야 할 것</h2>
+      <ul class="note">
+        <li>큰 위젯: 마트별로 이어지는 한 목록(시안 ②)이 괜찮은지 — 예전 2x2 칸 나눔 모양은 없어짐</li>
+        <li>체크한 항목을 바로 빼지 않고 회색 줄 그은 채로 남겨둘지 — 시안은 0.8초 뒤 빠짐</li>
+        <li>잘못 체크하면 위젯에선 되돌리기가 없어요. 앱 '완료' 탭에서 되살리기</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<script>
+const MARTS = {
+  coupang: { name: "쿠팡", emoji: "🚀", color: "#3182F6", items: ["생수 2L", "물티슈", "키친타월", "세탁세제", "햇반", "라면", "치약"] },
+  emart:   { name: "이마트", emoji: "🛒", color: "#FFB800", items: ["우유", "계란", "두부", "대파", "삼겹살", "양파"] },
+  daiso:   { name: "다이소", emoji: "🏪", color: "#F04452", items: ["건전지", "수세미", "지퍼백", "옷걸이", "테이프", "물병", "고무장갑"] },
+  kurly:   { name: "마켓컬리", emoji: "🥬", color: "#8B5CF6", items: [] },
+};
+const INIT = JSON.parse(JSON.stringify(MARTS));
+let state = JSON.parse(JSON.stringify(MARTS));
+
+const soft = (hex, a) => {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r},${g},${b},${a})`;
+};
+const badge = m => `<div class="badge" style="background:${soft(m.color,.12)}">${m.emoji}</div>`;
+const pill = m => `<div class="pill" style="background:${soft(m.color,.14)};color:${m.color}">${m.items.length}</div>`;
+
+function column(key, max) {
+  const m = state[key];
+  const shown = m.items.slice(0, max);
+  const rest = m.items.length - shown.length;
+  const body = m.items.length === 0
+    ? `<div class="empty" data-act="add" data-k="${key}">아직 적은 게 없어요</div>`
+    : `<ul>${shown.map(n => `
+        <li data-k="${key}" data-n="${n}">
+          <div class="chk" data-act="check"><span></span></div>
+          <div class="iname" data-act="open">${n}</div>
+        </li>`).join("")}</ul>
+       ${rest > 0 ? `<div class="more">+ ${rest}개 더</div>` : ""}`;
+  return `<div class="col">
+    <div class="hdr" data-act="openmart" data-k="${key}">${badge(m)}<div class="name">${m.name}</div>${pill(m)}</div>
+    ${body}
+  </div>`;
+}
+
+const fab = k => `<div class="fab" data-act="fab" data-k="${k}" title="추가">+</div>`;
+
+const rows = key => state[key].items.map(n => `
+  <li data-k="${key}" data-n="${n}">
+    <div class="chk" data-act="check"><span></span></div>
+    <div class="iname" data-act="open">${n}</div>
+  </li>`).join("");
+
+function section(key) {
+  const m = state[key];
+  return `<div class="sec">
+    <div class="hdr" data-act="openmart" data-k="${key}">${badge(m)}<div class="name">${m.name}</div>${pill(m)}</div>
+    ${m.items.length ? `<ul>${rows(key)}</ul>`
+                     : `<div class="empty" data-act="add" data-k="${key}">아직 적은 게 없어요</div>`}
+  </div>`;
+}
+
+function keepScroll(sel, html) {
+  const host = document.querySelector(sel);
+  const top = host.querySelector(".scroll")?.scrollTop || 0;
+  host.innerHTML = html;
+  const sc = host.querySelector(".scroll");
+  if (sc) sc.scrollTop = top;
+}
+
+function render() {
+  document.querySelector('[data-w="medium"]').innerHTML =
+    column("coupang", 4) + `<div class="vdiv"></div>` + column("emart", 4) + fab("coupang");
+  document.querySelector('[data-w="small"]').innerHTML =
+    ["daiso", "kurly", "emart"].map(k => `
+      <div class="row" data-act="openmart" data-k="${k}">${badge(state[k])}
+        <div class="name">${state[k].name}</div>${pill(state[k])}</div>`).join("") + fab("daiso");
+  keepScroll('[data-w="single"]', `<div class="scroll">${section("daiso")}</div><div class="hint"></div>` + fab("daiso"));
+  keepScroll('[data-w="large"]',
+    `<div class="scroll">${["coupang", "emart", "daiso", "kurly"].map(section).join("")}</div><div class="hint"></div>` + fab("coupang"));
+}
+
+const toastEl = document.getElementById("toast");
+let tt;
+function say(msg, logMsg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(tt);
+  tt = setTimeout(() => toastEl.classList.remove("show"), 1600);
+  document.getElementById("log").innerHTML = logMsg || msg;
+}
+
+document.getElementById("phone").addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === "check") {
+    const li = el.closest("li");
+    if (li.classList.contains("done")) return;
+    const k = li.dataset.k, n = li.dataset.n;
+    li.classList.add("done");
+    say(`✓ ${state[k].name} · ${n} 체크`,
+        `<span class="tag" style="background:${soft("#2BA471",.12)};color:#2BA471">체크</span>${state[k].name} · <b>${n}</b> — 앱을 안 열고 완료 처리. 앱의 '완료' 탭에 들어가요.`);
+    setTimeout(() => {
+      li.classList.add("gone");
+      setTimeout(() => {
+        // the same item may be shown in two widgets → drop it from data, then redraw
+        state[k].items = state[k].items.filter(x => x !== n);
+        render();
+      }, 800);
+    }, 800);
+  } else if (act === "open" || act === "openmart") {
+    const k = act === "open" ? el.closest("li").dataset.k : el.dataset.k;
+    say(`앱 열림 → ${state[k].name} 목록`,
+        `<span class="tag" style="background:${soft("#3182F6",.12)};color:#3182F6">앱 열기</span>마트노트가 열리고 <b>${state[k].name}</b> 탭이 선택돼요.`);
+  } else if (act === "fab") {
+    const k = el.dataset.k;
+    say(`추가 창 열림 (${state[k].name} 골라진 채)`,
+        `<span class="tag" style="background:${soft("#FFA000",.14)};color:#E08A00">+ 추가</span>마트노트가 열리면서 추가 창이 바로 떠요. 마트는 <b>${state[k].name}</b>로 골라져 있고, 창 위쪽에서 다른 마트로 바꿀 수 있어요.`);
+  } else if (act === "add") {
+    const k = el.dataset.k;
+    say(`${state[k].name}에 추가하기 창 열림`,
+        `<span class="tag" style="background:${soft("#FFA000",.14)};color:#E08A00">추가</span>마트노트가 열리면서 <b>${state[k].name}</b>에 적는 추가 창이 바로 떠요. 키보드도 같이 올라와요.`);
+  }
+});
+
+document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".opt").forEach(x => x.classList.toggle("on", x === b));
+  document.getElementById("phone").classList.toggle("show2", b.dataset.home === "2");
+}));
+
+document.getElementById("reset").addEventListener("click", () => {
+  state = JSON.parse(JSON.stringify(INIT));
+  render();
+  document.getElementById("log").textContent = "아직 아무것도 안 눌렀어요.";
+});
+
+render();
+</script>
+</body>
+</html>

@@ -27,7 +27,8 @@
 -keep class androidx.glance.** { *; }
 -keep class * extends androidx.glance.appwidget.GlanceAppWidget
 -keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver
--keep class * extends androidx.glance.appwidget.action.ActionCallback
+# CheckItemAction (widget ○) is created by reflection from its class name → keep the no-arg constructor.
+-keep class * extends androidx.glance.appwidget.action.ActionCallback { <init>(); }
 
 # --- AdMob (Phase 6) ---
 -keep class com.google.android.gms.ads.** { *; }

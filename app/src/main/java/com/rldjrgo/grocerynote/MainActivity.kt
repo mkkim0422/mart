@@ -118,9 +118,10 @@ object DeepLinkBus {
 
     fun consume(intent: Intent?) {
         if (intent == null) return
-        // Share sheet (카톡 등 텍스트 공유) → 항목 추가 시트 프리필
+        // Share sheet (카톡 등 텍스트 공유) → 한 줄이면 추가 시트 프리필,
+        // 여러 줄이면 HomeScreen이 SharedItemsSheet로 줄마다 항목을 만든다.
         if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()?.take(100)
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()?.take(2000)
             if (!text.isNullOrEmpty()) {
                 flow.value = Payload(openAddItem = true, sharedText = text)
                 return

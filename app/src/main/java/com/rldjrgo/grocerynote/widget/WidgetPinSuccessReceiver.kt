@@ -1,5 +1,6 @@
 package com.rldjrgo.grocerynote.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -30,13 +31,23 @@ class WidgetPinSuccessReceiver : BroadcastReceiver() {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
         }
+        // 목록 위젯 pinned from the in-app picker: apply the mart chosen there.
+        val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        val martId = if (intent.hasExtra(EXTRA_MART_ID)) intent.getLongExtra(EXTRA_MART_ID, 0L) else null
         val pending = goAsync()
         appScope.launch {
             try {
+                if (martId != null && appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    applyWidgetMart(context, appWidgetId, martId)
+                }
                 settings.setHasAddedWidget(true)
             } finally {
                 pending.finish()
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_MART_ID = "widget_mart_id"
     }
 }

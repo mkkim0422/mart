@@ -75,8 +75,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settings.setDarkMode(pref) }
     }
 
-    fun pinWidget(size: com.rldjrgo.grocerynote.util.WidgetSize): Boolean =
-        widgetPin.pinWidget(size)
+    fun pinWidget(kind: com.rldjrgo.grocerynote.util.WidgetKind, martId: Long?): Boolean =
+        widgetPin.pinWidget(kind, martId)
 
     fun purchaseRemoveAds(activity: Activity) {
         viewModelScope.launch { runCatching { billing.launchPurchase(activity) } }

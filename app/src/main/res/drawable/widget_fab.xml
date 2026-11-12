@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "+" (one per widget → add-item sheet). Brand blue circle. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp" android:height="36dp"
+    android:viewportWidth="36" android:viewportHeight="36">
+    <path
+        android:pathData="M18,0a18,18 0,1 1,0 36a18,18 0,1 1,0 -36z"
+        android:fillColor="#3182F6" />
+    <path
+        android:pathData="M18,11v14M11,18h14"
+        android:strokeWidth="2.4"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+</vector>

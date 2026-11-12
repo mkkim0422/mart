@@ -20,15 +20,15 @@ One-line definition: **마트별 장보기 리스트를 만들고, 홈화면 위
 ## 2. North Star — 3 Differentiators (do NOT compromise)
 
 1. **Per-mart separated lists** — horizontal scrollable tabs (seed defaults 쿠팡/다이소; user adds 이마트·홈플러스·etc.). **This is the #1 USP.**
-2. **At-a-glance home-screen widget** — per-mart lists in 5 sizes (2x1 / 2x2 / 2x4 / 4x2 / 4x4); **freely resizable — every placed widget auto-adapts between all 5 layouts**. **Display + deep-link only.**
+2. **At-a-glance home-screen widget** — 2 widgets (2026-11-12): **개수 위젯** (per-mart counts) + **목록 위젯** (one mart or all marts, scrollable, **○ checks in place**). Freely resizable.
 3. **Name-only, 1-second add/check** — no price/qty/memo; frictionless.
 
-Widget → app flow: tapping a placed widget opens the app **with that mart preselected**, where the user checks items off via the 1-second completion animation (§11). The widget itself never mutates data. This is deliberate: in-widget checking was **removed on 2026-05-18 (business-model pivot)** so the single banner-ad impression is preserved (revenue) and the widget stays battery-free (`updatePeriodMillis=0`). **Do NOT reintroduce in-widget checking.**
+Widget → app flow: tapping an item name / mart header opens the app **with that mart preselected**; the "+" opens the add-item sheet. **In-widget checking is back (2026-11-12, user decision)** — it was removed 2026-05-18 to force app opens for the banner ad, but competitors (Google Keep's note widget) check from the home screen and a display-only widget was a reason to leave; with few users the extra ad impressions were worth little. Still battery-free: `updatePeriodMillis=0`, the widget only redraws on taps / data changes.
 
 ## 3. Hard No (refuse even if user asks until v2.0)
 
 - 가격 / 수량 / 단위 / 메모 입력 — name only, period
-- 카톡 Import
+- 카톡 Import (대화 내보내기/대화 읽기). ※ 시스템 공유창으로 사용자가 직접 보낸 글을 줄 단위로 항목화하는 것은 허용 — 저장 전 확인 시트를 거침 (사용자 승인 2026-11-12)
 - 회원가입 / 로그인 (consider for v1.5 as optional only)
 - 카테고리 / 태그
 - 통계 탭
@@ -94,8 +94,7 @@ Android SDK: `C:\Users\minkk\AppData\Local\Android\Sdk` (platforms 35, build-too
 | compileSdk | **36** | matches target |
 
 **Compatibility branching**:
-- API 26-30: widget renders, but item-check tap is non-interactive → opens app via deep link to that mart+item (smooth fallback, not just "open app")
-- API 31+ (Android 12+): widget item check works via Glance ActionCallback (the killer interaction)
+- Widget ○ check (Glance `ActionCallback`) works on every supported API (26+); ○/✓/+ are vector drawables because Glance `cornerRadius` only rounds on API 31+
 - API 33+: Material You dynamic color is **NOT** used — brand consistency wins
 
 ## 8. Performance Budget (budget-phone-first)
@@ -208,7 +207,8 @@ Top: shared **`PageTitle`** (`ui/components/PageTitle.kt`) — `headingL` (20sp 
 - Home title: **"구매예정"** (app name lives in launcher/onboarding/Play, not the screen)
 - Completed title: **"완료"**  · Settings title: **"설정"**
 Tab strip (pill tabs, horizontally scrollable): ●쿠팡(2) ●다이소(3) [+ 추가] [⋮ 마트관리]
-Body: items of selected mart (□ name, ⋮ on right)
+Body: items of selected mart — row = name (+ 🔔 time chip if a reminder is set) · [🔍 shop-app, only when 쇼핑몰 앱 바로가기 on] · [완료] · ⋮ (쇼핑앱 찾기 / 알림 설정·변경 / 이름 수정 / 다른 마트로 이동 / 삭제). **Bell button removed from the row 2026-11-12** (reminder entry = ⋮ menu only).
+**Long-press a row → drag up/down to reorder** (2026-11-12, `sh.calvin.reorderable`, same as tab strip) → `items.display_order`, widget follows.
 FAB: Toss-blue + (bottom right)
 Bottom nav: 구매예정 / 완료 / 설정 — selected = `#3182F6` for both icon and text (titles match nav labels)
 
@@ -223,55 +223,49 @@ Check anim **V2 (1000ms total, in-app only — `ui/screens/home/components/ItemR
 
 ## 12. Widget (most important — invest most time)
 
-**5 Glance widget classes, all adaptive** (each = own class + Receiver + xml info; ALL extend `BaseGroceryWidget` which is `SizeMode.Responsive` over the 5 `WidgetSizes` breakpoints; shared layouts in `widget/common/WidgetCommon.kt` via `AdaptiveContent`). The 5 classes only differ by the xml `targetCell*` (initial pinned size) + picker entry + back-compat; after placement every widget auto-switches between these 5 as the user resizes it:
-- **Mini** (2x1, 110×40dp) — `SmallContent(compact)` = **exactly 2** mart count rows (no "외 N" footer)
-- **Small** (2x2 ≈ 110×110dp) — per-mart remaining counts (`WidgetStoreCountRow`), ≤4 marts + "외 N개"
-- **Long** (2x4 ≈ 110×250dp) — **1 mart** full-height item list + "+ N개 더" footer. Mart pick: 노출순서설정 1순위 → 미완료 최다 → displayOrder
-- **Medium** (4x2 ≈ 250×110dp) ★ default — item list: 1 mart full-width / ≥2 top-2 split
-- **Large** (4x4 ≈ 250×250dp) — item list: up to 4 marts (1 / 2 / 1+2 / 2x2); marts user-selectable via `SettingsDataStore.largeWidgetStoreIds`
+**2 widgets (2026-11-12, was 5 sizes)** — both extend `BaseGroceryWidget` (loads data, resolves dark, calls `Content(data)`); layouts in `widget/common/WidgetCommon.kt`. Class names kept from the old set so placed widgets carry over; the old Small/Long/Large receivers were removed (users who had those must re-add — accepted while installs are low).
+- **개수 위젯** = `GroceryWidget2x1` (receiver label "개수 위젯", pins at 2x1 — 2x2 looked like 2x4 on One UI tall cells; grows to 2x2+). `SizeMode.Exact` → `CountContent` fits rows to the real height: 2x1 strip = 2 rows, no "+"; otherwise rows above a bottom-right "+". Row tap → that mart in the app.
+- **목록 위젯** = `GroceryWidgetMedium` (label "목록 위젯", pins at 4x2, any size ≥2x2). `SizeMode.Single` → `ListContent`: **ONE `LazyColumn`** (scrolls). Shows the mart picked at placement (`WidgetStateKeys.MartId` in the widget's Glance Preferences) or 전체 (`ALL_MARTS`) = every mart stacked in tab order (노출순서설정 marts first), each under its header. **Never two marts side by side and never 2+ LazyColumns in one widget** — multiple collection views made Glance fail to inflate (blank, dead widget, 2026-05). Tried and rejected by the user: 2-mart split (4x2 "가장 불편"), in-widget mart tabs ("과해").
 
-`WidgetSize` enum order = `TWO_BY_ONE, SMALL, LONG, MEDIUM, LARGE` (= picker display order). Picker (`WidgetSizePickerSheet`, used by Home/Settings/Onboarding) lists all 5 with mini-render previews; pick → `requestPinAppWidget` (sets initial size) → app immediately routes to the home screen so the user sees & drags the placed widget into position. Each xml: `minWidth/minHeight` = the widget's NATURAL size (so it pins at the right size — do NOT shrink these or launchers place it tiny), `minResize`=Mini 110×40 + `maxResize`=360dp + `resizeMode=horizontal|vertical` (this is what enables adaptive shrink/grow), `previewLayout` only (no `previewImage` — the static vectors render broken on One UI; Long has its own `widget_preview_long`). Adaptive resize: `BaseGroceryWidget` re-runs `provideContent` on resize, `AdaptiveContent(LocalSize, data)` swaps the layout (no ViewModel/repo change).
+Taps (both widgets):
+- **○** (list rows) → `CheckItemAction` (`actionRunCallback`): adds the id to `WidgetStateKeys.Checking` → ✓ + strikethrough for 600ms (widgets can't animate) → clears reminder, `completeItem`, `Analytics.itemCompleted(fromWidget = true)` → the row drops from every widget via the data flow. Undo = 완료 탭.
+- **item name / mart header** → `OpenStoreAction.forStore(storeId)` (app on that mart).
+- **"+"** (one per widget, bottom-right, `widget_fab`): one-mart list widget → `OpenStoreAction.addToStore(martId)` (add sheet for that mart); 전체 list widget & count widget → **just open the app** (`forStore(-1)`, home) — defaulting to the first mart opened 쿠팡 when the user meant another (user 2026-11-12).
+- empty mart "아직 적은 게 없어요" → add sheet for that mart.
 
-**Widget is display + deep-link only — it never mutates data (decided 2026-05-18).**
-- Item rows are **read-only** (dot + name). Tap → `OpenStoreAction.forStore(-1L)` → opens MainActivity (HomeScreen, that mart preselected) where the user completes via the §11 V2 animation.
-- **No "+" buttons on any widget (removed 2026-10-28, user: "+버튼 그냥 다 빼").** A mart with no items shows "아직 적은 게 없어요" in its area; tapping that empty area → `OpenStoreAction.addToStore(storeId)` (add-item sheet via `DeepLinkBus`, `action=ADD_ITEM`). Long widget empty: "아직 적은 게 없어요 / 누르면 바로 적을 수 있어요" (same action).
-- Tapping anywhere else on the card → opens the app.
-- **No API branching.** Identical on all supported APIs (26–36). No `CheckItemAction`, no `ActionCallback` (`CheckItemAction.kt` deleted in commit `24eb07e`).
+Choosing the list widget's mart:
+- **In-app picker** (`WidgetSizePickerSheet`, Home/Settings/Onboarding): tap a card = select only (blue border + radio); 목록 위젯 always pins as 전체 — no mart question in-app (user 2026-11-12: mart screen and inline mart chips both unneeded); one mart = long-press widget → 설정; bottom "홈 화면에 추가" → `WidgetPinHelper.pinWidget(LIST, martId)`; the mart rides on the pin callback (`FLAG_MUTABLE` so the launcher can add `EXTRA_APPWIDGET_ID`) → `WidgetPinSuccessReceiver` → `applyWidgetMart`.
+- **System picker / long-press → 설정**: `WidgetConfigActivity` (`android:configure`, `widgetFeatures="reconfigurable|configuration_optional"` — Android 12+ may place it as 전체 without asking). Sets RESULT_OK up front so backing out keeps the widget (CANCELED would delete a fresh one).
 
-`res/xml/grocery_widget_info.xml`:
-- `updatePeriodMillis="0"` (battery: only refresh on user action)
-- `resizeMode="horizontal|vertical"`
-- `widgetCategory="home_screen"`
-- API 31+: `targetCellWidth/Height`, `previewLayout`
-- `widgetFeatures="reconfigurable"`
-- description: "마트별 장보기 리스트"
+xml (`grocery_widget_2x1_info` / `grocery_widget_medium_info`): `minWidth/minHeight` = natural pin size (do NOT shrink), `targetCell*` 2x1 / 4x2 (4x3 often hit "이 페이지에는 공간이 없어요"), `updatePeriodMillis="0"`, `resizeMode="horizontal|vertical"`, `previewLayout` only (`widget_preview_2x1`, `widget_preview_medium`; no `previewImage` — renders broken on One UI). R8: `-keep class * extends ActionCallback { <init>(); }` (created by reflection).
 
 **Widget dark mode = 폰(시스템) 다크 모드만 따른다 (2026-10-27).** `BaseGroceryWidget`이 `configuration.uiMode`로 in-process 판정해 `LocalWidgetDark`로 내려줌 (Glance day/night ColorProvider는 One UI가 라이트인데 위젯만 다크로 그리는 문제가 있어 안 씀). 앱 안의 설정 "다크 모드" 토글은 **앱 화면에만** 적용되고 위젯엔 영향 없음 — 위젯은 홈 화면 위에 있으니 다른 앱 위젯처럼 홈 화면 테마에 맞춰야 함 (이전엔 앱 설정을 따라가서 라이트 홈 화면에 검은 위젯이 뜨는 문제). 폰 테마가 바뀌면 `App.onConfigurationChanged`가 `WidgetUpdater.updateAll()`로 재렌더(프로세스 살아있을 때), 죽어 있으면 다음 앱 실행/DB 변경 때 따라잡음.
 
-App↔Widget sync: a process-lifetime `WidgetUpdater` (@Singleton, started in `App.onCreate`) subscribes to the items+stores Flows and, debounced 120ms, calls `GlanceAppWidget.updateAll(context)` on all 4 widget classes; every ViewModel mutation also pokes `WidgetUpdater.updateAll()`. Widget→App sync is automatic: widgets subscribe to `widgetDataFlow` via `collectAsState`.
+App↔Widget sync: a process-lifetime `WidgetUpdater` (@Singleton, started in `App.onCreate`) subscribes to the items+stores Flows and, debounced 120ms, calls `GlanceAppWidget.updateAll(context)` on both widget classes; every ViewModel mutation also pokes `WidgetUpdater.updateAll()`. Widget→App sync is automatic: widgets subscribe to `widgetDataFlow` via `collectAsState`.
 
 Empty states:
 - 0 marts: "마트를 추가해주세요" → tap = open app
-- 0 items across all marts: NO placeholder card any more — the normal mart rows/columns render (Small count "—", Medium/Large/Long "아직 적은 게 없어요") (2026-10-28; the old "항목 추가 / 탭해서 추가하세요" card was redundant)
+- 0 items: no placeholder card — count rows show "—", list shows "아직 적은 게 없어요" per mart (tap → add sheet)
 
 Onboarding last page: "위젯 추가하기" → `AppWidgetManager.requestPinAppWidget()` (Android 8+, depends on launcher); fallback hint: "홈화면을 길게 누르고 위젯 → 마트노트".
 
-**Widget-install nudging (2026-08-27)**: `WidgetPinHelper.anyWidgetPlaced()` = real presence check (`getAppWidgetIds` over the 5 receivers). Home `onResume`마다 `syncWidgetPresence()`가 `hasAddedWidget`을 실제 상태로 동기화 → 유도 배너는 위젯이 실제로 있으면 자동 숨김, 전부 제거되면(닫기 안 눌렀을 때) 복귀. 추가로 **항목 등록 후 추가 흐름이 끝날 때(추가 시트 닫힘/음성추가 종료) `WidgetNudgeSheet`** ("목록을 다 만든 직후"가 유도 타이밍 — 완료 체크는 마트 안이라 부적절, 사용자 피드백 2026-08-27; 0.6s 지연 후): Medium 미리보기 + "위젯 추가하기"→`WidgetSizePickerSheet`. 위젯 미설치면 **15일 간격 재노출**(`widgetNudgeLastShownAt`, 세션당 최대 1회; "평생 1회는 기회가 너무 없다" 사용자 피드백 2026-08-27), 설치돼 있으면 안 뜸. 첫 실행 강제 핀 팝업은 의도적으로 안 함(거부율·런처 편차).
+**Widget-install nudging (2026-08-27)**: `WidgetPinHelper.anyWidgetPlaced()` = real presence check (`getAppWidgetIds` over the 2 receivers). Home `onResume`마다 `syncWidgetPresence()`가 `hasAddedWidget`을 실제 상태로 동기화 → 유도 배너는 위젯이 실제로 있으면 자동 숨김, 전부 제거되면(닫기 안 눌렀을 때) 복귀. 추가로 **항목 등록 후 추가 흐름이 끝날 때(추가 시트 닫힘/음성추가 종료) `WidgetNudgeSheet`** ("목록을 다 만든 직후"가 유도 타이밍 — 완료 체크는 마트 안이라 부적절, 사용자 피드백 2026-08-27; 0.6s 지연 후): 목록 위젯 미리보기 + "위젯 추가하기"→`WidgetSizePickerSheet`. 위젯 미설치면 **15일 간격 재노출**(`widgetNudgeLastShownAt`, 세션당 최대 1회; "평생 1회는 기회가 너무 없다" 사용자 피드백 2026-08-27), 설치돼 있으면 안 뜸. 첫 실행 강제 핀 팝업은 의도적으로 안 함(거부율·런처 편차).
 
 Widget visual (Toss):
 - bg `#FFFFFF` (dark `#1F1F23`), r 16dp
 - mart header bg = mart color × alpha 0.08
 - 0.5dp divider between header and body
-- row pad H 12dp, V 8dp; checkbox r 6dp border 1.5dp `#C9CDD2`; checked bg `#3182F6`
+- list row: ○ 20dp (`widget_check_off`, 1.5dp `#C9CDD2`) in a 36dp touch box; mid-check ✓ green `#2BA471` (`widget_check_on`) + gray strikethrough name; "+" 36dp brand circle (`widget_fab`)
 - font: system default (Pretendard in Glance is messy)
 - text: item `#191F28`/dark `#F2F4F6`; mart name `#4E5968`/dark `#A8B0BA`
 
 Test scenarios (verify each after Phase 4):
 1. Add widget from launcher
 2. App add → widget reflects instantly
-3. Widget item tap → app opens on Home with that mart preselected (check happens in-app)
-4. Empty mart area tap → app opens straight into that mart's add-item sheet
-5. Resize widget on home screen → auto-adapts between Mini/Small/Long/Medium/Large
+3. Widget ○ tap → ✓ briefly, then the item leaves every widget and shows in the app's 완료 tab
+4. Item name tap → app on that mart; "+" / empty mart → add-item sheet for that mart
+5. Resize: 개수 2x1 ↔ 2x2+ (rows fit, "+" only when not 2x1); 목록 any size, always scrolls
+8. 목록 위젯 mart: in-app picker choice applied on pin; long-press → 설정 changes it; 전체 stacks marts
 6. System dark toggle → widget colors flip
 7. 1 day usage → battery impact negligible
 
@@ -298,7 +292,7 @@ app/src/main/java/com/rldjrgo/grocerynote/
 ├── widget/
 │   ├── GroceryWidget.kt         GlanceAppWidget
 │   ├── WidgetColors.kt          Light/Dark provider
-│   └── actions/                 CheckItemAction (API 31+), OpenAppAction (fallback)
+│   └── actions/                 CheckItemAction (○ check, all APIs) + WidgetStateKeys, OpenStoreAction
 ├── di/                          Hilt modules: Database, Repository, Widget EntryPoint
 └── util/
 ```
@@ -324,9 +318,11 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 14 — **v1.2.2 (vc8)** ① 위젯 다크 모드가 앱 설정 대신 **폰(시스템) 다크 모드만** 따르도록 변경 (§12). 폰 테마 전환 시 `App.onConfigurationChanged` → 위젯 재렌더. ② **온라인 마트 "N에서 찾기"** (`util/StoreSearch.kt`): 마트 이름에 쿠팡/컬리가 들어가면 그 탭의 항목 줄에 🔍 + ⋮ "쿠팡에서 찾기" → 마트 앱 검색 링크(쿠팡 `coupang://search?q=`, 컬리 `kurly://search?keyword=`; 둘 다 실기기에서 검색 결과 직행 확인 2026-10-28) → 웹 검색(**쿠팡 `coupang.com/np/search?q=`·컬리 둘 다** — 실제 브라우저에서 열림 확인 2026-10-28. 스크립트 접속은 쿠팡 봇 차단으로 403이 나와 예전에 "폴백 없음"으로 잘못 판단했었음) → Play 스토어(브라우저도 없을 때만) 순. 오프라인 마트 탭은 변화 없음.
   - **2026-10-28 변경 → "쇼핑몰 앱 바로가기"**: 마트 **이름**으로 앱을 정함(`StoreSearch.appFor`: 쿠팡→쿠팡, 이마트→이마트 앱, 다이소→다이소몰, 홈플러스, 롯데마트GO, 하나로마트, 킴스클럽, 우리동네GS, 포켓CU, SSG, 이마트24/에브리데이/이마트몰, 배민, 올리브영, 11번가, G마켓, 옥션 등 — 패키지는 Play 스토어 KR에서 확인, 더 구체적인 이름이 먼저 매칭). 해당 마트 탭 **목록 맨 위에 "○○ 앱 바로가기" 토글**(마트별, **기본 ON**, DB v3 `stores.shop_app_enabled`). 켜져 있으면 항목 🔍: **항목 검색 결과로 여는 앱** [S24+ 실기기 확인 2026-10-28] = 쿠팡(`coupang://search?q=`), 컬리(`kurly://search?keyword=`), 11번가(`elevenst://loadurl?url=`+검색 URL), 옥션(`auction://openwindow.v2?targeturl=`+검색 URL), 테무(`temu://com.einnovation.temu/search_result.html?search_key=`), G마켓(`gmarket://search?type=page&keyword=` → 검색창에 입력된 상태까지). [APK 분석만, 실기기 미확인] 홈플러스(매니페스트가 `https://mfront.homeplus.co.kr/search`를 받음 → 패키지 지정), SSG(`ssg://execute?landingUrl=`). 검색 링크 Intent에는 **`FLAG_ACTIVITY_CLEAR_TASK`** 필수 — 없으면 이미 켜진 쇼핑 앱이 이전 화면을 그대로 띄움(컬리에서 "우유" 버그). 나머지는 앱 첫 화면으로(검색 링크를 못 찾음), **앱이 없으면 Play 스토어**(웹사이트로 가지 않음). 이름이 어떤 앱과도 안 맞는 마트(시장·약국)는 토글·🔍 없음. 백업 JSON `shopAppEnabled`. ⋮ 메뉴 문구: "쿠팡에서 찾기" / "이마트 앱 열기". 쿠팡 파트너스 링크 전환은 미정 — 2026-10-27
 - [x] Phase 14.5 — **v1.3.0 (vc9) 쇼핑몰 앱 바로가기** (마트 이름 → 쇼핑 앱, 목록 위 마트별 토글 기본 ON, 🔍 → 앱 검색/앱 열기/Play 스토어, DB v3) + 온보딩 개편(4장: 마트별·이름만·쇼핑앱·위젯, 마지막 장 두 버튼) + 위젯 "+" 제거·빈 상태 정리 + 홈 FAB 브랜드색 고정. 스토어 자료 `docs/playstore_listing.md` §0~2 — 2026-10-28
+- [x] Phase 14.6 — **v1.4.0 (vc10) "카톡 나에게 보내기 대신"** (앱을 만든 이유 = 카톡 나에게 보내기에 적은 장보기가 다른 글에 묻힘 → 유입 메시지·기능을 이 방향으로): ① 여러 줄 공유 → `SharedTextParser` + `SharedItemsSheet`로 줄마다 항목, 마트 골라 한 번에 담기 ② 항목 길게 눌러 순서 바꾸기 ③ 줄의 🔔 버튼 제거 → ⋮ 메뉴 ④ 공유 메시지 끝 Play 설치 링크 ⑤ Analytics `reminder_set`/`shared_items_added`/`items_reordered` ⑥ 스토어 문구 초안 `docs/playstore_listing.md` — 2026-11-12
+- [x] Phase 14.7 — **위젯 2종 + 위젯에서 체크** (v1.4.0): 5종 → 개수 위젯·목록 위젯, 목록 위젯은 마트 하나/전체를 골라 놓고(앱 안 선택 또는 `WidgetConfigActivity`) 스크롤 목록 하나 + ○ 체크 + "+" 하나. 시안 `sample/위젯2종_시안.html` — 2026-11-12
 - [ ] Phase 15 (다음, 사용자 확정 2026-10-27) — **메뉴 → 재료 자동 제안**: 추가 시트에 요리 이름("된장찌개")을 치면 재료가 칩으로 떠서 탭해 담음. 한국 요리 200~300종 재료표를 앱 내 번들(서버 없음). 완성 시 스토어 첫 스크린샷/홍보 문구를 "메뉴만 치면 장보기 끝"으로. 그 뒤 후보: "다시 살 때 됐어요" 칩(완료 주기, 알림 없음) → 가족 공유 6자리 코드(가입 없음 원칙 재검토 필요)
 
-> Note: an earlier **share** feature also exists (Home share SmallFAB above the add-FAB → `ShareRequestDialog` with a 200-char 부탁 문구, 15 rotating placeholders, footer "마트노트에서 보냄"; 심부름 pivot — no store link) and the **XLarge widget breakpoint** (320×320, up to 6 marts, adaptive-only). Both pre-date Phase 11 in the CHANGELOG (2026-05-26) and ship in v1.1.0.
+> Note: an earlier **share** feature also exists (Home share SmallFAB above the add-FAB → `ShareRequestDialog` with a 200-char 부탁 문구, 15 rotating placeholders, footer "마트노트에서 보냄" + "👉 갤럭시(안드로이드)라면 마트노트 받기: <Play link>" (link added 2026-11-12; sender can't know the recipient's OS and there is no iOS app, so the copy says it's Android-only); 심부름 pivot) and the **XLarge widget breakpoint** (320×320, up to 6 marts, adaptive-only). Both pre-date Phase 11 in the CHANGELOG (2026-05-26) and ship in v1.1.0.
 
 > Rollback: tag **`rollback-v1.0.0`** (commit e91918b) = state right before Phase 11. `git reset --hard rollback-v1.0.0` restores 1.0.0 exactly.
 

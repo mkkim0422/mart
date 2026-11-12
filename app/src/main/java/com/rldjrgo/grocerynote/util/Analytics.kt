@@ -23,6 +23,12 @@ object Analytics {
     fun widgetUsed() = log("widget_used")
     /** "쿠팡에서 찾기" tapped. [target] is the shop-app label (StoreSearch.appFor), never the user's mart name. */
     fun storeSearch(target: String) = log("store_search", "target" to target)
+    /** Reminder armed — tells whether the (now ⋮-menu-only) feature is still used. */
+    fun reminderSet() = log("reminder_set")
+    /** Multi-line shared text (카톡 등) split into items. [count] bucketed, never the text. */
+    fun sharedItemsAdded(count: Int) =
+        log("shared_items_added", "count" to if (count >= 10) "10+" else count.toString())
+    fun itemsReordered() = log("items_reordered")
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")
 

@@ -47,6 +47,17 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- 목록 위젯: "어떤 마트를 보여줄까요?" on placement / long-press → 설정 -->
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.GroceryNote">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".widget.WidgetPinSuccessReceiver"
             android:exported="false" />
@@ -65,20 +76,11 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name=".widget.GroceryWidgetSmallReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/grocery_widget_small_info" />
-        </receiver>
 
         <receiver
             android:name=".widget.GroceryWidgetMediumReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_label_list">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -87,20 +89,11 @@
                 android:resource="@xml/grocery_widget_medium_info" />
         </receiver>
 
-        <receiver
-            android:name=".widget.GroceryWidgetLargeReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/grocery_widget_large_info" />
-        </receiver>
 
         <receiver
             android:name=".widget.GroceryWidget2x1Receiver"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_label_count">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -109,16 +102,6 @@
                 android:resource="@xml/grocery_widget_2x1_info" />
         </receiver>
 
-        <receiver
-            android:name=".widget.GroceryWidgetLongReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/grocery_widget_long_info" />
-        </receiver>
 
     </application>
 

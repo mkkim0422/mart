@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
@@ -73,6 +72,8 @@ fun ItemRow(
     /** Full action text for 🔍 / ⋮ menu ("쿠팡에서 찾기" or "이마트 앱 열기") when 쇼핑몰 앱 바로가기 is on. Null = off, no UI. */
     searchLabel: String? = null,
     onSearch: () -> Unit = {},
+    /** Long-press-drag reorder handle (from ItemList's ReorderableItem scope). */
+    dragModifier: Modifier = Modifier,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -126,6 +127,7 @@ fun ItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
+            .then(dragModifier)
             .background(
                 if (highlighted) storeColor.copy(alpha = if (colors.isDark) 0.25f else 0.15f)
                 else colors.bgPrimary,
@@ -192,7 +194,7 @@ fun ItemRow(
         if (searchLabel != null) {
             Spacer(Modifier.width(10.dp))
             // Mart-colored on a soft tinted disc so it reads as "the 쿠팡 button",
-            // not as another grey row control (bell/⋮ are tertiary grey on purpose).
+            // not as another grey row control (⋮ is tertiary grey on purpose).
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -208,25 +210,6 @@ fun ItemRow(
                     modifier = Modifier.size(19.dp),
                 )
             }
-        }
-        // Reminder bell — one tap opens the date/time picker. Outline = none set,
-        // filled (mart color) = a reminder is armed. Disabled during the complete anim.
-        Spacer(Modifier.width(10.dp))
-        val hasReminder = item.reminderAt != null
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(enabled = !triggered, onClick = onSetReminder),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = if (hasReminder) Icons.Filled.Notifications
-                else Icons.Outlined.Notifications,
-                contentDescription = if (hasReminder) "알림 변경" else "알림 설정",
-                tint = if (hasReminder) storeColor else colors.textTertiary,
-                modifier = Modifier.size(20.dp),
-            )
         }
         Spacer(Modifier.width(10.dp))
         // "완료" affordance. Before tap: bordered button. After tap: a green
@@ -292,6 +275,19 @@ fun ItemRow(
                         onClick = { menuOpen = false; onSearch() },
                     )
                 }
+                // Reminder lives here (not as a row button) since 2026-11-12 — a 4th
+                // always-visible control crowded the 1-second-check row for a rarely
+                // used feature. A set reminder still shows its 🔔 chip under the name.
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            if (item.reminderAt != null) "알림 변경" else "알림 설정",
+                            style = typo.body,
+                            color = colors.textPrimary,
+                        )
+                    },
+                    onClick = { menuOpen = false; onSetReminder() },
+                )
                 DropdownMenuItem(
                     text = { Text("이름 수정", style = typo.body, color = colors.textPrimary) },
                     onClick = { menuOpen = false; onRename() },
