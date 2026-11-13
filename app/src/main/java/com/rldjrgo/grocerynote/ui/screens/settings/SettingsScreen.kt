@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.GridView
@@ -223,6 +224,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         Intent.ACTION_VIEW,
                         Uri.parse("market://details?id=${context.packageName}")
                     ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                    runCatching { context.startActivity(intent) }
+                }
+            }
+            // Play policy: the privacy policy must be reachable inside the app too (2026-11-13).
+            item {
+                ActionRow("개인정보처리방침", icon = Icons.Outlined.Lock) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://mkkim0422.github.io/mart/privacy.html"))
+                        .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
                     runCatching { context.startActivity(intent) }
                 }
             }

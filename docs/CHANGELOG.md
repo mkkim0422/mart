@@ -5,6 +5,7 @@
 
 ## 미커밋 → v1.5.1 (vc13) 준비 중
 
+- 2026-11-13 · **Play 심사 거부(1.5.0) — 개인정보처리방침 URL 404**: GitHub Pages 소스를 main → gh-pages로 바꾸면서 `https://mkkim0422.github.io/mart/privacy.html`이 사라졌던 것(내 실수). gh-pages에 privacy.html 복구 + 내용 갱신(Firebase 통계·오류 보고, 공유 링크 단축 is.gd/tinyurl, 쇼핑 앱 검색, 음성 인식, 알림; 숨겨 둔 광고 제거 결제 문구 삭제). 앱 설정 > 정보에 "개인정보처리방침" 메뉴 추가(앱 안에도 있어야 함, 1.5.1) · `gh-pages:privacy.html`, `docs/privacy.html`, `SettingsScreen.kt`
 - 2026-11-13 · **처음 설치하면 "자주 가는 곳을 골라 주세요"** 창(한 번만): 이마트·홈플러스·롯데마트·코스트코·마켓컬리·올리브영·편의점·시장·약국 + **📝 메모, ✏️ 준비물**(장보기 말고도 쓸 수 있다는 걸 자연스럽게 알리려고, 사용자 제안 — 장보기 앱 정체성 지키려 2개만) 여러 개 골라 "N곳 추가하기", 건너뛰기 가능. 항목이 이미 있는 기존 사용자에겐 안 뜸. **마트 추가 창 추천**도 같은 목록으로: 이미 있는 이름(쿠팡·다이소 등)은 숨기고, 누르면 이름+색+아이콘이 한 번에 맞춰짐(예전엔 이름만) · `ui/components/{MartPresets,MartPickerSheet}.kt`(신규), `AddStoreSheet.kt`, `HomeScreen.kt`, `HomeViewModel.kt`, `StoreManageScreen.kt`, `SettingsDataStore.kt`, `app/build.gradle.kts`(1.5.1 / vc13)
 
 ## iOS (진행 중)
