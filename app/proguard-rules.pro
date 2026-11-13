@@ -71,3 +71,6 @@
     public static int v(...);
     public static int d(...);
 }
+
+# Play In-App Review (review-ktx 2.0.2) references a compile-only gms annotation — absent at runtime, safe to ignore.
+-dontwarn com.google.android.gms.common.annotation.NoNullnessRewrite
