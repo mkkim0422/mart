@@ -3,7 +3,7 @@
 > 사용자 지시 1건 = 1줄. 최신이 맨 위. 탐색·빌드·실기기 검증은 기록하지 않음.
 > 형식: `- YYYY-MM-DD · {한 줄 요약} · {대표 파일들}` (커밋되면 끝에 ` (커밋 abc1234)` 추가)
 
-## 미커밋 (워킹트리)
+## 2026-11-13 · v1.5.0 (vc11) — 받은 목록 링크
 
 - 2026-11-13 · **v1.5.0 (vc11) 받은 목록 링크 — 눌러서 바로 담기**: 공유 메시지 끝 줄을 Play 링크에서 **"👉 눌러서 마트노트에 바로 담기: https://mkkim0422.github.io/mart/l/#s=마트&i=항목…"**으로. 목록은 `#` 뒤라 서버로 안 감. 페이지(`gh-pages` 브랜치)가 폰을 구분: 안드로이드 → 마트노트 열기(없으면 Play 스토어), 아이폰·PC → 목록만(눌러서 체크) + "갤럭시에서만" 안내. 앱: `martnote://add` 받기 → "받은 장보기 리스트 N개" 시트, 보낸 마트와 이름이 같은 마트 자동 선택. 크롬에서 앱 열림·앱 없을 때 Play 스토어(S24+) 확인. Analytics `list_link_opened`. 1.4.0은 출시하지 않고 함께 묶음(출시 노트 통합). 스토어 스크린샷 04 "가족이 보낸 장보기, 누르면 바로 담겨요" 추가(6장), 출시 자료 폴더 `출시자료_v1.5.0` · `AndroidManifest.xml`, `MainActivity.kt`, `HomeScreen.kt`, `SharedItemsSheet.kt`, `util/Analytics.kt`, `app/build.gradle.kts`, `gh-pages:l/index.html`, `scripts/{compose_store_v5,build_release_kit}.py`, `docs/playstore_listing.md`, `CLAUDE.md`
 
