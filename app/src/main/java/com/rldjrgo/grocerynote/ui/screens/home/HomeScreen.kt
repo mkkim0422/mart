@@ -946,16 +946,23 @@ private fun objectParticle(word: String): String {
 
 private const val LIST_PAGE_URL = "https://mkkim0422.github.io/mart/l/"
 
+/**
+ * `#` + base64url(UTF-8 of "마트\n색\n이모지\n항목\n항목…") — about half the length of
+ * percent-encoded `s=…&i=…` (한글 1자 = 4자 vs 9자; user: "링크가 엄청 길다"). The page
+ * decodes it (and still reads the older `#s=…&i=…` form).
+ */
 private fun listLink(store: Store, items: List<Item>): String {
-    fun enc(s: String) = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-    return buildString {
-        append(LIST_PAGE_URL).append("#s=").append(enc(store.name.trim()))
+    val lines = buildList {
+        add(store.name.trim())
         // Color + emoji so a receiver without this mart creates it looking the same.
-        append("&c=").append(store.color.toHexString().removePrefix("#"))
-        append("&e=").append(enc(store.emoji()))
-        // Keep the link short enough for any messenger: at most 30 items.
-        items.take(30).forEach { append("&i=").append(enc(it.name.trim().replace('\n', ' '))) }
+        add(store.color.toHexString().removePrefix("#"))
+        add(store.emoji())
+        // At most 30 items keeps the link reasonable in any messenger.
+        items.take(30).forEach { add(it.name.trim().replace('\n', ' ')) }
     }
+    val packed = java.util.Base64.getUrlEncoder().withoutPadding()
+        .encodeToString(lines.joinToString("\n").toByteArray(Charsets.UTF_8))
+    return LIST_PAGE_URL + "#" + packed
 }
 
 /**
@@ -988,7 +995,7 @@ private fun buildShareText(
     // 링크 하나로 끝 (1.5.0): 마트노트가 있으면 눌러서 바로 담기, 없으면(안드로이드) 설치,
     // 아이폰이면 목록만 — 그 구분은 링크 페이지가 한다(보내는 쪽은 받는 사람 폰을 모름).
     // 📝/👉 줄은 받은 리스트를 다시 마트노트로 공유할 때 SharedTextParser가 걸러낸다.
-    append("\n👉 눌러서 마트노트에 바로 담기: ")
+    append("\n\n👉 눌러서 마트노트에 바로 담기\n")
     append(listLink(store, items))
 }
 
