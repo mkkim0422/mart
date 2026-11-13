@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마트노트 홍보 글</title>
+<style>
+  :root { --bg:#F9FAFB; --card:#fff; --line:#E5E8EB; --text:#191F28; --sub:#4E5968; --muted:#8B95A1; --brand:#3182F6; --soft:#E8F3FF; --ok:#2BA471; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#17171B; --card:#1F1F23; --line:#3A3D42; --text:#F2F4F6; --sub:#A8B0BA; --muted:#6B7684; --brand:#4592FF; --soft:#1A2D4D; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Pretendard,"Malgun Gothic",system-ui,sans-serif; line-height:1.6; letter-spacing:-0.01em; }
+  main { max-width:960px; margin:0 auto; padding:28px 16px 80px; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .lead { color:var(--sub); margin:0 0 20px; }
+  nav { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+  nav a { text-decoration:none; color:var(--brand); background:var(--soft); padding:6px 12px; border-radius:16px; font-size:14px; }
+  section.ch { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:22px; }
+  h2 { font-size:19px; margin:0 0 4px; }
+  .where { color:var(--muted); font-size:13px; margin:0 0 14px; }
+  .tip { background:var(--soft); color:var(--sub); border-radius:12px; padding:10px 14px; font-size:13px; margin:0 0 14px; }
+  .block { margin:12px 0 16px; }
+  .row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .row b { flex:1; font-size:14px; }
+  .meta { color:var(--muted); font-size:12px; }
+  pre { white-space:pre-wrap; word-break:keep-all; margin:0; font:15px/1.7 inherit; font-family:inherit; background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  button { border:0; background:var(--brand); color:#fff; border-radius:10px; padding:7px 13px; font-size:13px; cursor:pointer; font-family:inherit; }
+  button.done { background:var(--ok); }
+  .imgs { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .imgs figure { margin:0; }
+  .imgs img { width:100%; border-radius:10px; border:1px solid var(--line); display:block; }
+  .imgs figcaption { font-size:12px; color:var(--muted); margin-top:4px; }
+  .imgs a { color:var(--brand); font-size:12px; }
+  .ph { display:inline-block; background:#FFF4D6; color:#8A5A00; border-radius:6px; padding:0 6px; font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>마트노트 홍보 글 모음</h1>
+  <p class="lead">채널마다 [복사] → 붙여넣기. 이미지는 오른쪽 클릭 → 이미지 저장(또는 아래 ‘원본’ 링크). <span class="ph">[이미지: …]</span> 표시는 그 자리에 해당 이미지를 넣으라는 뜻이에요.</p>
+  <nav>
+    <a href="#disquiet">디스콰이엇</a><a href="#geek">GeekNews (Show GN)</a><a href="#blog">네이버 블로그</a>
+    <a href="#threads">스레드</a><a href="#insta">인스타 / 쇼츠</a><a href="#kin">지식iN·카페 답글</a><a href="#images">이미지 전체</a>
+  </nav>
+
+  <!-- ================= 디스콰이엇 ================= -->
+  <section class="ch" id="disquiet">
+    <h2>디스콰이엇</h2>
+    <p class="where">disquiet.io → 글쓰기(프로덕트 소개 / 메이커 로그) · 이미지 2~3장</p>
+    <p class="tip">메이커들이 보는 곳이라 "왜 만들었는지 + 뭘 일부러 뺐는지"가 반응이 좋아요. 마지막에 피드백 부탁을 꼭 넣기.</p>
+    <div class="block">
+      <div class="row"><b>제목</b><button data-copy="dq-t">복사</button></div>
+      <pre id="dq-t">카톡 나에게 보내기에 장보기 적다가 지쳐서, 장보기 메모 앱을 만들었어요</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>본문</b><span class="meta">이미지: 01 → 02 → 04</span><button data-copy="dq-b">복사</button></div>
+<pre id="dq-b">틈틈이 혼자 안드로이드 앱을 만들고 있어요. 이름은 마트노트예요.
+
+시작은 진짜 별거 아니었어요.
+살 게 생기면 카톡 나에게 보내기에 "우유, 계란, 휴지" 이렇게 적어두는데, 막상 마트 가서 열어보면 그 사이에 링크, 사진, 택배 송장번호가 잔뜩 쌓여 있더라고요. 위로 한참 올려서 찾다가 결국 몇 개 빼먹고 오고요.
+쿠팡에서 살 거랑 다이소에서 살 거가 한 줄에 섞여 있는 것도 은근 불편했어요.
+
+[이미지: 01 나에게 보내기에 묻힌 메모]
+
+그래서 딱 두 가지만 되게 만들었어요.
+1. 마트별로 따로 적기. 쿠팡 / 다이소 / 이마트 탭이 나뉘어 있어요.
+2. 폰 홈 화면에 붙여두기. 위젯에서 동그라미 누르면 앱 안 열고 바로 체크돼요.
+
+[이미지: 02 홈 화면 위젯]
+
+만들면서 제일 오래 고민한 건 '뭘 안 넣을까'였어요.
+장보기 앱을 찾아보면 가격, 수량, 가계부, 레시피까지 다 들어 있는데, 저는 그냥 살 거 적고 지우는 게 전부라서요. 그래서 이름만 적게 했어요. 가격 칸도, 수량 칸도 없어요.
+
+최근에 하나 더 넣은 건 가족끼리 목록 주고받기예요.
+목록을 카톡으로 보내면 링크가 같이 가는데, 받은 사람이 그 링크를 누르면 자기 마트노트에 그대로 담겨요. 같은 걸 두 번 보내도 겹치는 건 빼고요.
+
+[이미지: 04 받은 목록 담기]
+
+아직 설치가 50명 남짓이라 쓰다가 불편한 점 말해주시면 정말 큰 도움이 돼요. 아이폰 버전은 아직 없어요 ㅠ
+
+https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote</pre>
+    </div>
+  </section>
+
+  <!-- ================= GeekNews ================= -->
+  <section class="ch" id="geek">
+    <h2>GeekNews · Show GN</h2>
+    <p class="where">news.hada.io → 글 등록 → 제목 앞에 "Show GN:" · 링크는 Play 스토어 주소 · 이미지 없음(텍스트만)</p>
+    <p class="tip">개발자들이라 기술 이야기(서버 없이 링크로 목록 전달, 위젯에서 겪은 문제)를 넣으면 댓글이 달려요. 짧고 담백하게.</p>
+    <div class="block">
+      <div class="row"><b>제목</b><button data-copy="gn-t">복사</button></div>
+      <pre id="gn-t">Show GN: 마트노트 – 마트별로 나눠 적고 홈 화면 위젯에서 바로 체크하는 장보기 메모 (안드로이드)</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>링크</b><button data-copy="gn-l">복사</button></div>
+      <pre id="gn-l">https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>본문</b><button data-copy="gn-b">복사</button></div>
+<pre id="gn-b">카톡 나에게 보내기에 장보기 목록을 적어두면 다른 메시지에 묻혀서 매번 스크롤로 찾게 되는 게 싫어서 만들었습니다.
+
+- 마트별 탭으로 목록 분리 (쿠팡, 다이소, 이마트 …)
+- 이름만 입력 (가격·수량·메모 없음, 일부러 뺐습니다)
+- 홈 화면 위젯 2종: 목록 위젯은 ○ 누르면 앱을 열지 않고 체크, 개수 위젯은 마트별 남은 개수
+- 항목 옆 🔍 누르면 그 마트 쇼핑 앱 검색 결과로 이동 (쿠팡, 컬리, 11번가, 알리 등)
+- 가입 없음, 데이터는 기기 안에만
+
+만들면서 재미있었던 부분
+- 가족에게 목록을 보낼 때 링크를 붙이는데 서버가 없습니다. 목록을 URL의 # 뒤에 base64로 넣고, GitHub Pages 정적 페이지가 안드로이드면 intent:// 로 앱을 열고(없으면 Play 스토어), 아이폰이면 목록만 보여줍니다. # 뒤는 서버로 전송되지 않아서 목록이 어디에도 남지 않아요.
+- 위젯은 Jetpack Glance로 만들었는데, LazyColumn을 한 위젯에 2개 넣으면 일부 런처에서 위젯이 아예 안 그려지는 문제가 있어서 스크롤 목록은 하나로 합쳤습니다.
+- 릴리스 빌드에서 R8이 WorkManager 쪽 생성자를 지워서 위젯이 늘 미리보기 그림만 보이던 버그를 한참 못 찾았던 적이 있습니다. keep 규칙 하나로 끝났는데 찾는 데 한참 걸렸네요.
+
+Kotlin, Jetpack Compose, Glance, Room 입니다. 피드백 환영합니다.</pre>
+    </div>
+  </section>
+
+  <!-- ================= 네이버 블로그 ================= -->
+  <section class="ch" id="blog">
+    <h2>네이버 블로그</h2>
+    <p class="where">제목에 검색어(장보기 앱, 장보기 메모, 장보기 리스트)를 넣었어요 · 이미지 5장 · 태그도 아래에</p>
+    <p class="tip">네이버에서 "장보기 앱 추천"을 찾는 사람이 보는 글이라, 내가 왜 이렇게 쓰는지 생활 이야기처럼 쓰면 좋아요. 본문 붙여넣은 뒤 <span class="ph">[이미지]</span> 자리에 사진을 넣으세요.</p>
+    <div class="block">
+      <div class="row"><b>제목</b><button data-copy="bl-t">복사</button></div>
+      <pre id="bl-t">장보기 앱 찾다가 결국 직접 만든 장보기 메모 앱, 마트노트 (마트별 장보기 리스트 + 홈 화면 위젯)</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>본문</b><span class="meta">이미지: 01 → 02 → 03 → 04 → 05</span><button data-copy="bl-b">복사</button></div>
+<pre id="bl-b">저는 장 볼 게 생기면 늘 카톡 나에게 보내기에 적어뒀어요.
+"우유, 계란, 휴지, 대파"
+이렇게요.
+
+근데 이게 마트 가서 꼭 문제가 되더라고요.
+나에게 보내기에는 장보기만 있는 게 아니라 회의 링크, 사진, 택배 송장번호, 병원 예약 시간까지 다 섞여 있잖아요. 마트 카트 앞에서 위로 쭉쭉 올리면서 찾다가, 결국 한두 개는 꼭 빼먹고 와요.
+
+[이미지: 01]
+
+쿠팡에서 시킬 거, 다이소 가서 살 거, 동네 마트에서 살 거가 한 메모에 다 섞여 있는 것도 불편했고요.
+다이소 갔는데 쿠팡에서 시킬 생수가 목록에 같이 있으면 헷갈리더라고요.
+
+그래서 장보기 앱을 몇 개 깔아봤는데, 대부분 가격이나 수량, 가계부까지 적게 되어 있어서 저한테는 너무 많았어요. 저는 그냥 살 거 적고, 산 거 지우면 끝이거든요.
+
+결국 직접 만들었습니다. 이름은 마트노트예요.
+
+■ 마트별로 따로 적어요
+쿠팡, 다이소, 이마트처럼 마트마다 탭이 따로 있어요. 다이소 가면 다이소 탭만 보면 돼요. 마트는 원하는 만큼 추가할 수 있고 색깔로 구분돼요.
+
+■ 홈 화면에 붙여두면 앱 안 열어도 보여요
+제가 제일 많이 쓰는 기능이에요. 폰 홈 화면에 위젯으로 붙여두면 폰 켤 때마다 살 게 보여요.
+
+[이미지: 02]
+
+■ 산 건 동그라미만 누르면 끝
+위젯에서 동그라미를 누르면 앱을 안 열어도 바로 체크돼요. 장 보면서 하나씩 누르면 목록이 줄어드는 게 은근 기분 좋아요.
+
+[이미지: 03]
+
+■ 가족이 보낸 목록, 누르면 바로 담겨요
+가족한테 "이거 사 와" 하면서 목록을 카톡으로 보내면 링크가 같이 가요. 받은 사람이 마트노트를 쓰고 있으면 링크 누르는 순간 자기 목록에 그대로 담겨요. 같은 걸 두 번 보내도 이미 있는 건 빼고 담아줘요.
+
+[이미지: 04]
+
+■ 이름만 적으면 끝
+가격, 수량 같은 건 일부러 없앴어요. "라면" 이렇게 이름만 적으면 돼요. 자주 사는 건 아래에 떠서 눌러서 바로 담을 수도 있고, 말로 추가하는 버튼도 있어요.
+
+[이미지: 05]
+
+아직은 갤럭시(안드로이드)만 있어요. 아이폰 쓰시는 분들껜 죄송해요 ㅠ
+플레이스토어에서 '마트노트'로 검색하시거나 아래 링크로 받으실 수 있어요.
+
+https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote
+
+써보시고 불편한 점 댓글로 남겨주시면 다음 업데이트에 반영할게요!</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>태그</b><button data-copy="bl-tag">복사</button></div>
+      <pre id="bl-tag">#장보기앱 #장보기메모 #장보기리스트 #장보기목록 #쇼핑리스트 #마트장보기 #메모앱추천 #위젯앱 #살림템 #마트노트</pre>
+    </div>
+  </section>
+
+  <!-- ================= 스레드 ================= -->
+  <section class="ch" id="threads">
+    <h2>스레드 (Threads)</h2>
+    <p class="where">한 번에 몰아 올리지 말고 2~3일 간격으로 · 글마다 4:5 이미지 1장</p>
+    <p class="tip">스레드는 짧고 솔직한 글이 잘 퍼져요. "1인 개발", "직접 만든" 같은 말을 앞에 두면 개발자·메이커들이 반응해요.</p>
+    <div class="block">
+      <div class="row"><b>① 첫 글</b><span class="meta">이미지: insta_01</span><button data-copy="th-1">복사</button></div>
+<pre id="th-1">카톡 나에게 보내기에 장보기 적어두는 사람 저만 그런 거 아니죠
+
+마트 가서 열면 링크랑 사진 사이에 묻혀서 맨날 한참 올려서 찾았어요
+그게 너무 귀찮아서 결국 장보기 앱을 직접 만들었습니다 (1인 개발)
+
+마트별로 따로 적고, 홈 화면에 붙여두는 게 끝이에요
+플레이스토어에 '마트노트'로 있어요</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>② 두 번째 글</b><span class="meta">이미지: insta_03</span><button data-copy="th-2">복사</button></div>
+<pre id="th-2">장보기 앱 만들면서 제일 고민한 건 '뭘 뺄까'였어요
+
+가격, 수량, 가계부, 레시피 다 뺐어요
+남은 건 이름 적기랑 동그라미 체크 두 개뿐
+
+홈 화면 위젯에서 동그라미 누르면 앱 안 열고 체크돼요
+마트에서 카트 밀면서 한 손으로 누르기 편하게 만들었어요</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>③ 세 번째 글</b><span class="meta">이미지: insta_04</span><button data-copy="th-3">복사</button></div>
+<pre id="th-3">가족한테 장보기 목록 보낼 때 제일 답답한 거
+"그거 어디 적어놨어?" 하면서 다시 묻는 거
+
+그래서 목록 보낼 때 링크가 같이 가게 했어요
+받은 사람이 누르면 자기 앱에 그대로 담기고, 이미 있는 건 알아서 빼줘요
+
+서버도 회원가입도 없어요. 목록은 링크 안에만 들어 있어요</pre>
+    </div>
+  </section>
+
+  <!-- ================= 인스타 / 쇼츠 ================= -->
+  <section class="ch" id="insta">
+    <h2>인스타그램 / 유튜브 쇼츠</h2>
+    <p class="where">인스타 피드: 4:5 이미지 4장을 한 게시물로(넘겨보기) · 쇼츠/릴스는 폰 화면 녹화 15초</p>
+    <div class="block">
+      <div class="row"><b>피드 캡션</b><span class="meta">이미지: insta_01 → 02 → 03 → 04 순서</span><button data-copy="ig-c">복사</button></div>
+<pre id="ig-c">나에게 보내기에 묻히던 장보기 메모, 이제 홈 화면에 🛒
+
+마트별로 따로 적고
+폰 켜면 바로 보이고
+산 건 동그라미만 톡
+
+직접 만든 장보기 앱 '마트노트' (안드로이드)
+프로필 링크 / 플레이스토어에서 마트노트 검색
+
+#장보기 #장보기앱 #장보기메모 #살림 #살림팁 #마트장보기 #앱추천 #1인개발</pre>
+    </div>
+    <div class="block">
+      <div class="row"><b>쇼츠·릴스 15초 촬영 순서</b><button data-copy="ig-s">복사</button></div>
+<pre id="ig-s">0~3초  카톡 나에게 보내기 화면을 위로 쭉 스크롤 (자막: "장보기 메모 또 묻혔다…")
+3~7초  홈 화면으로 나가서 마트노트 위젯 보여주기 (자막: "이제 폰만 켜면 보여요")
+7~11초 위젯 동그라미 하나씩 톡톡 눌러서 체크 (자막: "산 건 동그라미만 톡")
+11~15초 앱 열어서 탭을 쿠팡 → 다이소로 넘기기 (자막: "마트별로 따로 · 마트노트")
+* 화면 녹화: 갤럭시 빠른 설정 → 화면 녹화. 알림이 안 보이게 방해금지 켜고 찍기</pre>
+    </div>
+  </section>
+
+  <!-- ================= 지식iN / 카페 답글 ================= -->
+  <section class="ch" id="kin">
+    <h2>지식iN · 카페 "장보기 앱 추천" 질문 답글</h2>
+    <p class="where">"장보기 앱 추천", "메모 앱 추천" 같은 질문에만 · 같은 글을 여러 곳에 그대로 붙이면 스팸 처리돼요 — 질문에 맞게 한두 줄 고쳐서</p>
+    <p class="tip">처음에 "제가 만든 앱"이라고 꼭 밝히세요. 숨기면 오히려 신고당해요.</p>
+    <div class="block">
+      <div class="row"><b>답글</b><button data-copy="kin">복사</button></div>
+<pre id="kin">저도 같은 고민하다가 직접 만들어서 쓰고 있는 앱이 있어서 조심스럽게 적어봐요. (제가 만든 앱이에요)
+
+'마트노트'라는 앱인데 마트별로 목록을 따로 적을 수 있고, 홈 화면 위젯에서 바로 보이고 동그라미 눌러서 체크할 수 있어요. 가격이나 수량은 안 적고 이름만 적는 거라 가볍게 쓰기 좋아요.
+가족한테 목록 보내면 받는 사람 앱에 바로 담기는 기능도 있어요.
+
+아직 안드로이드만 있어요. 플레이스토어에서 '마트노트' 검색하시면 나와요.</pre>
+    </div>
+  </section>
+
+  <!-- ================= 이미지 ================= -->
+  <section class="ch" id="images">
+    <h2>이미지 전체</h2>
+    <p class="where">4:5(인스타·스레드용) · 세로 원본(블로그·디스콰이엇용) · 표지 / 아이콘</p>
+    <div class="imgs">
+      <figure><img src="images/insta_01_memo_lost.png" alt=""><figcaption>insta_01 묻힌 메모 · <a href="images/insta_01_memo_lost.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/insta_02_widget_home.png" alt=""><figcaption>insta_02 홈 화면 위젯 · <a href="images/insta_02_widget_home.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/insta_03_widget_check.png" alt=""><figcaption>insta_03 위젯 체크 · <a href="images/insta_03_widget_check.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/insta_04_list_link.png" alt=""><figcaption>insta_04 받은 목록 · <a href="images/insta_04_list_link.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/01_memo_lost.png" alt=""><figcaption>01 묻힌 메모 · <a href="images/01_memo_lost.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/02_widget_home.png" alt=""><figcaption>02 홈 화면 위젯 · <a href="images/02_widget_home.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/03_widget_check.png" alt=""><figcaption>03 위젯 체크 · <a href="images/03_widget_check.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/04_list_link.png" alt=""><figcaption>04 받은 목록 · <a href="images/04_list_link.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/05_name_only.png" alt=""><figcaption>05 이름만 입력 · <a href="images/05_name_only.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/06_done.png" alt=""><figcaption>06 완료 · <a href="images/06_done.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/cover_1024x500.png" alt=""><figcaption>표지 1024×500 · <a href="images/cover_1024x500.png" download>원본</a></figcaption></figure>
+      <figure><img src="images/icon_512.png" alt=""><figcaption>아이콘 512 · <a href="images/icon_512.png" download>원본</a></figcaption></figure>
+    </div>
+  </section>
+</main>
+<script>
+  document.querySelectorAll("button[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var t = document.getElementById(b.dataset.copy).innerText;
+      var done = function () { b.textContent = "복사됨"; b.classList.add("done");
+        setTimeout(function () { b.textContent = "복사"; b.classList.remove("done"); }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () { fb(t); done(); });
+      else { fb(t); done(); }
+    });
+  });
+  function fb(t) { var a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select();
+    try { document.execCommand("copy"); } catch (e) {} document.body.removeChild(a); }
+</script>
+</body>
+</html>
