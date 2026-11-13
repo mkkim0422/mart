@@ -4,10 +4,12 @@ import SwiftUI
 /// 완료 — bought items grouped 오늘 / 어제 / 이번 주 / 이전, filter by mart, swipe to 되돌리기 / 삭제.
 struct CompletedView: View {
     @Environment(\.modelContext) private var ctx
-    @Query(sort: [SortDescriptor(\Mart.order)]) private var marts: [Mart]
-    @Query(filter: #Predicate<GroceryItem> { $0.isCompleted == true },
-           sort: [SortDescriptor(\GroceryItem.completedAt, order: .reverse)])
+    @Query(sort: [SortDescriptor<Mart>(\.order)]) private var marts: [Mart]
+    @Query(filter: CompletedView.donePredicate,
+           sort: [SortDescriptor<GroceryItem>(\.completedAt, order: .reverse)])
     private var done: [GroceryItem]
+
+    private static let donePredicate = #Predicate<GroceryItem> { item in item.isCompleted == true }
     @State private var filter: String?
 
     private var shown: [GroceryItem] { filter.map { f in done.filter { $0.martUid == f } } ?? done }

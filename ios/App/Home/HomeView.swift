@@ -5,10 +5,13 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.modelContext) private var ctx
     @EnvironmentObject private var router: Router
-    @Query(sort: [SortDescriptor(\Mart.order), SortDescriptor(\Mart.createdAt)]) private var marts: [Mart]
-    @Query(filter: #Predicate<GroceryItem> { $0.isCompleted == false },
-           sort: [SortDescriptor(\GroceryItem.order), SortDescriptor(\GroceryItem.createdAt)])
+    @Query(sort: [SortDescriptor<Mart>(\.order), SortDescriptor<Mart>(\.createdAt)])
+    private var marts: [Mart]
+    @Query(filter: HomeView.activePredicate,
+           sort: [SortDescriptor<GroceryItem>(\.order), SortDescriptor<GroceryItem>(\.createdAt)])
     private var active: [GroceryItem]
+
+    private static let activePredicate = #Predicate<GroceryItem> { item in item.isCompleted == false }
 
     @State private var selectedUid: String?
     @State private var completing: Set<String> = []
@@ -28,88 +31,13 @@ struct HomeView: View {
     private var shop: StoreSearch.Shop? { selected.flatMap { StoreSearch.shop(for: $0.name) } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("마트노트")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(Palette.text)
-                .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 12)
-
-            MartTabs(marts: marts, selectedUid: selected?.uid, counts: counts,
-                     onSelect: { selectedUid = $0 },
-                     onAdd: { showAddMart = true },
-                     onManage: { showManage = true })
-
-            Divider().overlay(Palette.divider)
-
-            if let selected, let shop {
-                HStack {
-                    Text("\(shop.label) 앱 바로가기").font(.system(size: 13)).foregroundStyle(Palette.textSecondary)
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { selected.shopAppEnabled },
-                        set: { selected.shopAppEnabled = $0; ctx.commit() }
-                    ))
-                    .labelsHidden()
-                }
-                .padding(.horizontal, 20).padding(.vertical, 6)
-            }
-
-            if items.isEmpty {
-                EmptyList { showAdd = true }
-            } else {
-                List {
-                    ForEach(items) { item in
-                        ItemRowView(
-                            item: item,
-                            martColor: selected?.color ?? Palette.brand,
-                            highlighted: item.uid == router.highlightItemUid,
-                            completing: completing.contains(item.uid),
-                            searchLabel: (selected?.shopAppEnabled ?? false) ? shop.map { $0.searchesItem ? "\($0.label)에서 찾기" : "\($0.label) 앱 열기" } : nil,
-                            onComplete: { complete(item) },
-                            onEdit: { editItem = item },
-                            onReminder: { reminderItem = item },
-                            onSearch: { if let shop { StoreSearch.open(shop, item: item.name) } }
-                        )
-                        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 12))
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Palette.bg)
-                    }
-                    .onMove(perform: move)
-                }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Palette.bg)
-        .overlay(alignment: .bottomTrailing) { actionButtons }
-        .overlay(alignment: .bottom) { ToastView(toast: $toast).padding(.bottom, 84) }
-        .sheet(isPresented: $showAdd) {
-            if let selected { AddItemSheet(mart: selected, marts: marts) }
-        }
-        .sheet(isPresented: $showAddMart) {
-            MartEditSheet(mart: nil) { selectedUid = $0 }
-        }
-        .sheet(isPresented: $showManage) { MartManageView() }
-        .sheet(isPresented: $showShare) {
-            if let selected { ShareComposeSheet(mart: selected, items: items) }
-        }
-        .sheet(isPresented: $showVoice) {
-            if let selected { VoiceAddSheet(mart: selected) }
-        }
-        .sheet(item: $editItem) { item in
-            ItemEditSheet(item: item, marts: marts,
-                          onReminder: { editItem = nil; DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { reminderItem = item } })
-        }
-        .sheet(item: $reminderItem) { item in
-            ReminderSheet(item: item, martName: marts.first { $0.uid == item.martUid }?.name ?? "")
-        }
-        .sheet(item: $router.received) { received in
-            ReceivedListSheet(received: received, marts: marts, currentUid: selected?.uid) { msg, martUid in
-                selectedUid = martUid
-                toast = Toast(text: msg)
-            }
-        }
+        withSheets(
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background(Palette.bg)
+                .overlay(alignment: .bottomTrailing) { actionButtons }
+                .overlay(alignment: .bottom) { ToastView(toast: $toast).padding(.bottom, 84) }
+        )
         .onChange(of: router.selectedMartUid) { _, uid in
             if let uid { selectedUid = uid; router.selectedMartUid = nil }
         }
@@ -120,6 +48,119 @@ struct HomeView: View {
             guard uid != nil else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { router.highlightItemUid = nil }
         }
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("마트노트")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Palette.text)
+                .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 12)
+            MartTabs(marts: marts, selectedUid: selected?.uid, counts: counts,
+                     onSelect: { selectedUid = $0 },
+                     onAdd: { showAddMart = true },
+                     onManage: { showManage = true })
+            Divider().overlay(Palette.divider)
+            shopToggle
+            if items.isEmpty {
+                EmptyList { showAdd = true }
+            } else {
+                itemList
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var shopToggle: some View {
+        if let selected, let shop {
+            HStack {
+                Text("\(shop.label) 앱 바로가기").font(.system(size: 13)).foregroundStyle(Palette.textSecondary)
+                Spacer()
+                Toggle("", isOn: shopBinding(selected)).labelsHidden()
+            }
+            .padding(.horizontal, 20).padding(.vertical, 6)
+        }
+    }
+
+    private func shopBinding(_ mart: Mart) -> Binding<Bool> {
+        Binding(get: { mart.shopAppEnabled }, set: { mart.shopAppEnabled = $0; ctx.commit() })
+    }
+
+    private var searchLabel: String? {
+        guard let selected, selected.shopAppEnabled, let shop else { return nil }
+        return shop.searchesItem ? "\(shop.label)에서 찾기" : "\(shop.label) 앱 열기"
+    }
+
+    private var itemList: some View {
+        List {
+            ForEach(items) { item in
+                row(item)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 12))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Palette.bg)
+            }
+            .onMove(perform: move)
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+    }
+
+    private func row(_ item: GroceryItem) -> ItemRowView {
+        ItemRowView(
+            item: item,
+            martColor: selected?.color ?? Palette.brand,
+            highlighted: item.uid == router.highlightItemUid,
+            completing: completing.contains(item.uid),
+            searchLabel: searchLabel,
+            onComplete: { complete(item) },
+            onEdit: { editItem = item },
+            onReminder: { reminderItem = item },
+            onSearch: { if let shop { StoreSearch.open(shop, item: item.name) } }
+        )
+    }
+
+    private func withSheets<V: View>(_ v: V) -> some View {
+        v
+            .sheet(isPresented: $showAdd) { addSheet }
+            .sheet(isPresented: $showAddMart) { MartEditSheet(mart: nil) { selectedUid = $0 } }
+            .sheet(isPresented: $showManage) { MartManageView() }
+            .sheet(isPresented: $showShare) { shareSheet }
+            .sheet(isPresented: $showVoice) { voiceSheet }
+            .sheet(item: $editItem) { item in editSheet(item) }
+            .sheet(item: $reminderItem) { item in
+                ReminderSheet(item: item, martName: martName(item.martUid))
+            }
+            .sheet(item: $router.received) { received in receivedSheet(received) }
+    }
+
+    @ViewBuilder private var addSheet: some View {
+        if let selected { AddItemSheet(mart: selected, marts: marts) }
+    }
+
+    @ViewBuilder private var shareSheet: some View {
+        if let selected { ShareComposeSheet(mart: selected, items: items) }
+    }
+
+    @ViewBuilder private var voiceSheet: some View {
+        if let selected { VoiceAddSheet(mart: selected) }
+    }
+
+    private func editSheet(_ item: GroceryItem) -> some View {
+        ItemEditSheet(item: item, marts: marts, onReminder: {
+            editItem = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { reminderItem = item }
+        })
+    }
+
+    private func receivedSheet(_ received: ShareText.Received) -> some View {
+        ReceivedListSheet(received: received, marts: marts, currentUid: selected?.uid) { msg, martUid in
+            selectedUid = martUid
+            toast = Toast(text: msg)
+        }
+    }
+
+    private func martName(_ uid: String) -> String {
+        marts.first { $0.uid == uid }?.name ?? ""
     }
 
     private var actionButtons: some View {

@@ -101,7 +101,7 @@ struct WidgetGuideView: View {
 struct MartManageView: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: [SortDescriptor(\Mart.order), SortDescriptor(\Mart.createdAt)]) private var marts: [Mart]
+    @Query(sort: [SortDescriptor<Mart>(\.order), SortDescriptor<Mart>(\.createdAt)]) private var marts: [Mart]
     @State private var editing: Mart?
     @State private var adding = false
     @State private var deleting: Mart?
