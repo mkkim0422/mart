@@ -664,8 +664,14 @@ fun HomeScreen(
                         viewModel.addStoreWithItems(newMart.name, newMart.color, "emoji:${newMart.emoji}", picked)
                         scope.launch { snackbarHostState.showSnackbar("${newMart.name}${objectParticle(newMart.name)} 만들고 ${picked.size}개를 담았어요") }
                     } else {
-                        viewModel.addItems(storeId, picked)
-                        scope.launch { snackbarHostState.showSnackbar("${picked.size}개를 담았어요") }
+                        viewModel.addItems(storeId, picked) { added, skipped ->
+                            val msg = when {
+                                added == 0 -> "이미 다 담겨 있어요"
+                                skipped > 0 -> "${added}개를 담았어요 · ${skipped}개는 이미 있어요"
+                                else -> "${added}개를 담았어요"
+                            }
+                            scope.launch { snackbarHostState.showSnackbar(msg) }
+                        }
                     }
                     sharedItems = null
                     sharedStoreName = null

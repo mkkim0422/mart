@@ -178,7 +178,12 @@ class HomeViewModel @Inject constructor(
     }
 
     /** 공유받은 글(카톡 등)에서 뽑은 여러 항목을 [storeId] 마트에 한 번에 담는다. */
-    fun addItems(storeId: Long, names: List<String>) {
+    /**
+     * Add shared/received names to a mart, skipping ones already on that mart's list
+     * (same name, ignoring case/spaces at the ends) — sharing the same list twice
+     * shouldn't double it. [onDone] gets (added, skipped) for the snackbar.
+     */
+    fun addItems(storeId: Long, names: List<String>, onDone: (added: Int, skipped: Int) -> Unit = { _, _ -> }) {
         val clean = names.map { it.trim() }.filter { it.isNotEmpty() }
         if (clean.isEmpty()) return
         hasAddedItemThisSession = true
@@ -186,8 +191,12 @@ class HomeViewModel @Inject constructor(
             val stores = storesFlow.first()
             val sid = if (stores.any { it.id == storeId }) storeId else stores.firstOrNull()?.id ?: return@launch
             selectedStoreId.value = sid
-            clean.forEach { itemRepo.addItem(sid, it) }
-            Analytics.sharedItemsAdded(clean.size)
+            val existing = itemRepo.observeActiveItems(sid).first().map { it.name.trim().lowercase() }.toSet()
+            val fresh = clean.filter { it.lowercase() !in existing }
+            fresh.forEach { itemRepo.addItem(sid, it) }
+            onDone(fresh.size, clean.size - fresh.size)
+            if (fresh.isEmpty()) return@launch
+            Analytics.sharedItemsAdded(fresh.size)
             refreshRecentNames()
             widgetUpdater.updateAll()
         }
