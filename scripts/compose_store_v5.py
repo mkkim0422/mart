@@ -10,7 +10,7 @@ v4와 같은 틀(배경·폰 프레임·갤럭시 기본 아이콘·문구 위�
 
 이미지·문구에 "카톡/카카오" 같은 타사 상표는 쓰지 않는다(Play 메타데이터 정책).
 
-Output: docs/playstore_assets/v5_store/01..06 (1080x2400) + feature_graphic_1024x500.png
+Output: docs/playstore_assets/v5_store/01..05 (1080x2400) + feature_graphic_1024x500.png
 Run:    python scripts/compose_store_v5.py
 """
 import os
@@ -232,29 +232,27 @@ def feature_graphic():
 
 if __name__ == "__main__":
     # Story order (user 2026-11-13: the app exists because notes sent to "나에게 보내기"
-    # got lost): 01 can't find it → 02 move it into 마트노트 → 03 now it's always on the
-    # home screen → 04 check it off there → 05 add more → 06 done.
+    # got lost): 01 can't find it → 02 now it's always on the
+    # home screen → 03 check it off there → 04 add more → 05 done.
     v4.shot_single("01_memo_lost.png",
                    ["나에게 보내기로 보낸 장보기", "또 찾고 계셨죠?"],
                    "다른 글 사이에 묻혀서 스크롤만 한참",
                    chat_screen_big())
-    v4.shot_raw("02_share_import.png",
-                ["써놨던 메모,", "공유 한 번이면 정리 끝"],
-                "마트만 고르면 하나하나 나눠서 담아줘요",
-                "ss9_share.png")
-    v4.shot_single("03_widget_home.png",
+    # (02 "써놨던 메모, 공유 한 번이면 정리 끝" dropped 2026-11-13: share-to-import is too
+    #  hidden to headline. Comes back as "가족이 보낸 목록, 눌러서 바로 담기" in 1.5.0.)
+    v4.shot_single("02_widget_home.png",
                    ["폰만 켜면", "살 게 다 보여요"],
                    "홈 화면 위젯에 마트별로 적혀 있어요",
                    hero_screen())
-    v4.shot_single("04_widget_check.png",
+    v4.shot_single("03_widget_check.png",
                    ["구매한 건 홈 화면에서", "바로 완료 체크!"],
                    "앱을 안 열어도 동그라미만 누르면 돼요",
                    check_screen())
-    v4.shot_raw("05_name_only.png",
+    v4.shot_raw("04_name_only.png",
                 ["생각날 때", "이름만 톡 적으면 끝"],
                 "가격이나 개수는 안 적어도 괜찮아요",
                 "ss4_add.png")
-    v4.shot_raw("06_done.png",
+    v4.shot_raw("05_done.png",
                 ["다 산 건 '완료' 한 번"],
                 "목록에서 쏙 빠지고, 산 건 따로 모여요",
                 "ss5_completed.png", ad=(2622, 2872))
