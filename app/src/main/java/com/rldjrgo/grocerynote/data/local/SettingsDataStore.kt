@@ -33,6 +33,22 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val LargeWidgetStoreIds = stringPreferencesKey("large_widget_store_ids")
         val HasSeenVoiceIntro = booleanPreferencesKey("has_seen_voice_intro")
         val HasSeenSearchHint = booleanPreferencesKey("has_seen_search_hint")
+        val CompletedCount = intPreferencesKey("completed_count")
+        val ReviewAsked = booleanPreferencesKey("review_asked")
+    }
+
+    /** In-app review (2026-11-13): count in-app completes; ask once at the Nth. */
+    suspend fun bumpCompletedCount(): Int {
+        var n = 0
+        context.dataStore.edit { n = (it[Keys.CompletedCount] ?: 0) + 1; it[Keys.CompletedCount] = n }
+        return n
+    }
+
+    val reviewAsked: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.ReviewAsked] ?: false }
+
+    suspend fun setReviewAsked() {
+        context.dataStore.edit { it[Keys.ReviewAsked] = true }
     }
 
     /** One-time tip on online-mart tabs ("🔍 누르면 쿠팡에서 바로 검색"); cleared on dismiss or first use. */

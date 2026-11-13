@@ -109,6 +109,8 @@ import com.rldjrgo.grocerynote.domain.model.toHexString
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.ui.theme.MartPalette
 import com.rldjrgo.grocerynote.ui.screens.home.components.ItemEditSheet
+import com.google.android.play.core.ktx.launchReview
+import com.google.android.play.core.ktx.requestReview
 import com.rldjrgo.grocerynote.util.LinkShortener
 import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.StoreSearch
@@ -238,6 +240,20 @@ fun HomeScreen(
     // Share FAB debounce — guard against double-taps so the system share sheet
     // is not requested twice (causes flicker on some launchers).
     var lastShareAt by remember { mutableLongStateOf(0L) }
+    // Google Play in-app review — asked once, at the 10th completed item (HomeViewModel).
+    // Shown after the 완료 snackbar has had its moment; never blocks the list.
+    val askReview by viewModel.askReview.collectAsStateWithLifecycle()
+    LaunchedEffect(askReview) {
+        if (!askReview) return@LaunchedEffect
+        viewModel.consumeReviewAsk()
+        kotlinx.coroutines.delay(2_500)
+        val activity = context.findActivity() ?: return@LaunchedEffect
+        runCatching {
+            val manager = com.google.android.play.core.review.ReviewManagerFactory.create(activity)
+            val info = manager.requestReview()
+            manager.launchReview(activity, info)
+        }
+    }
     val undo by viewModel.undoEvent.collectAsStateWithLifecycle()
     val newlyAddedStoreId by viewModel.newlyAddedStoreId.collectAsStateWithLifecycle()
     val showWidgetNudge by viewModel.showWidgetNudge.collectAsStateWithLifecycle()
@@ -966,4 +982,10 @@ fun ConfirmDialog(
             )
         },
     )
+}
+
+private tailrec fun android.content.Context.findActivity(): android.app.Activity? = when (this) {
+    is android.app.Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

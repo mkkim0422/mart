@@ -44,6 +44,9 @@ data class HomeUiState(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
+/** Completed items before the one-time in-app review ask. */
+private const val REVIEW_AT = 10
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     application: Application,
@@ -60,6 +63,14 @@ class HomeViewModel @Inject constructor(
 
     private val _undoEvent = MutableStateFlow<UndoInfo?>(null)
     val undoEvent: StateFlow<UndoInfo?> = _undoEvent
+
+    /** True once, at the [REVIEW_AT]th completed item → HomeScreen shows Google's in-app review. */
+    private val _askReview = MutableStateFlow(false)
+    val askReview: StateFlow<Boolean> = _askReview
+
+    fun consumeReviewAsk() {
+        _askReview.value = false
+    }
 
     /** Set briefly after addStore so the tab strip can auto-scroll + pulse the new pill. */
     private val _newlyAddedStoreId = MutableStateFlow<Long?>(null)
@@ -219,6 +230,12 @@ class HomeViewModel @Inject constructor(
             itemRepo.completeItem(itemId)
             _undoEvent.value = UndoInfo(itemId, itemName, System.currentTimeMillis())
             widgetUpdater.updateAll()
+            // A finished shopping run is the happy moment to ask for a rating (once; Google
+            // also rate-limits the dialog itself). Reviews were 13 → search rank stuck.
+            if (settings.bumpCompletedCount() >= REVIEW_AT && !settings.reviewAsked.first()) {
+                settings.setReviewAsked()
+                _askReview.value = true
+            }
         }
     }
 

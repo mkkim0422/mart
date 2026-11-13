@@ -35,6 +35,7 @@ reorderable = "3.1.0"
 # Firebase / Ads / Billing (later phases)
 firebaseBom = "34.13.0"
 playServicesAds = "25.2.0"
+playReview = "2.0.2"
 googleServicesPlugin = "4.4.4"
 crashlyticsPlugin = "3.0.7"
 billing = "8.3.0"
@@ -91,6 +92,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 
 # Test
