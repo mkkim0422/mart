@@ -18,7 +18,7 @@ import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION, VC = "1.5.0", 11
+VERSION, VC = "1.5.0", 12
 OUT = os.path.join(ROOT, f"출시자료_v{VERSION}")
 SRC = os.path.join(ROOT, "docs", "playstore_assets")
 

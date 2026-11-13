@@ -39,7 +39,7 @@ android {
         applicationId = "com.rldjrgo.grocerynote"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
+        versionCode = 12
         versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
