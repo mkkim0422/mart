@@ -9,6 +9,34 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- 쇼핑몰 앱 바로가기: packages StoreSearch may open (keep in sync with StoreSearch.apps). -->
+    <queries>
+        <package android:name="com.coupang.mobile" />
+        <package android:name="com.dbs.kurly.m2" />
+        <package android:name="kr.co.emart24.everse" />
+        <package android:name="com.emarteveryday" />
+        <package android:name="kr.co.emart.emartmall" />
+        <package android:name="com.emart.today" />
+        <package android:name="kr.co.ssg" />
+        <package android:name="com.socialapps.homeplus" />
+        <package android:name="com.lottemart.lmscp" />
+        <package android:name="com.lotte" />
+        <package android:name="com.uxlayer.wipoint" />
+        <package android:name="com.gaeasoft.oasis" />
+        <package android:name="com.nonghyup.hanaromartapp" />
+        <package android:name="kr.co.elandmall.kimsclub" />
+        <package android:name="com.gsr.gs25" />
+        <package android:name="com.bgfcu.membership" />
+        <package android:name="com.sampleapp" />
+        <package android:name="com.oliveyoung" />
+        <package android:name="com.elevenst" />
+        <package android:name="com.ebay.kr.gmarket" />
+        <package android:name="com.ebay.kr.auction" />
+        <package android:name="com.musinsa.store" />
+        <package android:name="com.einnovation.temu" />
+        <package android:name="com.alibaba.aliexpresshd" />
+    </queries>
+
     <application
         android:name=".App"
         android:allowBackup="true"

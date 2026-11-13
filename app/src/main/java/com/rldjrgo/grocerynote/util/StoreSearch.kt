@@ -15,13 +15,16 @@ import java.net.URLEncoder
  *
  * Tapping 🔍 on an item:
  *  1. Apps with a search link open on that item's results. Verified on S24+ (2026-10-28):
- *     쿠팡, 컬리, 11번가, 옥션, 테무 (results), G마켓 (search box pre-filled).
+ *     쿠팡, 컬리, 11번가, 옥션, 테무 (results), G마켓 (search box pre-filled); 알리 (2026-11-13).
  *     From APK analysis, not yet seen on a device: 홈플러스, SSG.
  *  2. Others: the app opens on its first screen (no search link found).
  *  3. App not installed → its Play Store page. Never a website.
  *
- * No <queries> needed: we only startActivity and catch the failure; we never
- * ask PackageManager what is installed.
+ * "App home" uses PackageManager.getLaunchIntentForPackage — the manifest lists every
+ * package below in <queries> (Android 11+ hides other apps otherwise). A bare
+ * MAIN/LAUNCHER intent with setPackage didn't resolve for 알리 on S24+ even though the
+ * app was installed → fell through to the Play Store (user report 2026-11-13).
+ * Keep [apps] and the manifest <queries> in sync.
  *
  * Package ids verified on Google Play (KR) 2026-10-28.
  */
@@ -45,7 +48,7 @@ object StoreSearch {
             nameHints.any { martName.contains(it, ignoreCase = true) } ||
                 exactHints.any { martName.contains(it) }
 
-        internal fun intents(query: String): List<Intent> {
+        internal fun intents(context: Context, query: String): List<Intent> {
             val q = URLEncoder.encode(query.trim(), "UTF-8")
             return listOfNotNull(
                 // CLEAR_TASK: if the shop app is already running, many (컬리, 11번가…) just bring
@@ -55,6 +58,7 @@ object StoreSearch {
                     Intent(Intent.ACTION_VIEW, Uri.parse(it(q))).setPackage(packageName)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 },
+                context.packageManager.getLaunchIntentForPackage(packageName),
                 Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(packageName),
                 Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")),
                 Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")),
@@ -108,7 +112,12 @@ object StoreSearch {
         ShopApp("테무", "com.einnovation.temu", listOf("테무", "temu"), searchLink = { q ->
             "temu://com.einnovation.temu/search_result.html?search_key=$q"
         }),
-        ShopApp("알리", "com.alibaba.aliexpresshd", listOf("알리", "aliexpress")),
+        // The app claims www.aliexpress.com links; /w/wholesale-<q>.html opens its own search
+        // results (ProductListActivity, verified S24+ 2026-11-13). Spaces are "-" in that path.
+        // (aliexpress://search?… only hung on the splash screen.)
+        ShopApp("알리", "com.alibaba.aliexpresshd", listOf("알리", "aliexpress"), searchLink = { q ->
+            "https://www.aliexpress.com/w/wholesale-" + q.replace("+", "-") + ".html"
+        }),
     )
 
     /** The shopping app this mart name maps to, or null (no toggle, no 🔍). */
@@ -121,7 +130,7 @@ object StoreSearch {
     fun open(context: Context, app: ShopApp, itemName: String): Boolean =
         // NEW_TASK always. (Tried without it: 쿠팡 puts its own home under the
         // search screen regardless, so back = 쿠팡 home either way — not ours to fix.)
-        app.intents(itemName).any { intent ->
+        app.intents(context, itemName).any { intent ->
             runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
         }
 }

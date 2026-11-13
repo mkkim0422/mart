@@ -10,7 +10,7 @@ v4와 같은 틀(배경·폰 프레임·갤럭시 기본 아이콘·문구 위�
 
 이미지·문구에 "카톡/카카오" 같은 타사 상표는 쓰지 않는다(Play 메타데이터 정책).
 
-Output: docs/playstore_assets/v5_store/01..05 (1080x2400) + feature_graphic_1024x500.png
+Output: docs/playstore_assets/v5_store/01..06 (1080x2400) + feature_graphic_1024x500.png
 Run:    python scripts/compose_store_v5.py
 """
 import os
@@ -184,7 +184,7 @@ def chat_screen_big():
     d.rounded_rectangle([x1 - dp(6), y1 - dp(6), x2 + dp(6), y2 + dp(6)], radius=dp(20),
                         outline=hexc("#F04452"), width=dp(3))
     # label on the left of the bubble, inside the screen
-    lab = "장보기 메모"
+    lab = "내가 써놨던 메모"
     lf = f(FB, 16)
     lw = d.textlength(lab, font=lf) + dp(24)
     lx1 = dp(18)
@@ -241,15 +241,20 @@ if __name__ == "__main__":
                    ["나에게 보내기로 보낸 장보기", "또 찾고 계셨죠?"],
                    "다른 글 사이에 묻혀서 스크롤만 한참",
                    chat_screen_big())
-    v4.shot_single("03_widget_check.png",
+    # 03: the answer to 02 — share that buried note into 마트노트, one line/comma = one item.
+    v4.shot_raw("03_share_import.png",
+                ["써놨던 메모,", "공유 한 번이면 정리 끝"],
+                "마트만 고르면 하나하나 나눠서 담아줘요",
+                "ss9_share.png")
+    v4.shot_single("04_widget_check.png",
                    ["산 건 위젯에서", "동그라미 톡"],
                    "앱을 안 열어도 바로 체크돼요",
                    check_screen())
-    v4.shot_raw("04_name_only.png",
+    v4.shot_raw("05_name_only.png",
                 ["생각날 때", "이름만 톡 적으면 끝"],
                 "가격이나 개수는 안 적어도 괜찮아요",
                 "ss4_add.png")
-    v4.shot_raw("05_done.png",
+    v4.shot_raw("06_done.png",
                 ["다 산 건 '완료' 한 번"],
                 "목록에서 쏙 빠지고, 산 건 따로 모여요",
                 "ss5_completed.png", ad=(2622, 2872))
