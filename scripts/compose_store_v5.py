@@ -174,7 +174,7 @@ def chat_screen_big():
         x2 = SW - dp(18)
         hl = s_.startswith("우유")
         d.rounded_rectangle([x2 - w, y, x2, y + h], radius=dp(16),
-                            fill=hexc("#FFF4D6") if hl else (255, 255, 255))
+                            fill=(255, 255, 255))  # same white as the rest — it's buried
         text(d, (x2 - w + dp(17), y + h / 2), s_, fnt, TEXT)
         if hl:
             hl_box = (x2 - w, y, x2, y + h)
