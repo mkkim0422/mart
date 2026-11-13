@@ -145,6 +145,56 @@ def check_screen():
     return home([draw])
 
 
+def chat_screen_big():
+    """Generic messenger 'note to self' (not any real app's UI), sized to be read on a phone:
+    bigger bubbles, the grocery note buried in the middle and marked."""
+    img = Image.new("RGB", (SW, SH), hexc("#E9EEF5"))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, SW, dp(70)], fill=hexc("#F7F8FA"))
+    text(d, (dp(20), dp(38)), "나에게 보내기", f(FB, 19), TEXT)
+    msgs = [
+        "이번 주 회의 자료",
+        "https://docs.example.com/…",
+        "[사진 3장]",
+        "택배 송장 6043-2219-8812",
+        "치과 예약 목요일 2시",
+        "우유, 계란, 두부, 대파",
+        "아이 준비물: 색종이, 풀",
+        "https://blog.example.com/…",
+        "영수증.pdf",
+        "적금 만기 확인",
+        "주차 B2 37번",
+    ]
+    y = dp(92)
+    fnt = f(FR, 19)
+    hl_box = None
+    for s_ in msgs:
+        tw = d.textlength(s_, font=fnt)
+        w, h = tw + dp(34), dp(52)
+        x2 = SW - dp(18)
+        hl = s_.startswith("우유")
+        d.rounded_rectangle([x2 - w, y, x2, y + h], radius=dp(16),
+                            fill=hexc("#FFF4D6") if hl else (255, 255, 255))
+        text(d, (x2 - w + dp(17), y + h / 2), s_, fnt, TEXT)
+        if hl:
+            hl_box = (x2 - w, y, x2, y + h)
+        y += h + dp(14)
+    # mark the buried grocery note
+    x1, y1, x2, y2 = hl_box
+    d.rounded_rectangle([x1 - dp(6), y1 - dp(6), x2 + dp(6), y2 + dp(6)], radius=dp(20),
+                        outline=hexc("#F04452"), width=dp(3))
+    # label on the left of the bubble, inside the screen
+    lab = "장보기 메모"
+    lf = f(FB, 16)
+    lw = d.textlength(lab, font=lf) + dp(24)
+    lx1 = dp(18)
+    ly = (y1 + y2) / 2
+    d.rounded_rectangle([lx1, ly - dp(17), lx1 + lw, ly + dp(17)], radius=dp(12), fill=hexc("#F04452"))
+    text(d, (lx1 + lw / 2, ly), lab, lf, (255, 255, 255), anchor="mm")
+    d.line([lx1 + lw + dp(2), ly, x1 - dp(8), ly], fill=hexc("#F04452"), width=dp(2.5))
+    return img
+
+
 def shot_compare(name, title, sub):
     c = v4.canvas_with(title, sub)
     d = ImageDraw.Draw(c)
@@ -185,9 +235,12 @@ if __name__ == "__main__":
                    ["마트 와서", "뭐 사러 왔더라?"],
                    "폰만 켜면 홈 화면에 다 적혀 있어요",
                    hero_screen())
-    shot_compare("02_vs_memo.png",
-                 ["나에게 보내기로 보낸 장보기", "또 찾고 계셨죠?"],
-                 "홈 화면에 붙여두면 스크롤할 일이 없어요")
+    # 02: one phone, readable at phone size (the old 2-phone compare was too small to read;
+    # the widget answer is already 01). shot_compare kept for reference.
+    v4.shot_single("02_vs_memo.png",
+                   ["나에게 보내기로 보낸 장보기", "또 찾고 계셨죠?"],
+                   "다른 글 사이에 묻혀서 스크롤만 한참",
+                   chat_screen_big())
     v4.shot_single("03_widget_check.png",
                    ["산 건 위젯에서", "동그라미 톡"],
                    "앱을 안 열어도 바로 체크돼요",
