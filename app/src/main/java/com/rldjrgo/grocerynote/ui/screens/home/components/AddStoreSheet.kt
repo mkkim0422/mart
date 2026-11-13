@@ -31,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -145,7 +147,13 @@ fun AddStoreSheet(
             Spacer(Modifier.height(20.dp))
             Text("아이콘", style = typo.bodyS, color = colors.textTertiary)
             Spacer(Modifier.height(8.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // A preset can pick an icon far to the right (📦, 📝) — bring it into view.
+            val iconRowState = rememberLazyListState()
+            LaunchedEffect(selectedIcon) {
+                val i = ICONS.indexOf(selectedIcon)
+                if (i >= 0) iconRowState.animateScrollToItem(maxOf(0, i - 2))
+            }
+            LazyRow(state = iconRowState, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ICONS) { icon ->
                     val selected = icon == selectedIcon
                     Box(
