@@ -72,6 +72,24 @@ class HomeViewModel @Inject constructor(
         _askReview.value = false
     }
 
+    /** First-run mart picker (1.5.1): fresh installs only — anyone with items never sees it. */
+    private val _showMartPicker = MutableStateFlow(false)
+    val showMartPicker: StateFlow<Boolean> = _showMartPicker
+
+    fun addPresetMarts(presets: List<com.rldjrgo.grocerynote.ui.components.MartPreset>) {
+        _showMartPicker.value = false
+        viewModelScope.launch {
+            settings.setMartPickerSeen()
+            presets.forEach { storeRepo.addStore(it.name, it.color, it.iconKey) }
+            widgetUpdater.updateAll()
+        }
+    }
+
+    fun dismissMartPicker() {
+        _showMartPicker.value = false
+        viewModelScope.launch { settings.setMartPickerSeen() }
+    }
+
     /** Set briefly after addStore so the tab strip can auto-scroll + pulse the new pill. */
     private val _newlyAddedStoreId = MutableStateFlow<Long?>(null)
     val newlyAddedStoreId: StateFlow<Long?> = _newlyAddedStoreId
@@ -144,6 +162,11 @@ class HomeViewModel @Inject constructor(
                     selectedStoreId.value = stores.first().id
                 }
             }
+        }
+        viewModelScope.launch {
+            if (settings.hasSeenMartPicker.first()) return@launch
+            val fresh = itemRepo.observeAllItems().first().isEmpty() && storesFlow.first().size <= 2
+            if (fresh) _showMartPicker.value = true else settings.setMartPickerSeen()
         }
         // "자주 사는 항목" is per-mart → refresh whenever the selected store changes.
         viewModelScope.launch {

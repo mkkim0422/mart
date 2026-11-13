@@ -38,17 +38,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.rldjrgo.grocerynote.domain.model.iconKeyToEmoji
+import com.rldjrgo.grocerynote.ui.components.presetsExcluding
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.MartPalette
 
-private val MART_PRESETS = listOf(
-    "이마트", "홈플러스", "롯데마트", "다이소",
-    "쿠팡", "마켓컬리", "편의점", "시장", "약국",
-)
-
 private val ICONS = listOf(
     "🛒", "🏪", "🥬", "🥚", "🍞", "🧺", "🛍",
-    "📦", "🚀", "🥕", "🍎", "💊", "🌸", "🧴", "🧻",
+    "📦", "🚀", "🥕", "🍎", "💊", "🌸", "🧴", "🧻", "📝", "✏️",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +57,8 @@ fun AddStoreSheet(
     initialName: String = "",
     initialColor: Color = MartPalette.Blue,
     initialIconKey: String = "",
+    /** Names the user already has — those presets are hidden (no duplicate 쿠팡/다이소). */
+    existingNames: List<String> = emptyList(),
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -120,20 +118,27 @@ fun AddStoreSheet(
                     },
                 )
             }
-            Spacer(Modifier.height(12.dp))
-            Text("추천", style = typo.bodyS, color = colors.textTertiary)
-            Spacer(Modifier.height(8.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(MART_PRESETS) { preset ->
-                    Box(
-                        modifier = Modifier
-                            .height(36.dp)
-                            .background(colors.bgTertiary, RoundedCornerShape(8.dp))
-                            .clickable { name = preset }
-                            .padding(horizontal = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(preset, style = typo.bodyS, color = colors.textSecondary)
+            val presets = remember(existingNames) { presetsExcluding(existingNames) }
+            if (presets.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text("추천", style = typo.bodyS, color = colors.textTertiary)
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(presets) { preset ->
+                        Box(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .background(colors.bgTertiary, RoundedCornerShape(8.dp))
+                                .clickable {
+                                    name = preset.name
+                                    selectedColor = preset.color
+                                    selectedIcon = preset.emoji
+                                }
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("${preset.emoji} ${preset.name}", style = typo.bodyS, color = colors.textSecondary)
+                        }
                     }
                 }
             }

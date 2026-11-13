@@ -111,6 +111,8 @@ import com.rldjrgo.grocerynote.ui.theme.MartPalette
 import com.rldjrgo.grocerynote.ui.screens.home.components.ItemEditSheet
 import com.google.android.play.core.ktx.launchReview
 import com.google.android.play.core.ktx.requestReview
+import com.rldjrgo.grocerynote.ui.components.MartPickerSheet
+import com.rldjrgo.grocerynote.ui.components.presetsExcluding
 import com.rldjrgo.grocerynote.util.LinkShortener
 import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.StoreSearch
@@ -705,6 +707,20 @@ fun HomeScreen(
                 showAddStore = false
             },
             onDismiss = { showAddStore = false },
+            existingNames = state.stores.map { it.name },
+        )
+    }
+
+    // First run (1.5.1): "자주 가는 곳을 골라 주세요" — once, only for a fresh list.
+    val showMartPicker by viewModel.showMartPicker.collectAsStateWithLifecycle()
+    if (showMartPicker) {
+        MartPickerSheet(
+            presets = presetsExcluding(state.stores.map { it.name }),
+            onAdd = { picked ->
+                viewModel.addPresetMarts(picked)
+                scope.launch { snackbarHostState.showSnackbar("${picked.size}곳을 추가했어요") }
+            },
+            onSkip = viewModel::dismissMartPicker,
         )
     }
 

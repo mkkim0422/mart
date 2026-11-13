@@ -35,6 +35,15 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val HasSeenSearchHint = booleanPreferencesKey("has_seen_search_hint")
         val CompletedCount = intPreferencesKey("completed_count")
         val ReviewAsked = booleanPreferencesKey("review_asked")
+        val HasSeenMartPicker = booleanPreferencesKey("has_seen_mart_picker")
+    }
+
+    /** First-run "자주 가는 곳을 골라 주세요" sheet shown/handled (1.5.1). */
+    val hasSeenMartPicker: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasSeenMartPicker] ?: false }
+
+    suspend fun setMartPickerSeen() {
+        context.dataStore.edit { it[Keys.HasSeenMartPicker] = true }
     }
 
     /** In-app review (2026-11-13): count in-app completes; ask once at the Nth. */

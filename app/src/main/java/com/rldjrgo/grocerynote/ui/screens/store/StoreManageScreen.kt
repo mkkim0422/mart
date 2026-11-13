@@ -219,6 +219,7 @@ fun StoreManageScreen(
                 showAddStore = false
             },
             onDismiss = { showAddStore = false },
+            existingNames = state.rows.map { it.store.name },
         )
     }
 

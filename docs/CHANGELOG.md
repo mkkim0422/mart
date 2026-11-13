@@ -3,6 +3,10 @@
 > 사용자 지시 1건 = 1줄. 최신이 맨 위. 탐색·빌드·실기기 검증은 기록하지 않음.
 > 형식: `- YYYY-MM-DD · {한 줄 요약} · {대표 파일들}` (커밋되면 끝에 ` (커밋 abc1234)` 추가)
 
+## 미커밋 → v1.5.1 (vc13) 준비 중
+
+- 2026-11-13 · **처음 설치하면 "자주 가는 곳을 골라 주세요"** 창(한 번만): 이마트·홈플러스·롯데마트·코스트코·마켓컬리·올리브영·편의점·시장·약국 + **📝 메모, ✏️ 준비물**(장보기 말고도 쓸 수 있다는 걸 자연스럽게 알리려고, 사용자 제안 — 장보기 앱 정체성 지키려 2개만) 여러 개 골라 "N곳 추가하기", 건너뛰기 가능. 항목이 이미 있는 기존 사용자에겐 안 뜸. **마트 추가 창 추천**도 같은 목록으로: 이미 있는 이름(쿠팡·다이소 등)은 숨기고, 누르면 이름+색+아이콘이 한 번에 맞춰짐(예전엔 이름만) · `ui/components/{MartPresets,MartPickerSheet}.kt`(신규), `AddStoreSheet.kt`, `HomeScreen.kt`, `HomeViewModel.kt`, `StoreManageScreen.kt`, `SettingsDataStore.kt`, `app/build.gradle.kts`(1.5.1 / vc13)
+
 ## iOS (진행 중)
 
 - 2026-11-13 · **iOS 앱 첫 코드** (SwiftUI·iOS 17·SwiftData·위젯 2종 ○ 체크) + GitHub Actions 맥 빌드(XcodeGen, 시뮬레이터, 서명 없음) — 2번째 빌드에서 통과. 안드로이드 1.5.0 기능 대부분, 광고·공유 확장·서명은 아직 · `ios/`, `.github/workflows/ios.yml`, `CLAUDE.md` §12.5
