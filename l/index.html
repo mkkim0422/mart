@@ -87,7 +87,7 @@
     return;
   }
 
-  $("title").textContent = (store ? store + " " : "") + "장보기 리스트";
+  $("title").textContent = (p.get("e") ? p.get("e").slice(0, 8) + " " : "") + (store ? store + " " : "") + "장보기 리스트";
   $("sub").textContent = items.length + "개 · 마트노트로 보낸 목록이에요";
   document.title = $("title").textContent + " · 마트노트";
   var list = $("list");
@@ -108,7 +108,13 @@
   });
 
   if (android) {
+    // c/e = sender's mart color/emoji, passed through so a receiver without that mart
+    // can create it looking the same.
+    var color = (p.get("c") || "").replace(/[^0-9A-Fa-f]/g, "").slice(0, 6);
+    var emoji = (p.get("e") || "").slice(0, 8);
     var q = "s=" + encodeURIComponent(store) +
+            (color.length === 6 ? "&c=" + color : "") +
+            (emoji ? "&e=" + encodeURIComponent(emoji) : "") +
             items.map(function (i) { return "&i=" + encodeURIComponent(i); }).join("");
     var intent = "intent://add?" + q + "#Intent;scheme=martnote;package=" + PKG +
                  ";S.browser_fallback_url=" + encodeURIComponent(PLAY) + ";end";
