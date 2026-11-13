@@ -1,0 +1,31 @@
+name: iOS build
+
+# Builds the iOS app (ios/) on a GitHub macOS runner — there's no Mac here.
+# Simulator build, unsigned: proves it compiles. Signing/TestFlight comes later.
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          brew install xcodegen
+          which xcbeautify || brew install xcbeautify
+          xcodebuild -version
+      - name: Generate project
+        working-directory: ios
+        run: xcodegen generate
+      - name: Build (simulator, unsigned)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -project MartNote.xcodeproj -scheme MartNote \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | xcbeautify --renderer github-actions
