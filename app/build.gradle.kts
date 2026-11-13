@@ -92,6 +92,9 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            // Bundle native debug symbols (AdMob etc. ship .so files) — clears Play's
+            // "디버그 기호가 업로드되지 않았습니다" warning and makes native crash/ANR reports readable.
+            ndk { debugSymbolLevel = "SYMBOL_TABLE" }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
