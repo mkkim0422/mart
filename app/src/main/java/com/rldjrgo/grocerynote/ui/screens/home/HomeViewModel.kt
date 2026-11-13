@@ -311,6 +311,27 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch { storeRepo.setShopAppEnabled(storeId, enabled) }
     }
 
+    /**
+     * Received list link for a mart the receiver doesn't have (1.5.0): create it with the
+     * sender's color/emoji, add the items, and land on its tab.
+     */
+    fun addStoreWithItems(name: String, color: Color, iconKey: String, names: List<String>) {
+        val clean = names.map { it.trim() }.filter { it.isNotEmpty() }
+        if (name.isBlank() || clean.isEmpty()) return
+        hasAddedItemThisSession = true
+        viewModelScope.launch {
+            val newId = storeRepo.addStore(name, color, iconKey)
+            clean.forEach { itemRepo.addItem(newId, it) }
+            selectedStoreId.value = newId
+            _newlyAddedStoreId.value = newId
+            Analytics.sharedItemsAdded(clean.size)
+            refreshRecentNames()
+            widgetUpdater.updateAll()
+            kotlinx.coroutines.delay(1_500)
+            if (_newlyAddedStoreId.value == newId) _newlyAddedStoreId.value = null
+        }
+    }
+
     fun addStore(name: String, color: Color, iconKey: String) {
         if (name.isBlank()) return
         viewModelScope.launch {

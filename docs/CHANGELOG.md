@@ -5,6 +5,7 @@
 
 ## 2026-11-13 · v1.5.0 (vc11) — 받은 목록 링크
 
+- 2026-11-13 · **받은 목록 — 내게 없는 마트면 "＋ 다이소 새로 만들기"**: 보낸 마트와 같은 이름 마트가 없으면 그 칩이 먼저 골라짐(제목 "받은 다이소 장보기 N개", 안내 "다이소 마트를 새로 만들고 여기에 담아요", 버튼 "다이소 만들고 N개 담기" 마트 색) → 담기 = 마트 생성 + 항목 + 그 탭으로, "다이소를 만들고 N개를 담았어요". 다른 마트를 누르면 평소 "N개 담기". 링크에 보낸 마트 색·이모지(`c`, `e`)를 실어 똑같은 모양으로 생성(없으면 회색 🛒). 시안 `sample/받은목록_새마트_시안.html` · `SharedItemsSheet.kt`, `HomeScreen.kt`, `HomeViewModel.kt`, `MainActivity.kt`, `gh-pages:l/index.html`
 - 2026-11-13 · **v1.5.0 (vc11) 받은 목록 링크 — 눌러서 바로 담기**: 공유 메시지 끝 줄을 Play 링크에서 **"👉 눌러서 마트노트에 바로 담기: https://mkkim0422.github.io/mart/l/#s=마트&i=항목…"**으로. 목록은 `#` 뒤라 서버로 안 감. 페이지(`gh-pages` 브랜치)가 폰을 구분: 안드로이드 → 마트노트 열기(없으면 Play 스토어), 아이폰·PC → 목록만(눌러서 체크) + "갤럭시에서만" 안내. 앱: `martnote://add` 받기 → "받은 장보기 리스트 N개" 시트, 보낸 마트와 이름이 같은 마트 자동 선택. 크롬에서 앱 열림·앱 없을 때 Play 스토어(S24+) 확인. Analytics `list_link_opened`. 1.4.0은 출시하지 않고 함께 묶음(출시 노트 통합). 스토어 스크린샷 04 "가족이 보낸 장보기, 누르면 바로 담겨요" 추가(6장), 출시 자료 폴더 `출시자료_v1.5.0` · `AndroidManifest.xml`, `MainActivity.kt`, `HomeScreen.kt`, `SharedItemsSheet.kt`, `util/Analytics.kt`, `app/build.gradle.kts`, `gh-pages:l/index.html`, `scripts/{compose_store_v5,build_release_kit}.py`, `docs/playstore_listing.md`, `CLAUDE.md`
 
 ## 2026-11-13 · v1.4.0 (vc10) 마무리 — 쇼핑 앱 열기 수정·스토어 이미지 5장

@@ -36,11 +36,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.domain.model.emoji
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
+
+/** The sender's mart, offered as "＋ 다이소 새로 만들기" when the receiver has no mart by that name. */
+data class NewMart(val name: String, val color: Color, val emoji: String)
+
+/** storeId passed to onAdd when the user keeps "새로 만들기" → caller creates [NewMart] first. */
+const val NEW_MART_ID = -1L
 
 /**
  * "받은 글에서 N개를 찾았어요" — shown when several lines are shared into the app
@@ -57,12 +64,17 @@ fun SharedItemsSheet(
     onDismiss: () -> Unit,
     /** True when the names came from a received list link (1.5.0), not pasted text. */
     fromLink: Boolean = false,
+    /** Sender's mart name from the link (title "받은 다이소 장보기 N개"). */
+    senderStoreName: String? = null,
+    /** Non-null when the receiver has no mart named like the sender's → preselected "새로 만들기". */
+    newMart: NewMart? = null,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var storeId by remember { mutableStateOf(initialStoreId) }
+    var storeId by remember { mutableStateOf(if (newMart != null) NEW_MART_ID else initialStoreId) }
+    val creating = newMart != null && storeId == NEW_MART_ID
     val unchecked = remember { mutableStateListOf<Int>() }
     val count = names.size - unchecked.size
 
@@ -74,7 +86,11 @@ fun SharedItemsSheet(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = if (fromLink) "받은 장보기 리스트 ${names.size}개" else "받은 글에서 ${names.size}개를 찾았어요",
+                text = when {
+                    fromLink && !senderStoreName.isNullOrBlank() -> "받은 $senderStoreName 장보기 ${names.size}개"
+                    fromLink -> "받은 장보기 리스트 ${names.size}개"
+                    else -> "받은 글에서 ${names.size}개를 찾았어요"
+                },
                 style = typo.headingM,
                 color = colors.textPrimary,
             )
@@ -86,6 +102,28 @@ fun SharedItemsSheet(
             )
             Spacer(Modifier.height(16.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (newMart != null) {
+                    item(key = "new") {
+                        Box(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .background(if (creating) newMart.color else Color.Transparent, RoundedCornerShape(18.dp))
+                                .then(
+                                    if (creating) Modifier
+                                    else Modifier.dashedBorder(newMart.color, 18.dp),
+                                )
+                                .clickable { storeId = NEW_MART_ID }
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "＋ ${newMart.emoji} ${newMart.name} 새로 만들기",
+                                style = typo.bodyS,
+                                color = if (creating) Color.White else newMart.color,
+                            )
+                        }
+                    }
+                }
                 items(stores, key = { it.id }) { store ->
                     val selected = store.id == storeId
                     Box(
@@ -106,6 +144,17 @@ fun SharedItemsSheet(
                         )
                     }
                 }
+            }
+            if (creating) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "${newMart!!.name} 마트를 새로 만들고 여기에 담아요",
+                    style = typo.caption,
+                    color = newMart.color,
+                    modifier = Modifier
+                        .background(newMart.color.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                )
             }
             Spacer(Modifier.height(12.dp))
             LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
@@ -156,7 +205,11 @@ fun SharedItemsSheet(
                     .fillMaxWidth()
                     .height(52.dp)
                     .background(
-                        if (count > 0) colors.brandPrimary else colors.bgTertiary,
+                        when {
+                            count <= 0 -> colors.bgTertiary
+                            creating -> newMart!!.color
+                            else -> colors.brandPrimary
+                        },
                         RoundedCornerShape(12.dp),
                     )
                     .clickable(enabled = count > 0) {
@@ -165,7 +218,11 @@ fun SharedItemsSheet(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = if (count > 0) "${count}개 담기" else "담을 항목을 골라주세요",
+                    text = when {
+                        count <= 0 -> "담을 항목을 골라주세요"
+                        creating -> "${newMart!!.name} 만들고 ${count}개 담기"
+                        else -> "${count}개 담기"
+                    },
                     style = typo.title,
                     color = if (count > 0) Color.White else colors.textDisabled,
                 )
@@ -174,3 +231,19 @@ fun SharedItemsSheet(
         }
     }
 }
+
+/** Dashed pill outline for the "새로 만들기" chip when it isn't selected. */
+private fun Modifier.dashedBorder(color: Color, radius: androidx.compose.ui.unit.Dp): Modifier =
+    drawBehind {
+        val stroke = 1.5.dp.toPx()
+        drawRoundRect(
+            color = color,
+            topLeft = androidx.compose.ui.geometry.Offset(stroke / 2, stroke / 2),
+            size = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius.toPx()),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = stroke,
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx())),
+            ),
+        )
+    }

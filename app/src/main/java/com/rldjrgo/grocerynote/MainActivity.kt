@@ -119,6 +119,9 @@ object DeepLinkBus {
         val linkItems: List<String>? = null,
         /** Mart name the sender's list came from — preselected if the receiver has it. */
         val linkStoreName: String? = null,
+        /** Sender's mart color "#RRGGBB" / emoji — used if the receiver creates that mart. */
+        val linkStoreColor: String? = null,
+        val linkStoreEmoji: String? = null,
     )
     val flow = MutableStateFlow<Payload?>(null)
 
@@ -145,6 +148,9 @@ object DeepLinkBus {
                     openAddItem = true,
                     linkItems = names,
                     linkStoreName = data.getQueryParameter("s")?.trim()?.take(30),
+                    linkStoreColor = data.getQueryParameter("c")
+                        ?.takeIf { Regex("[0-9A-Fa-f]{6}").matches(it) }?.let { "#$it" },
+                    linkStoreEmoji = data.getQueryParameter("e")?.trim()?.take(8)?.takeIf { it.isNotEmpty() },
                 )
             }
             return

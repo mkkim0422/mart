@@ -102,6 +102,12 @@ import com.rldjrgo.grocerynote.ui.screens.home.components.SharedItemsSheet
 import com.rldjrgo.grocerynote.ui.screens.home.components.StoreTabBar
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.util.Analytics
+import com.rldjrgo.grocerynote.ui.screens.home.components.NewMart
+import com.rldjrgo.grocerynote.ui.screens.home.components.NEW_MART_ID
+import com.rldjrgo.grocerynote.domain.model.toComposeColorOrDefault
+import com.rldjrgo.grocerynote.domain.model.toHexString
+import com.rldjrgo.grocerynote.domain.model.Store
+import com.rldjrgo.grocerynote.ui.theme.MartPalette
 import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.StoreSearch
 
@@ -129,6 +135,8 @@ fun HomeScreen(
     // Sender's mart name from a list link — preselect the receiver's mart with that name.
     var sharedStoreName by remember { mutableStateOf<String?>(null) }
     var sharedFromLink by remember { mutableStateOf(false) }
+    var sharedStoreColor by remember { mutableStateOf<String?>(null) }
+    var sharedStoreEmoji by remember { mutableStateOf<String?>(null) }
     var showAddStore by remember { mutableStateOf(false) }
     var showShareRequest by remember { mutableStateOf(false) }
     var showWidgetSizePicker by remember { mutableStateOf(false) }
@@ -261,6 +269,8 @@ fun HomeScreen(
         if (payload.linkItems != null) {
             // 받은 목록 링크 → 한 개여도 확인 시트(받은 목록이라는 걸 보여줌).
             sharedStoreName = payload.linkStoreName
+            sharedStoreColor = payload.linkStoreColor
+            sharedStoreEmoji = payload.linkStoreEmoji
             sharedFromLink = true
             sharedItems = payload.linkItems
         } else if (payload.openAddItem) {
@@ -632,22 +642,38 @@ fun HomeScreen(
         )
     }
     sharedItems?.let { names ->
-        val target = state.stores.firstOrNull { it.name == sharedStoreName }
-            ?: selectedStore ?: state.stores.firstOrNull()
-        if (target != null) {
+        val senderName = sharedStoreName?.trim()?.takeIf { sharedFromLink && it.isNotEmpty() }
+        val sameName = senderName?.let { n -> state.stores.firstOrNull { it.name.trim() == n } }
+        // Receiver has no mart by the sender's name → offer to create it (preselected).
+        val newMart = if (senderName != null && sameName == null) {
+            NewMart(
+                name = senderName,
+                color = sharedStoreColor?.toComposeColorOrDefault(MartPalette.Gray) ?: MartPalette.Gray,
+                emoji = sharedStoreEmoji ?: "🛒",
+            )
+        } else null
+        val target = sameName ?: selectedStore ?: state.stores.firstOrNull()
+        if (target != null || newMart != null) {
             SharedItemsSheet(
                 names = names,
                 stores = state.stores,
-                initialStoreId = target.id,
+                initialStoreId = target?.id ?: NEW_MART_ID,
                 onAdd = { storeId, picked ->
-                    viewModel.addItems(storeId, picked)
+                    if (storeId == NEW_MART_ID && newMart != null) {
+                        viewModel.addStoreWithItems(newMart.name, newMart.color, "emoji:${newMart.emoji}", picked)
+                        scope.launch { snackbarHostState.showSnackbar("${newMart.name}${objectParticle(newMart.name)} 만들고 ${picked.size}개를 담았어요") }
+                    } else {
+                        viewModel.addItems(storeId, picked)
+                        scope.launch { snackbarHostState.showSnackbar("${picked.size}개를 담았어요") }
+                    }
                     sharedItems = null
                     sharedStoreName = null
-                    scope.launch { snackbarHostState.showSnackbar("${picked.size}개를 담았어요") }
                     viewModel.onAddFlowFinished()
                 },
                 onDismiss = { sharedItems = null; sharedStoreName = null },
                 fromLink = sharedFromLink,
+                senderStoreName = senderName,
+                newMart = newMart,
             )
         }
     }
@@ -671,7 +697,7 @@ fun HomeScreen(
                 // 동안 다이얼로그가 뒤에 남아있을 필요 없음).
                 showShareRequest = false
                 val body = buildShareText(
-                    storeName = selectedStore.name,
+                    store = selectedStore,
                     items = state.activeItems,
                     requestNote = note,
                 )
@@ -911,12 +937,22 @@ private fun MoveItemDialog(
  * 목록은 `#` 뒤에 실어서 서버로 가지 않는다. 페이지가 안드로이드면 마트노트를 열고
  * (없으면 Play 스토어), 아이폰·PC면 목록만 보여준다 — 보내는 쪽은 받는 사람 폰을 모르니까.
  */
+/** 을/를 for the last Hangul syllable ("쿠팡을", "다이소를"); 를 for non-Hangul. */
+private fun objectParticle(word: String): String {
+    val c = word.lastOrNull() ?: return "를"
+    if (c !in '가'..'힣') return "를"
+    return if ((c - '가') % 28 != 0) "을" else "를"
+}
+
 private const val LIST_PAGE_URL = "https://mkkim0422.github.io/mart/l/"
 
-private fun listLink(storeName: String, items: List<Item>): String {
+private fun listLink(store: Store, items: List<Item>): String {
     fun enc(s: String) = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
     return buildString {
-        append(LIST_PAGE_URL).append("#s=").append(enc(storeName.trim()))
+        append(LIST_PAGE_URL).append("#s=").append(enc(store.name.trim()))
+        // Color + emoji so a receiver without this mart creates it looking the same.
+        append("&c=").append(store.color.toHexString().removePrefix("#"))
+        append("&e=").append(enc(store.emoji()))
         // Keep the link short enough for any messenger: at most 30 items.
         items.take(30).forEach { append("&i=").append(enc(it.name.trim().replace('\n', ' '))) }
     }
@@ -930,7 +966,7 @@ private fun listLink(storeName: String, items: List<Item>): String {
  * 링크([listLink]).
  */
 private fun buildShareText(
-    storeName: String,
+    store: Store,
     items: List<Item>,
     requestNote: String,
 ): String = buildString {
@@ -940,7 +976,7 @@ private fun buildShareText(
         append("\n\n")
     }
     append("🛒 [")
-    append(storeName)
+    append(store.name)
     append("] 장보기 리스트\n\n")
     items.forEach { item ->
         val clean = item.name.trim().replace('\n', ' ')
@@ -953,7 +989,7 @@ private fun buildShareText(
     // 아이폰이면 목록만 — 그 구분은 링크 페이지가 한다(보내는 쪽은 받는 사람 폰을 모름).
     // 📝/👉 줄은 받은 리스트를 다시 마트노트로 공유할 때 SharedTextParser가 걸러낸다.
     append("\n👉 눌러서 마트노트에 바로 담기: ")
-    append(listLink(storeName, items))
+    append(listLink(store, items))
 }
 
 /**

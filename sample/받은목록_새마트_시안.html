@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>받은 목록 새 마트 시안</title>
+<style>
+  :root { --bg:#F2F4F6; --card:#FFFFFF; --sheet:#FAFAF7; --line:#E5E8EB; --text:#191F28; --sub:#4E5968; --muted:#8B95A1;
+          --brand:#3182F6; --soft:#E8F3FF; --red:#F04452; --redsoft:#FFE3E8; --ok:#2BA471; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Pretendard,"Malgun Gothic",system-ui,sans-serif; letter-spacing:-0.02em; }
+  main { max-width:1180px; margin:0 auto; padding:32px 16px 60px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  .lead { color:var(--sub); margin:0 0 28px; line-height:1.6; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; }
+  .col { width:330px; }
+  .cap { font-weight:700; margin:0 0 4px; }
+  .capsub { color:var(--sub); font-size:14px; margin:0 0 12px; min-height:42px; line-height:1.5; }
+  .phone { width:330px; height:660px; border-radius:36px; background:#111; padding:10px; box-shadow:0 18px 40px rgba(0,0,0,.18); }
+  .screen { position:relative; width:100%; height:100%; border-radius:28px; overflow:hidden; background:var(--sheet); }
+  .top { padding:22px 16px 0; }
+  .apptitle { font-size:19px; font-weight:800; margin-bottom:12px; }
+  .tabs { display:flex; gap:6px; overflow:hidden; }
+  .tab { flex:none; border:1px solid var(--line); border-radius:20px; padding:7px 11px; font-size:13px; font-weight:700; background:#fff; white-space:nowrap; }
+  .tab .n { display:inline-block; min-width:18px; margin-left:4px; padding:0 5px; border-radius:9px; background:#F2F4F6; color:var(--muted); font-size:11px; text-align:center; }
+  .tab.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .tab.on .n { background:rgba(255,255,255,.25); color:#fff; }
+  .tab.red.on { background:var(--red); border-color:var(--red); }
+  .tab.new { animation:pop .5s ease; }
+  @keyframes pop { from { transform:scale(.6); opacity:0 } to { transform:scale(1); opacity:1 } }
+  .list { padding:10px 16px; }
+  .item { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid #EEF0F2; font-size:15px; }
+  .item .done { border:1px solid var(--line); border-radius:10px; padding:5px 10px; font-size:12px; color:var(--sub); }
+  .empty { text-align:center; color:var(--muted); padding-top:120px; font-size:14px; }
+  .dim { position:absolute; inset:0; background:rgba(0,0,0,.38); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:var(--sheet); border-radius:24px 24px 0 0; padding:20px 16px 16px; }
+  .st { font-size:17px; font-weight:800; }
+  .ss { color:var(--muted); font-size:12px; margin:3px 0 12px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip { border-radius:18px; padding:7px 11px; font-size:13px; font-weight:600; background:#EFF1F3; color:var(--sub); white-space:nowrap; }
+  .chip.on { background:var(--brand); color:#fff; }
+  .chip.newc { background:#fff; color:var(--red); border:1.5px dashed var(--red); }
+  .chip.newc.on { background:var(--red); color:#fff; border:1.5px solid var(--red); }
+  .hint { font-size:12px; color:var(--red); background:var(--redsoft); border-radius:10px; padding:7px 10px; margin-bottom:8px; }
+  .ck { display:flex; align-items:center; gap:10px; padding:8px 0; font-size:15px; }
+  .box { width:20px; height:20px; border-radius:6px; background:var(--brand); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; }
+  .btn { margin-top:10px; height:48px; border-radius:12px; background:var(--brand); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .snack { position:absolute; left:14px; right:14px; bottom:20px; background:#191F28; color:#fff; border-radius:12px; padding:12px 14px; font-size:13px; }
+  .notes { margin-top:36px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 22px; line-height:1.7; font-size:15px; }
+  .notes b { color:var(--brand); }
+</style>
+</head>
+<body>
+<main>
+  <h1>받은 목록 — 내게 없는 마트일 때</h1>
+  <p class="lead">엄마가 <b>다이소</b> 목록(건전지·수세미·지퍼백)을 링크로 보냈는데, 받는 나에겐 다이소 마트가 없는 경우.<br>
+  지금은 보고 있던 마트(쿠팡)가 골라져서 다이소 물건이 쿠팡에 들어가기 쉬워요. 시안은 <b>"+ 다이소 새로 만들기"</b>가 처음부터 골라져 있게 바꾼 모습이에요.</p>
+
+  <div class="row">
+    <!-- 1. 지금 -->
+    <div class="col">
+      <p class="cap">① 지금 (1.5.0 그대로)</p>
+      <p class="capsub">보고 있던 쿠팡이 골라져 있음. 다이소를 만들 방법이 창 안에 없음.</p>
+      <div class="phone"><div class="screen">
+        <div class="top">
+          <div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab on">🚀 쿠팡<span class="n">2</span></span><span class="tab">🛒 이마트<span class="n">4</span></span></div>
+        </div>
+        <div class="list"><div class="item">생수 2L <span class="done">완료</span></div><div class="item">물티슈 <span class="done">완료</span></div></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="st">받은 장보기 리스트 3개</div>
+          <div class="ss">담을 마트를 고르고 한 번에 넣으세요</div>
+          <div class="chips"><span class="chip on">🚀 쿠팡</span><span class="chip">🛒 이마트</span></div>
+          <div class="ck"><span class="box">✓</span>건전지</div>
+          <div class="ck"><span class="box">✓</span>수세미</div>
+          <div class="ck"><span class="box">✓</span>지퍼백</div>
+          <div class="btn">3개 담기</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 2. 시안 -->
+    <div class="col">
+      <p class="cap">② 시안 — 받은 창</p>
+      <p class="capsub">보낸 사람의 마트 "다이소"가 <b style="color:#F04452">새로 만들기</b>로 먼저 골라져 있음. 내 마트를 골라도 됨.</p>
+      <div class="phone"><div class="screen">
+        <div class="top">
+          <div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab on">🚀 쿠팡<span class="n">2</span></span><span class="tab">🛒 이마트<span class="n">4</span></span></div>
+        </div>
+        <div class="list"><div class="item">생수 2L <span class="done">완료</span></div><div class="item">물티슈 <span class="done">완료</span></div></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="st">받은 다이소 장보기 3개</div>
+          <div class="ss">담을 마트를 고르고 한 번에 넣으세요</div>
+          <div class="chips"><span class="chip newc on">＋ 🏪 다이소 새로 만들기</span><span class="chip">🚀 쿠팡</span><span class="chip">🛒 이마트</span></div>
+          <div class="hint">다이소 마트를 새로 만들고 여기에 담아요</div>
+          <div class="ck"><span class="box">✓</span>건전지</div>
+          <div class="ck"><span class="box">✓</span>수세미</div>
+          <div class="ck"><span class="box">✓</span>지퍼백</div>
+          <div class="btn" style="background:#F04452">다이소 만들고 3개 담기</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 3. 담은 뒤 -->
+    <div class="col">
+      <p class="cap">③ 시안 — 담은 뒤</p>
+      <p class="capsub">다이소 탭이 생기고 바로 그 탭으로 이동. 색·아이콘은 이름에 맞춰 자동(다이소 = 빨강 🏪).</p>
+      <div class="phone"><div class="screen">
+        <div class="top">
+          <div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab">🚀 쿠팡<span class="n">2</span></span><span class="tab">🛒 이마트<span class="n">4</span></span><span class="tab red on new">🏪 다이소<span class="n">3</span></span></div>
+        </div>
+        <div class="list">
+          <div class="item" style="font-size:13px;color:#4E5968;border:0">다이소몰 앱 바로가기 <span style="width:36px;height:20px;border-radius:10px;background:#3182F6;display:inline-block"></span></div>
+          <div class="item">건전지 <span class="done">완료</span></div>
+          <div class="item">수세미 <span class="done">완료</span></div>
+          <div class="item">지퍼백 <span class="done">완료</span></div>
+        </div>
+        <div class="snack">다이소를 만들고 3개를 담았어요</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>정리</b><br>
+    · 받는 사람에게 <b>같은 이름 마트가 있으면</b> → 그 마트가 골라짐 (지금과 같음)<br>
+    · <b>없으면</b> → "＋ 다이소 새로 만들기"가 먼저 골라짐 → 담기 = 마트 생성 + 항목 추가 + 그 탭으로 이동<br>
+    · 새 마트 색·아이콘: 이름으로 추천(다이소 빨강🏪, 쿠팡 파랑🚀, 이마트 노랑🛒 …), 모르는 이름은 회색🛒<br>
+    · 쇼핑 앱이 있는 이름이면 "앱 바로가기"도 자동으로 켜짐<br>
+    · 보낸 사람이 마트 이름 없이 보냈거나(예전 버전) 이름이 비어 있으면 지금처럼 보고 있던 마트
+  </div>
+</main>
+</body>
+</html>
