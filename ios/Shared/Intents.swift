@@ -17,10 +17,11 @@ struct CompleteItemIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        let ctx = DataStore.shared.mainContext
+        let ctx = DataStore.freshContext()
         if let item = ctx.item(uid: itemUid), !item.isCompleted {
             ctx.complete(item)
             ctx.commit()
+            AppGroup.defaults.set(true, forKey: DataStore.externalChangeKey)
         }
         return .result()
     }
@@ -49,7 +50,7 @@ struct MartQuery: EntityQuery {
 
     func suggestedEntities() async throws -> [MartEntity] {
         await MainActor.run {
-            [MartEntity.all] + DataStore.shared.mainContext.marts().map {
+            [MartEntity.all] + DataStore.freshContext().marts().map {
                 MartEntity(id: $0.uid, name: $0.name, emoji: $0.emoji)
             }
         }

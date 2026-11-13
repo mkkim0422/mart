@@ -1,9 +1,11 @@
+import StoreKit
 import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var ctx
     @AppStorage("darkMode") private var darkMode = 0
+    @Environment(\.requestReview) private var requestReview
     @State private var showWidgetGuide = false
     @State private var showManage = false
     @State private var confirmWipe = false
@@ -30,6 +32,7 @@ struct SettingsView: View {
                     Link(destination: URL(string: "mailto:mkkim850422@gmail.com?subject=%EB%A7%88%ED%8A%B8%EB%85%B8%ED%8A%B8%20%EB%AC%B8%EC%9D%98")!) {
                         row("envelope", "문의·피드백 보내기")
                     }
+                    Button { requestReview() } label: { row("star", "별점 주기") }
                     Link(destination: URL(string: "https://github.com/mkkim0422/mart/blob/main/docs/privacy_policy_ko.md")!) {
                         row("lock", "개인정보처리방침")
                     }

@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 /// 구매예정 — mart tabs + that mart's list (Android HomeScreen).
 struct HomeView: View {
@@ -24,6 +25,13 @@ struct HomeView: View {
     @State private var showVoice = false
     @State private var editItem: GroceryItem?
     @State private var reminderItem: GroceryItem?
+    /// Set by the edit sheet; acted on once it has closed (sheet → sheet, delete after dismiss).
+    @State private var afterEdit: AfterEdit?
+    @State private var widgetPlaced = true
+    @State private var showWidgetGuide = false
+    @AppStorage("widgetBannerDismissed") private var bannerDismissed = false
+
+    enum AfterEdit { case reminder(GroceryItem), delete(String) }
 
     private var selected: Mart? { marts.first { $0.uid == selectedUid } ?? marts.first }
     private var items: [GroceryItem] { active.filter { $0.martUid == selected?.uid } }
@@ -38,15 +46,39 @@ struct HomeView: View {
                 .overlay(alignment: .bottomTrailing) { actionButtons }
                 .overlay(alignment: .bottom) { ToastView(toast: $toast).padding(.bottom, 84) }
         )
-        .onChange(of: router.selectedMartUid) { _, uid in
-            if let uid { selectedUid = uid; router.selectedMartUid = nil }
-        }
-        .onChange(of: router.openAddFor) { _, uid in
-            if let uid { selectedUid = uid; router.openAddFor = nil; showAdd = true }
-        }
+        .onChange(of: router.selectedMartUid) { _, _ in consumeRouter() }
+        .onChange(of: router.openAddFor) { _, _ in consumeRouter() }
         .onChange(of: router.highlightItemUid) { _, uid in
             guard uid != nil else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { router.highlightItemUid = nil }
+        }
+        // Cold start / after onboarding: the link may have arrived before this view existed.
+        .onAppear { consumeRouter() }
+        .task { await checkWidget() }
+        .sheet(isPresented: $showWidgetGuide) { WidgetGuideView() }
+    }
+
+    private func consumeRouter() {
+        if let uid = router.selectedMartUid { selectedUid = uid; router.selectedMartUid = nil }
+        if let uid = router.openAddFor { selectedUid = uid; router.openAddFor = nil; showAdd = true }
+        if router.highlightItemUid != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { router.highlightItemUid = nil }
+        }
+    }
+
+    /// Hide the "위젯을 추가하면…" banner once any 마트노트 widget is on the home screen.
+    private func checkWidget() async {
+        let configs = (try? await WidgetCenter.shared.currentConfigurations()) ?? []
+        widgetPlaced = !configs.isEmpty
+    }
+
+    /// Swipe the list left/right → next/previous mart (Android's tab swipe).
+    private var martSwipe: some Gesture {
+        DragGesture(minimumDistance: 40).onEnded { v in
+            guard abs(v.translation.width) > abs(v.translation.height) * 2,
+                  let i = marts.firstIndex(where: { $0.uid == selected?.uid }) else { return }
+            let next = v.translation.width < 0 ? i + 1 : i - 1
+            if marts.indices.contains(next) { withAnimation { selectedUid = marts[next].uid } }
         }
     }
 
@@ -61,13 +93,37 @@ struct HomeView: View {
                      onAdd: { showAddMart = true },
                      onManage: { showManage = true })
             Divider().overlay(Palette.divider)
+            if !widgetPlaced && !bannerDismissed { widgetBanner }
             shopToggle
-            if items.isEmpty {
-                EmptyList { showAdd = true }
-            } else {
-                itemList
+            Group {
+                if marts.isEmpty {
+                    NoMarts { showAddMart = true }
+                } else if items.isEmpty {
+                    EmptyList { showAdd = true }
+                } else {
+                    itemList
+                }
+            }
+            .simultaneousGesture(martSwipe)
+        }
+    }
+
+    private var widgetBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "lightbulb").foregroundStyle(Palette.brand)
+            Text("위젯을 추가하면 홈 화면에서 한눈에 확인").font(.system(size: 13)).foregroundStyle(Palette.text)
+            Spacer()
+            Button("추가") { showWidgetGuide = true }
+                .font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                .padding(.horizontal, 12).frame(height: 30)
+                .background(Capsule().fill(Palette.brand))
+            Button { bannerDismissed = true } label: {
+                Image(systemName: "xmark").font(.system(size: 12)).foregroundStyle(Palette.textTertiary)
             }
         }
+        .padding(.horizontal, 14).frame(height: 52)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Palette.brandSoft))
+        .padding(.horizontal, 16).padding(.vertical, 8)
     }
 
     @ViewBuilder
@@ -126,7 +182,7 @@ struct HomeView: View {
             .sheet(isPresented: $showManage) { MartManageView() }
             .sheet(isPresented: $showShare) { shareSheet }
             .sheet(isPresented: $showVoice) { voiceSheet }
-            .sheet(item: $editItem) { item in editSheet(item) }
+            .sheet(item: $editItem, onDismiss: runAfterEdit) { item in editSheet(item) }
             .sheet(item: $reminderItem) { item in
                 ReminderSheet(item: item, martName: martName(item.martUid))
             }
@@ -146,10 +202,27 @@ struct HomeView: View {
     }
 
     private func editSheet(_ item: GroceryItem) -> some View {
-        ItemEditSheet(item: item, marts: marts, onReminder: {
-            editItem = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { reminderItem = item }
-        })
+        ItemEditSheet(item: item, marts: marts,
+                      onReminder: { afterEdit = .reminder(item); editItem = nil },
+                      onDelete: { afterEdit = .delete(item.uid); editItem = nil })
+    }
+
+    /// Runs once the edit sheet is fully gone: open 알림, or delete (deleting while the
+    /// sheet still showed the item crashed SwiftData on iOS 17).
+    private func runAfterEdit() {
+        guard let next = afterEdit else { return }
+        afterEdit = nil
+        switch next {
+        case .reminder(let item):
+            reminderItem = item
+        case .delete(let uid):
+            if let it = ctx.item(uid: uid) {
+                let name = it.name
+                ctx.deleteItem(it)
+                ctx.commit()
+                toast = Toast(text: "'\(name)' 삭제했어요")
+            }
+        }
     }
 
     private func receivedSheet(_ received: ShareText.Received) -> some View {
@@ -203,9 +276,10 @@ struct HomeView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         completing.insert(item.uid)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            completing.remove(item.uid)
+            // Complete first, then clear the flag — otherwise the row flashes back unstruck.
             ctx.complete(item)
             ctx.commit()
+            completing.remove(item.uid)
             toast = Toast(text: "'\(item.name)' 완료", actionLabel: "되돌리기") {
                 ctx.restore(item)
                 ctx.commit()
@@ -365,6 +439,23 @@ struct ItemRowView: View {
             }
         }
         .animation(.easeOut(duration: 0.25), value: completing)
+    }
+}
+
+struct NoMarts: View {
+    let onAdd: () -> Void
+    var body: some View {
+        VStack(spacing: 10) {
+            Spacer()
+            Image(systemName: "cart.badge.plus").font(.system(size: 44)).foregroundStyle(Palette.textDisabled)
+            Text("마트를 추가해주세요").font(.system(size: 17, weight: .semibold)).foregroundStyle(Palette.textSecondary)
+            Button("마트 추가", action: onAdd)
+                .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                .padding(.horizontal, 20).frame(height: 44)
+                .background(Capsule().fill(Palette.brand))
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

@@ -8,7 +8,10 @@ import Speech
 final class SpeechAdder: ObservableObject {
     @Published var text = ""
     @Published var listening = false
-    @Published var denied = false
+    /// Shown instead of the transcript when listening can't start.
+    @Published var problem: String?
+    /// Called with what was heard whenever listening ends (button, final result, error, time limit).
+    var onFinish: ((String) -> Void)?
 
     private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "ko-KR"))
     private let engine = AVAudioEngine()
@@ -20,8 +23,10 @@ final class SpeechAdder: ObservableObject {
             SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0 == .authorized) }
         }
         let micOK = await AVAudioApplication.requestRecordPermission()
-        guard speechOK, micOK, let recognizer, recognizer.isAvailable else { denied = true; return }
+        guard speechOK, micOK else { problem = "설정에서 마이크·음성 인식을 허용해 주세요"; return }
+        guard let recognizer, recognizer.isAvailable else { problem = "지금은 음성 인식을 쓸 수 없어요. 잠시 후 다시 해 주세요"; return }
 
+        problem = nil
         text = ""
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.record, mode: .measurement, options: .duckOthers)
@@ -36,15 +41,21 @@ final class SpeechAdder: ObservableObject {
             req.append(buf)
         }
         engine.prepare()
-        do { try engine.start() } catch { denied = true; return }
+        do { try engine.start() } catch {
+            input.removeTap(onBus: 0)
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            problem = "마이크를 켤 수 없어요"
+            return
+        }
         listening = true
-        task = recognizer.recognitionTask(with: req) { [weak self] result, error in
+        let mine = recognizer.recognitionTask(with: req) { [weak self] result, error in
             Task { @MainActor in
-                guard let self else { return }
+                guard let self, self.request === req else { return }  // ignore a previous session's late callback
                 if let result { self.text = result.bestTranscription.formattedString }
                 if error != nil || (result?.isFinal ?? false) { self.stop() }
             }
         }
+        task = mine
     }
 
     func stop() {
@@ -53,8 +64,13 @@ final class SpeechAdder: ObservableObject {
         engine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
         task?.cancel()
+        request = nil
+        task = nil
         listening = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        let heard = text
+        text = ""
+        if !heard.isEmpty { onFinish?(heard) }
     }
 
     static func clean(_ raw: String) -> String {

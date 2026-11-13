@@ -32,6 +32,14 @@ struct AddItemSheet: View {
             .prefix(10).map { $0 }
     }
 
+    private var suggestions: [String] {
+        let q = text.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return [] }
+        let mine = recent.filter { $0 != q && $0.lowercased().hasPrefix(q.lowercased()) }
+        var seen = Set<String>()
+        return (mine + ProductDictionary.suggest(q)).filter { seen.insert($0).inserted }.prefix(8).map { $0 }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
@@ -63,19 +71,24 @@ struct AddItemSheet: View {
             .padding(.horizontal, 16).frame(height: 52)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(focused ? Palette.brand : Palette.divider, lineWidth: focused ? 1.5 : 1))
 
-            if !recent.isEmpty {
-                Text("최근 등록 상품 · 누르면 바로 추가").font(.system(size: 12)).foregroundStyle(Palette.textTertiary)
+            // Typing → "비슷한 항목" (this mart's history + built-in words); else recent names.
+            let suggesting = !suggestions.isEmpty
+            if suggesting || !recent.isEmpty {
+                Text(suggesting ? "비슷한 항목 · 누르면 바로 추가" : "최근 등록 상품 · 누르면 바로 추가")
+                    .font(.system(size: 12)).foregroundStyle(suggesting ? Palette.brand : Palette.textTertiary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
-                        ForEach(recent, id: \.self) { n in
-                            Button { addName(n) } label: {
-                                Text(n).font(.system(size: 13)).foregroundStyle(Palette.textSecondary)
+                        ForEach(suggesting ? suggestions : recent, id: \.self) { n in
+                            Button { addName(n); text = "" } label: {
+                                Text(n).font(.system(size: 13))
+                                    .foregroundStyle(suggesting ? Palette.brand : Palette.textSecondary)
                                     .padding(.horizontal, 12).frame(height: 32)
-                                    .background(Capsule().fill(Palette.bgTertiary))
+                                    .background(Capsule().fill(suggesting ? Palette.brandSoft : Palette.bgTertiary))
                             }
                         }
                     }
                 }
+                .frame(height: 34)
             }
             if !added.isEmpty {
                 Text("담았어요: " + added.joined(separator: ", "))
@@ -177,7 +190,10 @@ struct ItemEditSheet: View {
     let item: GroceryItem
     let marts: [Mart]
     let onReminder: () -> Void
+    /// Parent deletes after this sheet has closed (never while it still shows the item).
+    let onDelete: () -> Void
     @State private var name = ""
+    @State private var originalName = ""
     @State private var martUid = ""
     @State private var confirmDelete = false
 
@@ -203,7 +219,7 @@ struct ItemEditSheet: View {
                     }
                 }
             }
-            Button(action: onReminder) {
+            Button { apply(); onReminder() } label: {
                 HStack {
                     Image(systemName: "bell")
                     Text("알림").foregroundStyle(Palette.text)
@@ -229,26 +245,34 @@ struct ItemEditSheet: View {
         }
         .padding(20)
         .presentationDetents([.medium])
-        .onAppear { name = item.name; martUid = item.martUid }
-        .confirmationDialog("'\(item.name)'\(item.name.objectParticle) 삭제할까요?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("삭제", role: .destructive) {
-                ctx.deleteItem(item)
-                ctx.commit()
-                dismiss()
-            }
+        .onAppear { name = item.name; originalName = item.name; martUid = item.martUid }
+        .confirmationDialog("'\(originalName)'\(originalName.objectParticle) 삭제할까요?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("삭제", role: .destructive, action: onDelete)
         }
     }
 
     private func save() {
+        apply()
+        dismiss()
+    }
+
+    /// Write name/mart edits (also before jumping to 알림 so they aren't lost).
+    private func apply() {
         let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !n.isEmpty else { return }
+        let changed = n != item.name || martUid != item.martUid
         item.name = String(n.prefix(100))
         if martUid != item.martUid {
             item.martUid = martUid
             item.order = (ctx.activeItems(martUid: martUid).map(\.order).max() ?? -1) + 1
         }
+        // Pending reminder text names the mart/item — re-schedule with the new ones.
+        if changed, let at = item.reminderAt, at > .now {
+            Reminders.schedule(itemUid: item.uid, martUid: item.martUid,
+                               martName: marts.first { $0.uid == item.martUid }?.name ?? "",
+                               itemName: item.name, at: at)
+        }
         ctx.commit()
-        dismiss()
     }
 }
 
@@ -379,25 +403,27 @@ struct VoiceAddSheet: View {
     @StateObject private var speech = SpeechAdder()
     @State private var added: [String] = []
 
+    private func addHeard(_ heard: String) {
+        let n = SpeechAdder.clean(heard)
+        guard !n.isEmpty else { return }
+        ctx.addItem(martUid: mart.uid, name: n)
+        ctx.commit()
+        added.append(n)
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             Text("\(mart.emoji) \(mart.name)에 말로 추가").font(.system(size: 17, weight: .bold))
-            Text(speech.denied ? "설정에서 마이크·음성 인식을 허용해 주세요" :
-                    speech.text.isEmpty ? (speech.listening ? "듣고 있어요… \"라면\"" : "마이크를 누르고 말하세요") : speech.text)
+            Text(speech.problem ??
+                    (speech.text.isEmpty ? (speech.listening ? "듣고 있어요… \"라면\"" : "마이크를 누르고 말하세요") : speech.text))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(speech.text.isEmpty ? Palette.textTertiary : Palette.text)
                 .frame(maxWidth: .infinity, minHeight: 60)
             Button {
                 if speech.listening {
-                    speech.stop()
-                    let n = SpeechAdder.clean(speech.text)
-                    if !n.isEmpty {
-                        ctx.addItem(martUid: mart.uid, name: n)
-                        ctx.commit()
-                        added.append(n)
-                        speech.text = ""
-                    }
+                    speech.stop()  // → onFinish adds what was heard
                 } else {
+                    speech.onFinish = { addHeard($0) }
                     Task { await speech.start() }
                 }
             } label: {

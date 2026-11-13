@@ -8,6 +8,8 @@ struct MartNoteApp: App {
     @StateObject private var router = Router.shared
     @AppStorage("darkMode") private var darkMode = 0  // 0 시스템, 1 라이트, 2 다크
     @AppStorage("onboarded") private var onboarded = false
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var container = DataStore.shared
 
     init() {
         Task { @MainActor in DataStore.seedIfNeeded() }
@@ -26,8 +28,18 @@ struct MartNoteApp: App {
             .preferredColorScheme(darkMode == 1 ? .light : darkMode == 2 ? .dark : nil)
             .tint(Palette.brand)
             .onOpenURL { router.handle($0) }
+            .modelContainer(container)
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                // ○ ticked on the widget (another process) → reload so @Query sees it.
+                if AppGroup.defaults.bool(forKey: DataStore.externalChangeKey) {
+                    AppGroup.defaults.set(false, forKey: DataStore.externalChangeKey)
+                    DataStore.refresh()
+                    container = DataStore.shared
+                }
+                container.mainContext.clearPastReminders()
+            }
         }
-        .modelContainer(DataStore.shared)
     }
 }
 

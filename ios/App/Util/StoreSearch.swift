@@ -21,8 +21,9 @@ enum StoreSearch {
         }
 
         func url(for item: String) -> URL? {
+            // Strict: "&", "+", "=" inside a name ("R&B", "1+1") must not break the query.
             let q = item.trimmingCharacters(in: .whitespaces)
-                .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                .addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
             return URL(string: search?(q) ?? home)
         }
     }

@@ -11,13 +11,28 @@ enum AppGroup {
 /// One SwiftData store in the App Group so the app, the widget and the widget's
 /// check button (`CompleteItemIntent`) all see the same lists.
 enum DataStore {
-    static let shared: ModelContainer = {
+    /// Replaced by `refresh()` when the widget changed data from its own process — on
+    /// iOS 17 SwiftData doesn't merge another process's saves into this one.
+    private(set) static var shared: ModelContainer = make()
+
+    /// A context that reads the store as it is now (widget/intent calls: the widget
+    /// process stays alive between reloads and a long-lived context returns stale rows).
+    static func freshContext() -> ModelContext { ModelContext(shared) }
+
+    /// Set by the widget's ○ (other process); the app reloads its container when it comes back.
+    static let externalChangeKey = "externalChange"
+
+    static func refresh() { shared = make() }
+
+    private static func make() -> ModelContainer {
         let schema = Schema([Mart.self, GroceryItem.self])
         let dir: URL
         if let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppGroup.id) {
             dir = group
         } else {
             // Unsigned simulator builds have no App Group — fall back to the app's own folder.
+            // The widget then reads a different store (shows nothing) — expected only there.
+            print("⚠️ App Group \(AppGroup.id) unavailable — app and widget will NOT share data")
             dir = URL.applicationSupportDirectory
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -27,7 +42,7 @@ enum DataStore {
         } catch {
             fatalError("ModelContainer: \(error)")
         }
-    }()
+    }
 
     /// First launch: 쿠팡 / 다이소 (same seed as Android).
     @MainActor
@@ -104,6 +119,18 @@ extension ModelContext {
             added += 1
         }
         return (added, clean.count - added)
+    }
+
+    /// Reminder times that already passed (fired while the app was closed) → clear the 🔔 chip.
+    func clearPastReminders() {
+        let now = Date.now
+        let d = FetchDescriptor<GroceryItem>(predicate: #Predicate { $0.reminderAt != nil })
+        var changed = false
+        for it in (try? fetch(d)) ?? [] where (it.reminderAt ?? .distantFuture) <= now {
+            it.reminderAt = nil
+            changed = true
+        }
+        if changed { commit() }
     }
 
     func complete(_ item: GroceryItem) {

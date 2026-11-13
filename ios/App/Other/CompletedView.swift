@@ -77,14 +77,18 @@ struct CompletedView: View {
                 .listStyle(.plain)
             }
             HStack {
-                Text("오늘 \(done.filter { Calendar.current.isDateInToday($0.completedAt ?? .distantPast) }.count)개")
+                Text("이번 주 \(count(.weekOfYear))개")
                 Spacer()
-                Text("밀어서 되돌리기 · 삭제")
+                Text("이번 달 \(count(.month))개")
             }
             .font(.system(size: 12)).foregroundStyle(Palette.textTertiary)
             .padding(.horizontal, 20).padding(.vertical, 8)
         }
         .background(Palette.bg)
+    }
+
+    private func count(_ unit: Calendar.Component) -> Int {
+        done.filter { Calendar.current.isDate($0.completedAt ?? .distantPast, equalTo: .now, toGranularity: unit) }.count
     }
 
     private func chip(_ t: String, on: Bool, color: Color = Palette.text, action: @escaping () -> Void) -> some View {

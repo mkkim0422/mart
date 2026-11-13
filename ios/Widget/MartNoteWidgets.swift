@@ -34,7 +34,7 @@ struct WMart: Identifiable, Hashable {
 
 @MainActor
 private func loadMarts(only martUid: String?) -> [WMart] {
-    let ctx = DataStore.shared.mainContext
+    let ctx = DataStore.freshContext()
     let all = ctx.marts()
     let marts = martUid.flatMap { uid in all.filter { $0.uid == uid }.nilIfEmpty } ?? all
     return marts.map { m in
@@ -242,7 +242,8 @@ struct CountWidgetView: View {
             Text("마트를 추가해주세요").font(.caption).foregroundStyle(Palette.textTertiary)
         } else {
             VStack(spacing: 8) {
-                ForEach(entry.marts.prefix(family == .systemSmall ? 4 : 4)) { m in
+                ForEach(entry.marts.prefix(4)) { m in
+                    // .systemSmall ignores Link — the whole widget opens the first mart instead.
                     Link(destination: DeepLink.store(m.id)) {
                         HStack(spacing: 8) {
                             Text(m.emoji).font(.system(size: 13))
@@ -260,6 +261,7 @@ struct CountWidgetView: View {
                 }
                 Spacer(minLength: 0)
             }
+            .widgetURL(entry.marts.first.map { DeepLink.store($0.id) })
         }
     }
 }
