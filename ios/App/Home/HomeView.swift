@@ -68,8 +68,13 @@ struct HomeView: View {
 
     /// Hide the "위젯을 추가하면…" banner once any 마트노트 widget is on the home screen.
     private func checkWidget() async {
-        let configs = (try? await WidgetCenter.shared.currentConfigurations()) ?? []
-        widgetPlaced = !configs.isEmpty
+        // getCurrentConfigurations (iOS 14+); the async variant is iOS 18 only.
+        let count: Int = await withCheckedContinuation { c in
+            WidgetCenter.shared.getCurrentConfigurations { result in
+                c.resume(returning: (try? result.get())?.count ?? 0)
+            }
+        }
+        widgetPlaced = count > 0
     }
 
     /// Swipe the list left/right → next/previous mart (Android's tab swipe).
