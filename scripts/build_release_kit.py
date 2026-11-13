@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""출시 자료 폴더(출시자료_v1.5.0/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
+"""출시 자료 폴더(출시자료_v1.5.1/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
 
 결과:
-  출시자료_v1.5.0/
+  출시자료_v1.5.1/
     index.html            ← 브라우저로 열어 복사 버튼으로 붙여넣기
     1_스크린샷/01~06.png    (1080x2400, 이 순서대로 업로드)
     2_피처그래픽/feature_graphic_1024x500.png
@@ -18,7 +18,7 @@ import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION, VC = "1.5.0", 12
+VERSION, VC = "1.5.1", 13
 OUT = os.path.join(ROOT, f"출시자료_v{VERSION}")
 SRC = os.path.join(ROOT, "docs", "playstore_assets")
 
