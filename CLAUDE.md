@@ -207,8 +207,8 @@ Top: shared **`PageTitle`** (`ui/components/PageTitle.kt`) — `headingL` (20sp 
 - Home title: **"구매예정"** (app name lives in launcher/onboarding/Play, not the screen)
 - Completed title: **"완료"**  · Settings title: **"설정"**
 Tab strip (pill tabs, horizontally scrollable): ●쿠팡(2) ●다이소(3) [+ 추가] [⋮ 마트관리]
-Body: items of selected mart — row = name (+ 🔔 time chip if a reminder is set) · [🔍 shop-app, only when 쇼핑몰 앱 바로가기 on] · [완료] · ⋮ (쇼핑앱 찾기 / 알림 설정·변경 / 이름 수정 / 다른 마트로 이동 / 삭제). **Bell button removed from the row 2026-11-12** (reminder entry = ⋮ menu only).
-**Long-press a row → drag up/down to reorder** (2026-11-12, `sh.calvin.reorderable`, same as tab strip) → `items.display_order`, widget follows.
+Body: items of selected mart — row = name (+ 🔔 time chip if a reminder is set) · [🔍 shop-app, only when 쇼핑몰 앱 바로가기 on] · [완료] · **≡ drag handle**. **No ⋮ menu since 2026-11-13** (5 items was too much): **tap the name → `ItemEditSheet` "항목 편집"** = name field · mart chips (move) · 알림 row (→ `ReminderPickerSheet`) · 삭제 (→ confirm) / 저장; "○○에서 찾기" dropped (same as 🔍).
+**Reorder: drag the ≡ handle (immediate) or long-press anywhere on the row** (`sh.calvin.reorderable`, same as tab strip) → `items.display_order`, widget follows.
 FAB: Toss-blue + (bottom right)
 Bottom nav: 구매예정 / 완료 / 설정 — selected = `#3182F6` for both icon and text (titles match nav labels)
 

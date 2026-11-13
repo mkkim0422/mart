@@ -20,11 +20,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,22 +63,22 @@ fun ItemRow(
     storeColor: Color,
     highlighted: Boolean,
     onCompleteAnimDone: () -> Unit,
-    onRename: () -> Unit,
-    onMove: () -> Unit,
-    onDelete: () -> Unit,
+    /** Tap on the name → "항목 편집" sheet (이름 · 마트 · 알림 · 삭제). Replaced the ⋮ menu 2026-11-13. */
+    onEdit: () -> Unit,
     onSetReminder: () -> Unit,
-    /** Full action text for 🔍 / ⋮ menu ("쿠팡에서 찾기" or "이마트 앱 열기") when 쇼핑몰 앱 바로가기 is on. Null = off, no UI. */
+    /** 🔍 description ("쿠팡에서 찾기" or "이마트 앱 열기") when 쇼핑몰 앱 바로가기 is on. Null = off, no UI. */
     searchLabel: String? = null,
     onSearch: () -> Unit = {},
-    /** Long-press-drag reorder handle (from ItemList's ReorderableItem scope). */
+    /** Long-press-drag reorder on the whole row (from ItemList's ReorderableItem scope). */
     dragModifier: Modifier = Modifier,
+    /** Immediate drag on the ≡ handle — makes reordering visible (it was long-press only). */
+    handleModifier: Modifier = Modifier,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
-    var menuOpen by remember { mutableStateOf(false) }
     // Latched the moment "완료" is tapped; survives recomposition so the
     // animation always plays to 1000ms even under fast consecutive completes.
     var triggered by remember(item.id) { mutableStateOf(item.isCompleted) }
@@ -139,7 +137,11 @@ fun ItemRow(
         // size.width ≠ glyph width). The strikethrough must only span the
         // text itself, not the empty space up to the "완료" button.
         var textRightPx by remember(item.id) { mutableStateOf(0f) }
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(enabled = !triggered, onClick = onEdit),
+        ) {
             Text(
                 text = item.name,
                 style = typo.body,
@@ -189,7 +191,7 @@ fun ItemRow(
                 }
             }
         }
-        // "쿠팡에서 찾기" — only on online-mart tabs. The icon's presence is the cue
+        // 🔍 "쿠팡에서 찾기" — only on marts with 쇼핑몰 앱 바로가기 on. The icon's presence is the cue
         // that this mart can be searched in its own app; offline tabs show nothing.
         if (searchLabel != null) {
             Spacer(Modifier.width(10.dp))
@@ -254,53 +256,19 @@ fun ItemRow(
                 }
             }
         }
-        Spacer(Modifier.width(8.dp))
-        Box {
+        Spacer(Modifier.width(6.dp))
+        // ≡ reorder handle (2026-11-13, was ⋮). Drag starts at once here; the rest of the
+        // row still reorders on long-press.
+        Box(
+            modifier = Modifier.size(32.dp).then(handleModifier),
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = "더보기",
-                tint = colors.textTertiary,
-                modifier = Modifier
-                    .size(20.dp)
-                    // Disabled while the completion animation is running.
-                    .clickable(enabled = !triggered) { menuOpen = true },
+                imageVector = Icons.Filled.DragHandle,
+                contentDescription = "순서 바꾸기",
+                tint = colors.textDisabled,
+                modifier = Modifier.size(22.dp),
             )
-            DropdownMenu(
-                expanded = menuOpen && !triggered,
-                onDismissRequest = { menuOpen = false },
-            ) {
-                if (searchLabel != null) {
-                    DropdownMenuItem(
-                        text = { Text(searchLabel, style = typo.body, color = colors.textPrimary) },
-                        onClick = { menuOpen = false; onSearch() },
-                    )
-                }
-                // Reminder lives here (not as a row button) since 2026-11-12 — a 4th
-                // always-visible control crowded the 1-second-check row for a rarely
-                // used feature. A set reminder still shows its 🔔 chip under the name.
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            if (item.reminderAt != null) "알림 변경" else "알림 설정",
-                            style = typo.body,
-                            color = colors.textPrimary,
-                        )
-                    },
-                    onClick = { menuOpen = false; onSetReminder() },
-                )
-                DropdownMenuItem(
-                    text = { Text("이름 수정", style = typo.body, color = colors.textPrimary) },
-                    onClick = { menuOpen = false; onRename() },
-                )
-                DropdownMenuItem(
-                    text = { Text("다른 마트로 이동", style = typo.body, color = colors.textPrimary) },
-                    onClick = { menuOpen = false; onMove() },
-                )
-                DropdownMenuItem(
-                    text = { Text("삭제", style = typo.body, color = colors.danger) },
-                    onClick = { menuOpen = false; onDelete() },
-                )
-            }
         }
     }
 }

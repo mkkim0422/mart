@@ -50,9 +50,7 @@ fun ItemList(
     storeColor: Color,
     highlightItemId: Long?,
     onCompleteAnimDone: (Long, String) -> Unit,
-    onRename: (Item) -> Unit,
-    onMove: (Item) -> Unit,
-    onDelete: (Item) -> Unit,
+    onEdit: (Item) -> Unit,
     onSetReminder: (Item) -> Unit,
     modifier: Modifier = Modifier,
     searchLabel: String? = null,
@@ -115,9 +113,7 @@ fun ItemList(
                     storeColor = storeColor,
                     highlighted = item.id == highlightItemId,
                     onCompleteAnimDone = { onCompleteAnimDone(item.id, item.name) },
-                    onRename = { onRename(item) },
-                    onMove = { onMove(item) },
-                    onDelete = { onDelete(item) },
+                    onEdit = { onEdit(item) },
                     onSetReminder = { onSetReminder(item) },
                     searchLabel = searchLabel,
                     onSearch = { onSearch(item) },
@@ -140,6 +136,17 @@ fun ItemList(
                                 onReorder(localItems.map { it.id })
                             },
                         ),
+                    // ≡ handle: same drag, no long-press wait.
+                    handleModifier = Modifier.draggableHandle(
+                        onDragStarted = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            dragging = true
+                        },
+                        onDragStopped = {
+                            dragging = false
+                            onReorder(localItems.map { it.id })
+                        },
+                    ),
                 )
             }
         }

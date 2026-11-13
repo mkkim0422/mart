@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>항목 편집 시안</title>
+<style>
+  :root { --bg:#F2F4F6; --sheet:#FAFAF7; --line:#E5E8EB; --text:#191F28; --sub:#4E5968; --muted:#8B95A1; --dis:#C9CDD2;
+          --brand:#3182F6; --soft:#E8F3FF; --red:#F04452; --ok:#2BA471; --amber:#FFB800; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Pretendard,"Malgun Gothic",system-ui,sans-serif; letter-spacing:-0.02em; }
+  main { max-width:1180px; margin:0 auto; padding:32px 16px 60px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  .lead { color:var(--sub); margin:0 0 28px; line-height:1.6; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; }
+  .col { width:330px; }
+  .cap { font-weight:700; margin:0 0 4px; }
+  .capsub { color:var(--sub); font-size:14px; margin:0 0 12px; min-height:42px; line-height:1.5; }
+  .phone { width:330px; height:660px; border-radius:36px; background:#111; padding:10px; box-shadow:0 18px 40px rgba(0,0,0,.18); }
+  .screen { position:relative; width:100%; height:100%; border-radius:28px; overflow:hidden; background:var(--sheet); }
+  .top { padding:22px 16px 0; }
+  .apptitle { font-size:19px; font-weight:800; margin-bottom:12px; }
+  .tabs { display:flex; gap:6px; }
+  .tab { border:1px solid var(--line); border-radius:20px; padding:7px 11px; font-size:13px; font-weight:700; background:#fff; white-space:nowrap; }
+  .tab.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .toggle { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--sub); padding:12px 16px 4px; }
+  .sw { width:34px; height:20px; border-radius:10px; background:var(--brand); }
+  .list { padding:0 16px; }
+  .item { display:flex; align-items:center; gap:8px; padding:11px 0; border-bottom:1px solid #EEF0F2; font-size:15px; }
+  .item .nm { flex:1; }
+  .item .nm small { display:block; color:var(--amber); font-size:11px; margin-top:2px; }
+  .srch { width:30px; height:30px; border-radius:50%; background:#E8F3FF; color:var(--brand); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .done { border:1px solid var(--line); border-radius:10px; padding:5px 9px; font-size:12px; color:var(--sub); background:#fff; }
+  .kebab { color:#A0A7B0; font-size:18px; width:18px; text-align:center; }
+  .handle { color:#B0B8C1; font-size:18px; width:20px; text-align:center; letter-spacing:-1px; }
+  .menu { position:absolute; right:20px; top:208px; width:170px; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.18); padding:6px 0; }
+  .menu div { padding:11px 16px; font-size:14px; }
+  .menu .del { color:var(--red); }
+  .dim { position:absolute; inset:0; background:rgba(0,0,0,.38); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:var(--sheet); border-radius:24px 24px 0 0; padding:20px 16px 18px; }
+  .st { font-size:17px; font-weight:800; margin-bottom:12px; }
+  .field { border:1.5px solid var(--brand); border-radius:12px; padding:12px 14px; font-size:15px; background:#fff; margin-bottom:14px; }
+  .lbl { font-size:12px; color:var(--muted); margin:0 0 6px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .chip { border-radius:18px; padding:7px 11px; font-size:13px; font-weight:600; background:#EFF1F3; color:var(--sub); }
+  .chip.on { background:var(--brand); color:#fff; }
+  .line { display:flex; justify-content:space-between; align-items:center; padding:12px 2px; border-top:1px solid #EEF0F2; font-size:14px; }
+  .line span:last-child { color:var(--muted); font-size:13px; }
+  .btns { display:flex; gap:8px; margin-top:12px; }
+  .b { flex:1; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .b.del { flex:none; width:96px; background:#FFF0F2; color:var(--red); }
+  .b.ok { background:var(--brand); color:#fff; }
+  .tag { display:inline-block; font-size:11px; padding:2px 6px; border-radius:6px; background:#FFF4D6; color:#B07A00; margin-left:4px; }
+  .notes { margin-top:36px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 22px; line-height:1.75; font-size:15px; }
+  .notes b { color:var(--brand); }
+</style>
+</head>
+<body>
+<main>
+  <h1>항목 줄 정리 — ⋮ 메뉴 없애기</h1>
+  <p class="lead">지금은 ⋮을 누르면 메뉴가 5개(쿠팡에서 찾기 · 알림 · 이름 수정 · 다른 마트로 이동 · 삭제).<br>
+  바꾼 뒤엔 줄이 <b>이름 · 🔍 · 완료 · ≡</b> 로 단순해지고, 나머지는 <b>이름을 누르면</b> 한 창에서 해요.</p>
+
+  <div class="row">
+    <div class="col">
+      <p class="cap">① 지금</p>
+      <p class="capsub">⋮ 메뉴 5개. 순서 바꾸기는 길게 눌러야 해서 아무도 모름.</p>
+      <div class="phone"><div class="screen">
+        <div class="top"><div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab on">🚀 쿠팡 3</span><span class="tab">🏪 다이소 2</span></div></div>
+        <div class="toggle">쿠팡 앱 바로가기 <span class="sw"></span></div>
+        <div class="list">
+          <div class="item"><span class="nm">생수 2L</span><span class="srch">🔍</span><span class="done">완료</span><span class="kebab">⋮</span></div>
+          <div class="item"><span class="nm">물티슈<small>🔔 내일 오전 9:00</small></span><span class="srch">🔍</span><span class="done">완료</span><span class="kebab">⋮</span></div>
+          <div class="item"><span class="nm">키친타월</span><span class="srch">🔍</span><span class="done">완료</span><span class="kebab">⋮</span></div>
+        </div>
+        <div class="menu">
+          <div>쿠팡에서 찾기</div><div>알림 설정</div><div>이름 수정</div><div>다른 마트로 이동</div><div class="del">삭제</div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="col">
+      <p class="cap">② 바꾼 뒤 — 목록</p>
+      <p class="capsub">⋮ 자리에 <b>≡</b> 손잡이 → 잡고 끌면 순서 변경(길게 누르기도 그대로). 이름을 누르면 ③.</p>
+      <div class="phone"><div class="screen">
+        <div class="top"><div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab on">🚀 쿠팡 3</span><span class="tab">🏪 다이소 2</span></div></div>
+        <div class="toggle">쿠팡 앱 바로가기 <span class="sw"></span></div>
+        <div class="list">
+          <div class="item"><span class="nm">생수 2L</span><span class="srch">🔍</span><span class="done">완료</span><span class="handle">≡</span></div>
+          <div class="item"><span class="nm">물티슈<small>🔔 내일 오전 9:00</small></span><span class="srch">🔍</span><span class="done">완료</span><span class="handle">≡</span></div>
+          <div class="item"><span class="nm">키친타월</span><span class="srch">🔍</span><span class="done">완료</span><span class="handle">≡</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="col">
+      <p class="cap">③ 바꾼 뒤 — 이름을 누르면 "항목 편집"</p>
+      <p class="capsub">이름 고치기 · 마트 옮기기 · 알림 · 삭제를 한 창에서. "쿠팡에서 찾기"는 줄의 🔍와 같아서 뺌.</p>
+      <div class="phone"><div class="screen">
+        <div class="top"><div class="apptitle">마트노트</div>
+          <div class="tabs"><span class="tab on">🚀 쿠팡 3</span><span class="tab">🏪 다이소 2</span></div></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="st">항목 편집</div>
+          <div class="field">물티슈</div>
+          <p class="lbl">마트</p>
+          <div class="chips"><span class="chip on">🚀 쿠팡</span><span class="chip">🏪 다이소</span><span class="chip">🛒 이마트</span></div>
+          <div class="line"><span>🔔 알림</span><span>내일 오전 9:00 ›</span></div>
+          <div class="btns"><span class="b del">삭제</span><span class="b ok">저장</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>정리</b><br>
+    · 줄: 이름 · 🔍(쇼핑 앱 켜진 마트만) · 완료 · ≡ — ⋮ 메뉴 없음<br>
+    · <b>≡ 를 잡고 끌면</b> 순서 변경 (길게 눌러 끌기도 그대로 됨) → 순서 바꾸기를 눈에 보이게<br>
+    · <b>이름을 누르면</b> "항목 편집": 이름 칸(바로 수정), 마트 칩(누르면 옮김), 알림 줄(누르면 지금의 날짜·시간 창), 삭제 / 저장<br>
+    · 삭제는 지금처럼 "되돌리기" 알림으로 복구 가능<br>
+    · "쿠팡에서 찾기"는 메뉴에서 빠짐 (🔍 버튼과 같은 기능)
+  </div>
+</main>
+</body>
+</html>
