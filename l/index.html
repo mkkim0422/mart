@@ -13,7 +13,7 @@
 <link rel="icon" href="../icon_512.png">
 <!--
   받은 목록 페이지 (마트노트 1.5.0). 앱의 공유 메시지 링크가 여기로 온다:
-    https://mkkim0422.github.io/mart/l/#s=<마트>&i=<항목>&i=<항목>…
+    https://mkkim0422.github.io/mart/l/#<base64url("마트\n색\n이모지\n항목…")>  (예전: #s=<마트>&i=<항목>…)
   목록은 # 뒤에 있어서 서버(GitHub)로 전송되지 않는다.
   - 안드로이드: 마트노트를 연다 (intent://add?… scheme=martnote). 없으면 Play 스토어.
   - 아이폰·PC: 목록만 보여준다 (iOS 앱 없음). 항목을 누르면 줄이 그어진다(이 화면에서만).
@@ -68,7 +68,25 @@
 (function () {
   var PKG = "com.rldjrgo.grocerynote";
   var PLAY = "https://play.google.com/store/apps/details?id=" + PKG;
-  var p = new URLSearchParams(location.hash.slice(1));
+  // Link formats:
+  //  - short (app 1.5.0+): #<base64url of UTF-8 "마트\n색\n이모지\n항목\n…">
+  //  - long (first 1.5.0 builds): #s=마트&c=색&e=이모지&i=항목&i=…
+  var hash = location.hash.slice(1);
+  var p = new URLSearchParams(hash.indexOf("=") >= 0 ? hash : "");
+  if (hash && hash.indexOf("=") < 0) {
+    try {
+      var b64 = hash.replace(/-/g, "+").replace(/_/g, "/");
+      while (b64.length % 4) b64 += "=";
+      var bin = atob(b64), bytes = new Uint8Array(bin.length);
+      for (var k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+      var lines = new TextDecoder("utf-8").decode(bytes).split("\n");
+      p = new URLSearchParams();
+      p.set("s", lines[0] || "");
+      if (lines[1]) p.set("c", lines[1]);
+      if (lines[2]) p.set("e", lines[2]);
+      lines.slice(3).forEach(function (x) { p.append("i", x); });
+    } catch (e) {}
+  }
   var store = (p.get("s") || "").trim().slice(0, 30);
   var items = p.getAll("i").map(function (s) { return s.trim().slice(0, 30); })
                             .filter(Boolean).slice(0, 50);
