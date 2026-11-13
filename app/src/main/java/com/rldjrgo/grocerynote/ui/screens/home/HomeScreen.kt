@@ -108,6 +108,7 @@ import com.rldjrgo.grocerynote.domain.model.toComposeColorOrDefault
 import com.rldjrgo.grocerynote.domain.model.toHexString
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.ui.theme.MartPalette
+import com.rldjrgo.grocerynote.util.LinkShortener
 import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.StoreSearch
 
@@ -696,24 +697,27 @@ fun HomeScreen(
                 // 시스템 공유 시트 호출. 다이얼로그는 즉시 닫는다 (시트가 떠 있는
                 // 동안 다이얼로그가 뒤에 남아있을 필요 없음).
                 showShareRequest = false
-                val body = buildShareText(
-                    store = selectedStore,
-                    items = state.activeItems,
-                    requestNote = note,
-                )
-                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, body)
-                }
-                try {
-                    context.startActivity(
-                        Intent.createChooser(sendIntent, "장보기 리스트 공유")
+                val store = selectedStore
+                val items = state.activeItems
+                scope.launch {
+                    // Short link (is.gd → tinyurl → long link on failure, ≤ ~5s worst case).
+                    val link = LinkShortener.shorten(listLink(store, items))
+                    val body = buildShareText(
+                        store = store,
+                        items = items,
+                        requestNote = note,
+                        link = link,
                     )
-                } catch (_: ActivityNotFoundException) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            "공유할 수 있는 앱을 찾을 수 없습니다."
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, body)
+                    }
+                    try {
+                        context.startActivity(
+                            Intent.createChooser(sendIntent, "장보기 리스트 공유")
                         )
+                    } catch (_: ActivityNotFoundException) {
+                        snackbarHostState.showSnackbar("공유할 수 있는 앱을 찾을 수 없습니다.")
                     }
                 }
             },
@@ -976,6 +980,8 @@ private fun buildShareText(
     store: Store,
     items: List<Item>,
     requestNote: String,
+    /** [listLink], usually shortened by [LinkShortener]. */
+    link: String,
 ): String = buildString {
     val note = requestNote.trim().replace('\n', ' ')
     if (note.isNotEmpty()) {
@@ -996,7 +1002,7 @@ private fun buildShareText(
     // 아이폰이면 목록만 — 그 구분은 링크 페이지가 한다(보내는 쪽은 받는 사람 폰을 모름).
     // 📝/👉 줄은 받은 리스트를 다시 마트노트로 공유할 때 SharedTextParser가 걸러낸다.
     append("\n\n👉 눌러서 마트노트에 바로 담기\n")
-    append(listLink(store, items))
+    append(link)
 }
 
 /**
