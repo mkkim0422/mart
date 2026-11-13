@@ -331,7 +331,7 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - [x] Phase 14.5 — **v1.3.0 (vc9) 쇼핑몰 앱 바로가기** (마트 이름 → 쇼핑 앱, 목록 위 마트별 토글 기본 ON, 🔍 → 앱 검색/앱 열기/Play 스토어, DB v3) + 온보딩 개편(4장: 마트별·이름만·쇼핑앱·위젯, 마지막 장 두 버튼) + 위젯 "+" 제거·빈 상태 정리 + 홈 FAB 브랜드색 고정. 스토어 자료 `docs/playstore_listing.md` §0~2 — 2026-10-28
 - [x] Phase 14.6 — **v1.4.0 (vc10) "카톡 나에게 보내기 대신"** (앱을 만든 이유 = 카톡 나에게 보내기에 적은 장보기가 다른 글에 묻힘 → 유입 메시지·기능을 이 방향으로): ① 여러 줄 공유 → `SharedTextParser` + `SharedItemsSheet`로 줄마다 항목, 마트 골라 한 번에 담기 ② 항목 길게 눌러 순서 바꾸기 ③ 줄의 🔔 버튼 제거 → ⋮ 메뉴 ④ 공유 메시지 끝 Play 설치 링크 ⑤ Analytics `reminder_set`/`shared_items_added`/`items_reordered` ⑥ 스토어 문구 초안 `docs/playstore_listing.md` — 2026-11-12
 - [x] Phase 14.7 — **위젯 2종 + 위젯에서 체크** (v1.4.0): 5종 → 개수 위젯·목록 위젯, 목록 위젯은 마트 하나/전체를 골라 놓고(앱 안 선택 또는 `WidgetConfigActivity`) 스크롤 목록 하나 + ○ 체크 + "+" 하나. 시안 `sample/위젯2종_시안.html` — 2026-11-12
-- [x] **Phase 14.8 — v1.5.0 (vc11) "링크 눌러 바로 담기"** (2026-11-13; 1.4.0은 출시 안 하고 함께 묶음): 공유 메시지에 링크 하나(목록은 `#` 뒤라 서버로 안 감). 받는 사람이 누르면 마트노트 있음 → 앱에서 담기 / 없음 → Play 스토어. 정적 페이지 = `gh-pages` 브랜치 `l/index.html` → `https://mkkim0422.github.io/mart/l/#<base64url(UTF-8 "마트
+- [x] **Phase 14.8 — v1.5.0 (vc12) "링크 눌러 바로 담기"** (2026-11-13; 1.4.0은 출시 안 하고 함께 묶음; **Play 프로덕션에 12 (1.5.0) 등록 2026-11-13** — 먼저 올린 11은 별점 창 추가로 교체, 같은 버전 코드는 재업로드 불가): 공유 메시지에 링크 하나(목록은 `#` 뒤라 서버로 안 감). 받는 사람이 누르면 마트노트 있음 → 앱에서 담기 / 없음 → Play 스토어. 정적 페이지 = `gh-pages` 브랜치 `l/index.html` → `https://mkkim0422.github.io/mart/l/#<base64url(UTF-8 "마트
 색hex
 이모지
 항목
