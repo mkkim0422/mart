@@ -126,6 +126,9 @@ fun HomeScreen(
     var sharedDraft by remember { mutableStateOf("") }
     /** 여러 줄 공유(카톡 메모 등) → 줄별 항목 후보. null = 시트 닫힘. */
     var sharedItems by remember { mutableStateOf<List<String>?>(null) }
+    // Sender's mart name from a list link — preselect the receiver's mart with that name.
+    var sharedStoreName by remember { mutableStateOf<String?>(null) }
+    var sharedFromLink by remember { mutableStateOf(false) }
     var showAddStore by remember { mutableStateOf(false) }
     var showShareRequest by remember { mutableStateOf(false) }
     var showWidgetSizePicker by remember { mutableStateOf(false) }
@@ -255,11 +258,17 @@ fun HomeScreen(
     LaunchedEffect(deepLink) {
         val payload = deepLink ?: return@LaunchedEffect
         viewModel.handleDeepLink(payload.storeId, payload.itemId)
-        if (payload.openAddItem) {
+        if (payload.linkItems != null) {
+            // 받은 목록 링크 → 한 개여도 확인 시트(받은 목록이라는 걸 보여줌).
+            sharedStoreName = payload.linkStoreName
+            sharedFromLink = true
+            sharedItems = payload.linkItems
+        } else if (payload.openAddItem) {
             val shared = payload.sharedText.orEmpty()
             val parsed = SharedTextParser.parse(shared)
             if (parsed.size >= 2) {
                 // 여러 줄 → 확인 시트에서 한 번에 담기.
+                sharedFromLink = false
                 sharedItems = parsed
             } else {
                 sharedDraft = (parsed.firstOrNull() ?: shared).take(100)
@@ -623,7 +632,8 @@ fun HomeScreen(
         )
     }
     sharedItems?.let { names ->
-        val target = selectedStore ?: state.stores.firstOrNull()
+        val target = state.stores.firstOrNull { it.name == sharedStoreName }
+            ?: selectedStore ?: state.stores.firstOrNull()
         if (target != null) {
             SharedItemsSheet(
                 names = names,
@@ -632,10 +642,12 @@ fun HomeScreen(
                 onAdd = { storeId, picked ->
                     viewModel.addItems(storeId, picked)
                     sharedItems = null
+                    sharedStoreName = null
                     scope.launch { snackbarHostState.showSnackbar("${picked.size}개를 담았어요") }
                     viewModel.onAddFlowFinished()
                 },
-                onDismiss = { sharedItems = null },
+                onDismiss = { sharedItems = null; sharedStoreName = null },
+                fromLink = sharedFromLink,
             )
         }
     }
@@ -894,15 +906,28 @@ private fun MoveItemDialog(
     )
 }
 
-private const val PLAY_STORE_URL =
-    "https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote"
+/**
+ * 받은 목록 페이지 (1.5.0, GitHub Pages `gh-pages` 브랜치 `l/index.html`).
+ * 목록은 `#` 뒤에 실어서 서버로 가지 않는다. 페이지가 안드로이드면 마트노트를 열고
+ * (없으면 Play 스토어), 아이폰·PC면 목록만 보여준다 — 보내는 쪽은 받는 사람 폰을 모르니까.
+ */
+private const val LIST_PAGE_URL = "https://mkkim0422.github.io/mart/l/"
+
+private fun listLink(storeName: String, items: List<Item>): String {
+    fun enc(s: String) = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
+    return buildString {
+        append(LIST_PAGE_URL).append("#s=").append(enc(storeName.trim()))
+        // Keep the link short enough for any messenger: at most 30 items.
+        items.take(30).forEach { append("&i=").append(enc(it.name.trim().replace('\n', ' '))) }
+    }
+}
 
 /**
  * 공유용 텍스트 빌더.
  *
  * 사용자가 부탁 문구를 적었으면 맨 위에 한 줄로 얹고 빈 줄로 띄움. 아이템
- * 이름은 trim + `\n` 치환으로 한 줄 보장. 푸터는 마트노트 워터마크 + Play 설치
- * 링크 (iOS 앱은 아직 없으므로 Android 링크만).
+ * 이름은 trim + `\n` 치환으로 한 줄 보장. 푸터는 마트노트 워터마크 + 받은 목록
+ * 링크([listLink]).
  */
 private fun buildShareText(
     storeName: String,
@@ -924,12 +949,11 @@ private fun buildShareText(
         append('\n')
     }
     append("\n📝 마트노트에서 보냄")
-    // 받은 사람이 바로 설치할 수 있게 — 공유 = 무료 홍보 (2026-11-12).
-    // 보내는 쪽은 받는 사람 폰이 아이폰인지 알 수 없다(카톡 공유창은 그 정보를 안 줌).
-    // iOS 앱이 없으니 "갤럭시용"임을 문구로 밝혀 아이폰 사용자가 헛걸음하지 않게 한다.
+    // 링크 하나로 끝 (1.5.0): 마트노트가 있으면 눌러서 바로 담기, 없으면(안드로이드) 설치,
+    // 아이폰이면 목록만 — 그 구분은 링크 페이지가 한다(보내는 쪽은 받는 사람 폰을 모름).
     // 📝/👉 줄은 받은 리스트를 다시 마트노트로 공유할 때 SharedTextParser가 걸러낸다.
-    append("\n👉 갤럭시(안드로이드)라면 마트노트 받기: ")
-    append(PLAY_STORE_URL)
+    append("\n👉 눌러서 마트노트에 바로 담기: ")
+    append(listLink(storeName, items))
 }
 
 /**

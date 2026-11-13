@@ -29,6 +29,9 @@ object Analytics {
     fun sharedItemsAdded(count: Int) =
         log("shared_items_added", "count" to if (count >= 10) "10+" else count.toString())
     fun itemsReordered() = log("items_reordered")
+    /** A received list link (1.5.0) opened the app. */
+    fun listLinkOpened(count: Int) =
+        log("list_link_opened", "count" to if (count >= 10) "10+" else count.toString())
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")
 

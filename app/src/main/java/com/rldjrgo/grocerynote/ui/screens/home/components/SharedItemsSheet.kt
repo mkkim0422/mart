@@ -55,6 +55,8 @@ fun SharedItemsSheet(
     initialStoreId: Long,
     onAdd: (storeId: Long, names: List<String>) -> Unit,
     onDismiss: () -> Unit,
+    /** True when the names came from a received list link (1.5.0), not pasted text. */
+    fromLink: Boolean = false,
 ) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
@@ -72,7 +74,7 @@ fun SharedItemsSheet(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = "받은 글에서 ${names.size}개를 찾았어요",
+                text = if (fromLink) "받은 장보기 리스트 ${names.size}개" else "받은 글에서 ${names.size}개를 찾았어요",
                 style = typo.headingM,
                 color = colors.textPrimary,
             )

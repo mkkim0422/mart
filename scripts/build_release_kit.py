@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""출시 자료 폴더(출시자료_v1.4.0/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
+"""출시 자료 폴더(출시자료_v1.5.0/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
 
 결과:
-  출시자료_v1.4.0/
+  출시자료_v1.5.0/
     index.html            ← 브라우저로 열어 복사 버튼으로 붙여넣기
-    1_스크린샷/01~05.png    (1080x2400, 이 순서대로 업로드)
+    1_스크린샷/01~06.png    (1080x2400, 이 순서대로 업로드)
     2_피처그래픽/feature_graphic_1024x500.png
     3_앱아이콘/icon_512.png
     4_문구/*.txt           (출시노트·앱이름·짧은설명·자세한설명)
@@ -18,7 +18,7 @@ import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION, VC = "1.4.0", 10
+VERSION, VC = "1.5.0", 11
 OUT = os.path.join(ROOT, f"출시자료_v{VERSION}")
 SRC = os.path.join(ROOT, "docs", "playstore_assets")
 
@@ -42,8 +42,9 @@ SHOTS = [
     ("01_memo_lost.png", "나에게 보내기에 묻힌 메모", "나에게 보내기로 보낸 장보기 또 찾고 계셨죠?"),
     ("02_widget_home.png", "홈 화면 위젯", "폰만 켜면 살 게 다 보여요"),
     ("03_widget_check.png", "위젯에서 체크", "구매한 건 홈 화면에서 바로 완료 체크!"),
-    ("04_name_only.png", "이름만 입력", "생각날 때 이름만 톡 적으면 끝"),
-    ("05_done.png", "완료", "다 산 건 '완료' 한 번"),
+    ("04_list_link.png", "받은 목록 링크", "가족이 보낸 장보기, 누르면 바로 담겨요"),
+    ("05_name_only.png", "이름만 입력", "생각날 때 이름만 톡 적으면 끝"),
+    ("06_done.png", "완료", "다 산 건 '완료' 한 번"),
 ]
 
 # ---------- files ----------
@@ -146,7 +147,7 @@ page = f"""<!doctype html>
       <li><b>프로덕션</b>(또는 테스트 트랙) → <b>새 버전 만들기</b> → AAB 업로드: {aab_line}</li>
       <li>출시 노트 칸에 아래 <b>출시 노트</b> 복사해서 붙여넣기</li>
       <li><b>스토어 등록정보</b> → 앱 이름·짧은 설명·자세한 설명 붙여넣기</li>
-      <li>휴대전화 스크린샷: <b>기존 8장 모두 삭제</b> → <code>1_스크린샷</code>의 01~05를 순서대로 업로드</li>
+      <li>휴대전화 스크린샷: <b>기존 8장 모두 삭제</b> → <code>1_스크린샷</code>의 01~06을 순서대로 업로드</li>
       <li>그래픽 이미지(피처): <code>2_피처그래픽/feature_graphic_1024x500.png</code> 교체 · 앱 아이콘은 그대로</li>
       <li>저장 → 검토 제출</li>
     </ol>

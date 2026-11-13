@@ -30,6 +30,8 @@ import com.rldjrgo.grocerynote.ui.navigation.currentRouteOrNull
 import com.rldjrgo.grocerynote.ui.screens.onboarding.OnboardingScreen
 import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import com.rldjrgo.grocerynote.ui.theme.LocalAppColors
+import com.rldjrgo.grocerynote.util.Analytics
+import com.rldjrgo.grocerynote.util.SharedTextParser
 import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -113,6 +115,10 @@ object DeepLinkBus {
         val itemId: Long? = null,
         val openAddItem: Boolean = false,
         val sharedText: String? = null,
+        /** Items from a received list link (martnote://add) → straight to SharedItemsSheet. */
+        val linkItems: List<String>? = null,
+        /** Mart name the sender's list came from — preselected if the receiver has it. */
+        val linkStoreName: String? = null,
     )
     val flow = MutableStateFlow<Payload?>(null)
 
@@ -126,6 +132,22 @@ object DeepLinkBus {
                 flow.value = Payload(openAddItem = true, sharedText = text)
                 return
             }
+        }
+        // 받은 목록 링크 (1.5.0): 가족이 보낸 공유 메시지의 링크 → 목록 페이지 → 여기.
+        val data = intent.data
+        if (intent.action == Intent.ACTION_VIEW && data?.scheme == "martnote" && data.host == "add") {
+            val names = SharedTextParser.parse(
+                runCatching { data.getQueryParameters("i") }.getOrDefault(emptyList()).joinToString("\n"),
+            )
+            if (names.isNotEmpty()) {
+                Analytics.listLinkOpened(names.size)
+                flow.value = Payload(
+                    openAddItem = true,
+                    linkItems = names,
+                    linkStoreName = data.getQueryParameter("s")?.trim()?.take(30),
+                )
+            }
+            return
         }
         // Widget "+" button / App Shortcut → 해당 마트로 추가 시트 자동
         val action = intent.getStringExtra("action")

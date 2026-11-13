@@ -10,7 +10,7 @@ v4와 같은 틀(배경·폰 프레임·갤럭시 기본 아이콘·문구 위�
 
 이미지·문구에 "카톡/카카오" 같은 타사 상표는 쓰지 않는다(Play 메타데이터 정책).
 
-Output: docs/playstore_assets/v5_store/01..05 (1080x2400) + feature_graphic_1024x500.png
+Output: docs/playstore_assets/v5_store/01..06 (1080x2400) + feature_graphic_1024x500.png
 Run:    python scripts/compose_store_v5.py
 """
 import os
@@ -248,11 +248,16 @@ if __name__ == "__main__":
                    ["구매한 건 홈 화면에서", "바로 완료 체크!"],
                    "앱을 안 열어도 동그라미만 누르면 돼요",
                    check_screen())
-    v4.shot_raw("04_name_only.png",
+    # 04 (1.5.0): a family member's list link opened → "받은 장보기 리스트" sheet (real capture).
+    v4.shot_raw("04_list_link.png",
+                ["가족이 보낸 장보기,", "누르면 바로 담겨요"],
+                "링크 하나로 내 마트노트에 쏙",
+                "ss10_link.png")
+    v4.shot_raw("05_name_only.png",
                 ["생각날 때", "이름만 톡 적으면 끝"],
                 "가격이나 개수는 안 적어도 괜찮아요",
                 "ss4_add.png")
-    v4.shot_raw("05_done.png",
+    v4.shot_raw("06_done.png",
                 ["다 산 건 '완료' 한 번"],
                 "목록에서 쏙 빠지고, 산 건 따로 모여요",
                 "ss5_completed.png", ad=(2622, 2872))
