@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>장보기 리스트 · 마트노트</title>
+<meta name="description" content="눌러서 목록 보기 · 마트노트에 바로 담기">
+<meta property="og:type" content="website">
+<meta property="og:title" content="장보기 리스트가 도착했어요">
+<meta property="og:description" content="눌러서 목록 보기 · 마트노트에 바로 담기">
+<meta property="og:image" content="https://mkkim0422.github.io/mart/icon_512.png">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="../icon_512.png">
+<!--
+  받은 목록 페이지 (마트노트 1.5.0). 앱의 공유 메시지 링크가 여기로 온다:
+    https://mkkim0422.github.io/mart/l/#s=<마트>&i=<항목>&i=<항목>…
+  목록은 # 뒤에 있어서 서버(GitHub)로 전송되지 않는다.
+  - 안드로이드: 마트노트를 연다 (intent://add?… scheme=martnote). 없으면 Play 스토어.
+  - 아이폰·PC: 목록만 보여준다 (iOS 앱 없음). 항목을 누르면 줄이 그어진다(이 화면에서만).
+-->
+<style>
+  :root {
+    --bg:#F9FAFB; --card:#FFFFFF; --line:#E5E8EB; --text:#191F28; --sub:#4E5968; --muted:#8B95A1;
+    --brand:#3182F6; --soft:#E8F3FF; --ok:#2BA471; --ring:#C9CDD2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#17171B; --card:#1F1F23; --line:#3A3D42; --text:#F2F4F6; --sub:#A8B0BA; --muted:#6B7684;
+            --brand:#4592FF; --soft:#1A2D4D; --ring:#4E5968; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+         letter-spacing:-0.02em; line-height:1.5; }
+  main { max-width:480px; margin:0 auto; padding:28px 16px 40px; }
+  .brand { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; margin-bottom:18px; }
+  .brand img { width:22px; height:22px; border-radius:6px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--sub); font-size:14px; margin:0 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .row { display:flex; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--line);
+         font-size:16px; cursor:pointer; user-select:none; }
+  .row:first-child { border-top:0; }
+  .dot { width:20px; height:20px; border-radius:50%; border:1.5px solid var(--ring); flex:none;
+         display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; }
+  .row.done .dot { background:var(--ok); border-color:var(--ok); }
+  .row.done .name { color:var(--muted); text-decoration:line-through; }
+  .btn { display:block; width:100%; border:0; border-radius:12px; height:52px; font-size:16px; font-weight:600;
+         background:var(--brand); color:#fff; text-align:center; line-height:52px; text-decoration:none;
+         margin-top:18px; cursor:pointer; font-family:inherit; }
+  .note { color:var(--muted); font-size:13px; text-align:center; margin-top:10px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="../icon_512.png" alt="">마트노트</div>
+  <h1 id="title">장보기 리스트</h1>
+  <p class="sub" id="sub"></p>
+  <div class="card" id="list"></div>
+
+  <a class="btn hidden" id="open" href="#">마트노트에 바로 담기</a>
+  <p class="note hidden" id="openNote">마트노트가 없으면 설치 화면으로 가요</p>
+
+  <a class="btn hidden" id="get" href="https://play.google.com/store/apps/details?id=com.rldjrgo.grocerynote">마트노트 받기</a>
+  <p class="note hidden" id="iosNote">마트노트는 지금 갤럭시(안드로이드)에서만 쓸 수 있어요.<br>위 목록은 눌러서 체크하며 쓰셔도 돼요.</p>
+</main>
+<script>
+(function () {
+  var PKG = "com.rldjrgo.grocerynote";
+  var PLAY = "https://play.google.com/store/apps/details?id=" + PKG;
+  var p = new URLSearchParams(location.hash.slice(1));
+  var store = (p.get("s") || "").trim().slice(0, 30);
+  var items = p.getAll("i").map(function (s) { return s.trim().slice(0, 30); })
+                            .filter(Boolean).slice(0, 50);
+  var ua = navigator.userAgent;
+  var android = /Android/i.test(ua);
+  var ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var $ = function (id) { return document.getElementById(id); };
+
+  if (!items.length) {
+    // Opened without a list (e.g. the bare link) → just the app.
+    $("title").textContent = "마트노트";
+    $("sub").textContent = "마트별 장보기 리스트 · 홈 화면 위젯에서 보고 바로 체크";
+    $("list").classList.add("hidden");
+    $("get").classList.remove("hidden");
+    if (ios) $("iosNote").classList.remove("hidden");
+    return;
+  }
+
+  $("title").textContent = (store ? store + " " : "") + "장보기 리스트";
+  $("sub").textContent = items.length + "개 · 마트노트로 보낸 목록이에요";
+  document.title = $("title").textContent + " · 마트노트";
+  var list = $("list");
+  items.forEach(function (name) {
+    var row = document.createElement("div");
+    row.className = "row";
+    var dot = document.createElement("span");
+    dot.className = "dot";
+    var label = document.createElement("span");
+    label.className = "name";
+    label.textContent = name;
+    row.appendChild(dot); row.appendChild(label);
+    row.addEventListener("click", function () {
+      row.classList.toggle("done");
+      dot.textContent = row.classList.contains("done") ? "✓" : "";
+    });
+    list.appendChild(row);
+  });
+
+  if (android) {
+    var q = "s=" + encodeURIComponent(store) +
+            items.map(function (i) { return "&i=" + encodeURIComponent(i); }).join("");
+    var intent = "intent://add?" + q + "#Intent;scheme=martnote;package=" + PKG +
+                 ";S.browser_fallback_url=" + encodeURIComponent(PLAY) + ";end";
+    var open = $("open");
+    open.href = intent;
+    open.classList.remove("hidden");
+    $("openNote").classList.remove("hidden");
+    // Try once on arrival: 마트노트 있음 → 앱의 "N개 담기" 창, 없음 → Play 스토어.
+    // Once per list so coming back to this page doesn't bounce again.
+    var key = "opened:" + location.hash;
+    try {
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        setTimeout(function () { location.href = intent; }, 300);
+      }
+    } catch (e) {}
+  } else {
+    $("iosNote").classList.toggle("hidden", !ios);
+    if (!ios) $("get").classList.remove("hidden");
+  }
+})();
+</script>
+</body>
+</html>
