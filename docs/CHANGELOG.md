@@ -5,6 +5,7 @@
 
 ## 2026-11-13 · v1.4.0 (vc10) 마무리 — 쇼핑 앱 열기 수정·스토어 이미지 6장
 
+- 2026-11-13 · (코드 아님) 스토어 스크린샷 순서를 **앱을 만든 이유 순서**로: 01 나에게 보내기에 묻힌 메모 → 02 공유로 옮기기 → 03 "이제 장보기는 홈 화면에 늘 보여요"(위젯) → 04 위젯 체크 → 05 이름만 → 06 완료. 피처 그래픽 문구 "묻히던 장보기, 이제 홈 화면에" · `scripts/compose_store_v5.py`, `scripts/build_release_kit.py`, `docs/playstore_listing.md`
 - 2026-11-13 · **알리 🔍 → 알리 앱 검색 결과로 바로**: `https://www.aliexpress.com/w/wholesale-<검색어>.html`을 알리 앱으로 보내면 앱 안 검색 결과가 열림(S24+ 확인, 띄어쓰기 포함). `aliexpress://search?…`는 첫 화면에서 멈춰서 안 씀 · `util/StoreSearch.kt`
 - 2026-11-13 · (코드 아님) 스토어 스크린샷 6장으로: 02 표시 "장보기 메모" → **"내가 써놨던 메모"**, 새 03 **"써놨던 메모, 공유 한 번이면 정리 끝"**(02의 메모를 공유해 여러 항목 담기 시트, 실기기 캡처 `raw/ss9_share.png`) — "불편 → 마트노트는 이렇게 편함" 흐름. 이후 번호 하나씩 밀림 · `scripts/compose_store_v5.py`, `scripts/build_release_kit.py`, `docs/playstore_listing.md`
 - 2026-11-13 · (코드 아님) 스토어 스크린샷 02: 폰 두 대(메신저 vs 위젯) 비교는 폰 화면에서 글씨가 안 읽혀서 **메신저 폰 한 대 + 큰 글씨 + "장보기 메모" 표시**로 바꿈(위젯은 01에서 보여줌), 부제 "다른 글 사이에 묻혀서 스크롤만 한참" · `scripts/compose_store_v5.py`, `docs/playstore_assets/v5_store/02_vs_memo.png`

@@ -225,27 +225,27 @@ def feature_graphic():
     d = ImageDraw.Draw(g)
     d.text((385, 150), "마트노트", font=v2.font(FB, 104), fill=TEXT, anchor="lm")
     d.text((388, 262), "마트별 장보기 리스트", font=v2.font(FR, 46), fill=TEXT2, anchor="lm")
-    d.text((388, 335), "홈 화면 위젯에서 보고, 바로 체크", font=v2.font(FB, 38), fill=BRAND, anchor="lm")
+    d.text((388, 335), "묻히던 장보기, 이제 홈 화면에", font=v2.font(FB, 38), fill=BRAND, anchor="lm")
     g.convert("RGB").save(os.path.join(OUT, "feature_graphic_1024x500.png"), "PNG")
     print("saved feature_graphic_1024x500.png")
 
 
 if __name__ == "__main__":
-    v4.shot_single("01_widget_home.png",
-                   ["마트 와서", "뭐 사러 왔더라?"],
-                   "폰만 켜면 홈 화면에 다 적혀 있어요",
-                   hero_screen())
-    # 02: one phone, readable at phone size (the old 2-phone compare was too small to read;
-    # the widget answer is already 01). shot_compare kept for reference.
-    v4.shot_single("02_vs_memo.png",
+    # Story order (user 2026-11-13: the app exists because notes sent to "나에게 보내기"
+    # got lost): 01 can't find it → 02 move it into 마트노트 → 03 now it's always on the
+    # home screen → 04 check it off there → 05 add more → 06 done.
+    v4.shot_single("01_memo_lost.png",
                    ["나에게 보내기로 보낸 장보기", "또 찾고 계셨죠?"],
                    "다른 글 사이에 묻혀서 스크롤만 한참",
                    chat_screen_big())
-    # 03: the answer to 02 — share that buried note into 마트노트, one line/comma = one item.
-    v4.shot_raw("03_share_import.png",
+    v4.shot_raw("02_share_import.png",
                 ["써놨던 메모,", "공유 한 번이면 정리 끝"],
                 "마트만 고르면 하나하나 나눠서 담아줘요",
                 "ss9_share.png")
+    v4.shot_single("03_widget_home.png",
+                   ["이제 장보기는", "홈 화면에 늘 보여요"],
+                   "마트 와서 뭐 사러 왔더라? 할 일이 없어요",
+                   hero_screen())
     v4.shot_single("04_widget_check.png",
                    ["산 건 위젯에서", "동그라미 톡"],
                    "앱을 안 열어도 바로 체크돼요",
