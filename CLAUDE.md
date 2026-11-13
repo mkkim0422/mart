@@ -269,6 +269,15 @@ Test scenarios (verify each after Phase 4):
 6. System dark toggle → widget colors flip
 7. 1 day usage → battery impact negligible
 
+## 12.5 iOS app (`ios/`, started 2026-11-13)
+
+- **SwiftUI, iOS 17+**, SwiftData in App Group `group.com.rldjrgo.grocerynote` (app + widget share it). Bundle id `com.rldjrgo.grocerynote` (widget `.widget`). Scheme `martnote://` (`add?s=&c=&e=&i=` received list, `store/<uid>`, `add-item/<uid>`, `open`).
+- **No Mac here**: project is **XcodeGen** (`ios/project.yml`; `.xcodeproj` is generated, gitignored). CI `.github/workflows/ios.yml` builds on a GitHub macOS runner (simulator, unsigned) on every push to `ios/**`. Read compile errors from the check-run annotations (public API, xcbeautify `--renderer github-actions`).
+- Parity with Android 1.5.0: mart tabs, name-only add (recent chips), 1s strike+✓ complete + 되돌리기, ≡ reorder (List onMove), tap name → 항목 편집, 완료 탭 (sections, swipe 되돌리기/삭제), 설정 (위젯 안내 — iOS can't pin widgets, 마트 관리, 다크 모드, 문의, 데이터 지우기), 알림 (UNUserNotification), 음성추가 (Speech ko-KR), 공유 (부탁 문구 + is.gd link, same base64url page), 받은 목록 (same-name mart / "새로 만들기" / dedupe), 온보딩 4장 (SF Symbols).
+- Widgets: 목록 위젯 (`AppIntentConfiguration` + `SelectMartIntent`, medium/large, ○ = `Button(intent: CompleteItemIntent)`, no scroll on iOS → "+N개 더", "+" link) and 개수 위젯 (small/medium). `reloadAllTimelines()` on every change (`ModelContext.commit()`), timeline policy `.never`.
+- 쇼핑 앱 바로가기 on iOS = the shop's https search URL (opens the app via universal links if installed, else Safari) — which shops actually jump into their app is **unverified on an iPhone**.
+- Not yet: AdMob (needs an iOS app id), Share Extension (receive text from other apps), widget 노출순서, signing/TestFlight (needs Apple Developer account), list page iOS button (after App Store id exists).
+
 ## 13. Folder Structure
 
 ```
