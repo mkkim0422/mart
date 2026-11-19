@@ -93,12 +93,14 @@ private val pages = listOf(
         "가격도 수량도 필요 없어요. 빠르고 심플하게!",
         R.drawable.onboarding_page3,
     ),
-    // 쇼핑몰 앱 바로가기 — real capture + callout on the first 🔍 (was drawn in Compose and
-    // didn't match the real screen: narrow tabs, different 🔍 button; 2026-11-12).
+    // 요리별 재료 (1.6.0) — real capture of the 김치찌개 screen with three things picked.
+    // Replaced the "쇼핑 앱에서 검색" page (R.drawable.onboarding_page_shop) so the count
+    // stays at 4: that feature already has its own one-time tip on the first 🔍, and the
+    // store screenshots now show 요리별 재료 too (user 2026-11-19).
     Page(
-        "적어둔 그대로 쇼핑 앱에서 검색",
-        "항목 옆 🔍를 누르면 쿠팡·컬리 앱에서 바로 찾아줘요. 앱이 없으면 설치 화면으로 가요",
-        R.drawable.onboarding_page_shop,
+        "요리만 고르면 살 재료가 나와요",
+        "“김치찌개에 뭘 넣더라?” 싶을 때, 필요한 것만 눌러 담으세요",
+        R.drawable.onboarding_page_recipe,
     ),
     // LAST page on purpose: the widget-or-start choice is rendered on
     // pages.lastIndex, so the widget intro and its buttons stay together.

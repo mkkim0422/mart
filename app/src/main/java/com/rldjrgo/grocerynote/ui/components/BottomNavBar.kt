@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.RestaurantMenu
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +38,7 @@ private data class NavItem(
 
 private val items = listOf(
     NavItem(Routes.HOME, "구매예정", Icons.AutoMirrored.Outlined.List),
+    NavItem(Routes.RECIPES, "요리별 재료", Icons.Outlined.RestaurantMenu),
     NavItem(Routes.COMPLETED, "완료", Icons.Outlined.CheckCircle),
     NavItem(Routes.SETTINGS, "설정", Icons.Outlined.Settings),
 )
@@ -42,6 +46,8 @@ private val items = listOf(
 @Composable
 fun BottomNavBar(
     currentRoute: String?,
+    /** Tabs that show a small "new" dot next to their icon. */
+    dotRoutes: Set<String> = emptySet(),
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -72,16 +78,30 @@ fun BottomNavBar(
                         .clickable { if (!selected) onNavigate(item.route) }
                         .padding(vertical = 6.dp),
                 ) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        tint = tint,
-                        modifier = Modifier.size(24.dp),
-                    )
+                    Box {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = tint,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        if (item.route in dotRoutes) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 5.dp, y = (-2).dp)
+                                    .size(7.dp)
+                                    .background(colors.brandPrimary, CircleShape),
+                            )
+                        }
+                    }
                     Text(
                         text = item.label,
                         color = tint,
                         style = AppTheme.typography.micro,
+                        // 4 tabs: keep "요리별 재료" on one line even with a large system font.
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
             }

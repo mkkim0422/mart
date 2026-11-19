@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.rldjrgo.grocerynote.ui.screens.completed.CompletedScreen
 import com.rldjrgo.grocerynote.ui.screens.home.HomeScreen
+import com.rldjrgo.grocerynote.ui.screens.recipes.RecipesScreen
 import com.rldjrgo.grocerynote.ui.screens.settings.SettingsScreen
 import com.rldjrgo.grocerynote.ui.screens.store.StoreManageScreen
 
@@ -25,7 +26,7 @@ private const val ANIM_MS = 300
  *  otherwise (with popUpTo+restoreState) 설정→완료 reads as "forward" and slides
  *  the wrong way vs 완료→구매예정. Going to a tab on the right slides like
  *  "next" (Left); to a tab on the left slides like "back" (Right). */
-private val TAB_ORDER = listOf(Routes.HOME, Routes.COMPLETED, Routes.SETTINGS)
+private val TAB_ORDER = listOf(Routes.HOME, Routes.RECIPES, Routes.COMPLETED, Routes.SETTINGS)
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabDir(
     forwardDefault: Boolean,
@@ -65,6 +66,9 @@ fun AppNavHost(
             HomeScreen(
                 onManageStores = { navController.navigate(Routes.STORE_MANAGE) },
             )
+        }
+        composable(Routes.RECIPES) {
+            RecipesScreen()
         }
         composable(Routes.COMPLETED) {
             CompletedScreen()

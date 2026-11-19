@@ -32,6 +32,22 @@ object Analytics {
     /** A received list link (1.5.0) opened the app. */
     fun listLinkOpened(count: Int) =
         log("list_link_opened", "count" to if (count >= 10) "10+" else count.toString())
+    /** "요리별 재료" tab: a dish was opened. Dish names are our own bundled table, not user text. */
+    fun recipeOpened(name: String) = log("recipe_opened", "recipe" to name)
+    fun recipeItemsAdded(count: Int) =
+        log("recipe_items_added", "count" to if (count >= 10) "10+" else count.toString())
+    /** "만드는 법 보기" → YouTube search. Tells whether in-app cooking steps (phase 2) are worth building. */
+    fun recipeHowTo(name: String) = log("recipe_howto", "recipe" to name)
+    /**
+     * A dish search that found nothing — the one place typed text leaves the device
+     * (owner decision 2026-11-19: it tells us which dishes to add to the table).
+     * Only letters/Hangul, max 20 chars, never numbers. Must be declared in the privacy
+     * policy and Play "Data safety" (App activity → in-app search history) before release.
+     */
+    fun recipeSearchMiss(query: String) {
+        val q = query.filter { it.isLetter() || it == ' ' }.trim().take(20)
+        if (q.length >= 2) log("recipe_search_miss", "query" to q)
+    }
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")
 

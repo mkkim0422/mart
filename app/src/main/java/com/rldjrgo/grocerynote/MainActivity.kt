@@ -187,14 +187,19 @@ private fun AppRoot(settings: SettingsDataStore, onResolved: () -> Unit) {
         // startDestination always HOME, so bottom-nav popUpTo() is never
         // pointed at a popped ONBOARDING (the cause of the weird tab swipe).
         false -> OnboardingScreen(onDone = {})
-        else -> MainScaffold()
+        else -> MainScaffold(settings)
     }
 }
 
 @Composable
-private fun MainScaffold() {
+private fun MainScaffold(settings: SettingsDataStore) {
     val navController = rememberNavController()
     val current = navController.currentRouteOrNull()
+
+    // "요리별 재료" (new in 1.6.0): a small dot on its tab until it has been opened once —
+    // people who update never see onboarding again, so this is the only quiet hint.
+    val recipesOpened by settings.hasOpenedRecipes.collectAsState(initial = true)
+    LaunchedEffect(current) { if (current == Routes.RECIPES) settings.setRecipesOpened() }
 
     // A widget deep-link can arrive while the app sits on Settings/Completed.
     // HomeScreen only reacts when it's composed, so route to Home FIRST here
@@ -220,6 +225,7 @@ private fun MainScaffold() {
             if (current != Routes.STORE_MANAGE) {
                 BottomNavBar(
                     currentRoute = current,
+                    dotRoutes = if (recipesOpened) emptySet() else setOf(Routes.RECIPES),
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }

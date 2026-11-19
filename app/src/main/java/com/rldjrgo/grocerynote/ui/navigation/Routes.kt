@@ -3,6 +3,7 @@ package com.rldjrgo.grocerynote.ui.navigation
 object Routes {
     const val ONBOARDING = "onboarding"
     const val HOME = "home"
+    const val RECIPES = "recipes"
     const val COMPLETED = "completed"
     const val SETTINGS = "settings"
     const val STORE_MANAGE = "store_manage"

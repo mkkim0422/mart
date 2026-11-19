@@ -19,6 +19,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 enum class DarkModePref { Auto, On, Off }
 
+private const val RECENT_RECIPES_MAX = 8
+
 @Singleton
 class SettingsDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
@@ -36,6 +38,36 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val CompletedCount = intPreferencesKey("completed_count")
         val ReviewAsked = booleanPreferencesKey("review_asked")
         val HasSeenMartPicker = booleanPreferencesKey("has_seen_mart_picker")
+        val RecentRecipes = stringPreferencesKey("recent_recipes")
+        val RecipeLastStoreId = longPreferencesKey("recipe_last_store_id")
+        val HasOpenedRecipes = booleanPreferencesKey("has_opened_recipes")
+    }
+
+    /** "요리별 재료" tab: last opened dishes, newest first (names, max [RECENT_RECIPES_MAX]). */
+    val recentRecipes: Flow<List<String>> = context.dataStore.data
+        .map { prefs -> (prefs[Keys.RecentRecipes] ?: "").split("\n").filter { it.isNotBlank() } }
+
+    suspend fun pushRecentRecipe(name: String) {
+        context.dataStore.edit { prefs ->
+            val cur = (prefs[Keys.RecentRecipes] ?: "").split("\n").filter { it.isNotBlank() && it != name }
+            prefs[Keys.RecentRecipes] = (listOf(name) + cur).take(RECENT_RECIPES_MAX).joinToString("\n")
+        }
+    }
+
+    /** "요리별 재료" tab opened at least once → its "new" dot on the bottom bar goes away for good. */
+    val hasOpenedRecipes: Flow<Boolean> = context.dataStore.data
+        .map { it[Keys.HasOpenedRecipes] ?: false }
+
+    suspend fun setRecipesOpened() {
+        context.dataStore.edit { it[Keys.HasOpenedRecipes] = true }
+    }
+
+    /** Mart the user last added recipe ingredients to (0 = none yet). */
+    val recipeLastStoreId: Flow<Long> = context.dataStore.data
+        .map { it[Keys.RecipeLastStoreId] ?: 0L }
+
+    suspend fun setRecipeLastStoreId(id: Long) {
+        context.dataStore.edit { it[Keys.RecipeLastStoreId] = id }
     }
 
     /** First-run "자주 가는 곳을 골라 주세요" sheet shown/handled (1.5.1). */
