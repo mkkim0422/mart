@@ -110,6 +110,7 @@ const SEARCH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stro
 const NAV_I = {
   list:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`,
   done:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>`,
+  cook:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M8 3v18M17 3c-2 1.5-3 4-3 7v2h3zM17 12v9"/></svg>`,
   set:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M5.2 18.8l2.1-2.1M16.7 7.3l2.1-2.1"/></svg>`
 };
 const MARTS = {
@@ -134,13 +135,30 @@ function row(it){
    ${it.s?`<span class="srch"${it.hl?` style="box-shadow:0 0 0 3px #3182F6"`:''}>${SEARCH}</span>`:''}
    ${done?`<span class="okc"><i>✓</i></span>`:`<span class="btnc">완료</span>`}<span class="drag">≡</span></div>`;
 }
+function navBar(on){
+  const it=(k,ic,l)=>`<div${k===on?' class="on"':''}>${ic}${l}</div>`;
+  return `<div class="nav">${it("list",NAV_I.list,"구매예정")}${it("cook",NAV_I.cook,"요리별 재료")}${it("done",NAV_I.done,"완료")}${it("set",NAV_I.set,"설정")}</div>`;
+}
+/* 요리별 재료 탭의 요리 화면 (앱 1.6.0) */
+function recipeScreen({emoji,name,groups,marts,sel,count}){
+  const chip=(n,on)=>`<span style="display:inline-flex;align-items:center;height:40px;padding:0 14px;border-radius:20px;font-size:15px;white-space:nowrap;${on?'background:#E8F3FF;border:1px solid #3182F6;color:#3182F6;font-weight:600':'background:#fff;border:1px solid #E5E8EB;color:#191F28'}">${on?'✓ ':''}${n}</span>`;
+  return `<div class="app"><div class="sb"><span>9:41</span><span>▂▄▆ 100</span></div>
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 20px 10px;font-size:22px;font-weight:700"><span style="font-size:24px;font-weight:400">←</span>${E(emoji)} ${name}</div>
+   <div style="padding:0 20px"><span style="display:inline-flex;align-items:center;gap:4px;height:38px;padding:0 14px 0 10px;border-radius:19px;border:1px solid #E5E8EB;font-size:15px;font-weight:600"><span style="color:#FF0000;font-size:15px">▶</span> 만드는 법 보기</span></div>
+   ${groups.map(([t,h,items])=>`<div style="padding:18px 20px 0"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px"><b style="font-size:16px">${t}</b>${h?`<span style="font-size:13px;color:#8B95A1">${h}</span>`:''}</div>
+     <div style="display:flex;flex-wrap:wrap;gap:8px">${items.map(([n,on])=>chip(n,on)).join('')}</div></div>`).join('')}
+   <div style="position:absolute;left:0;right:0;top:458px;background:#fff;border-top:1px solid #E5E8EB;padding:14px 20px 12px">
+     <div style="display:flex;gap:8px;margin-bottom:12px">${marts.map(k=>{const m=MARTS[k];const on=k===sel;return `<span style="display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 13px;border-radius:18px;font-size:14px;${on?`border:1.5px solid ${m.c};background:${m.bg};font-weight:700`:'border:1px solid #E5E8EB;color:#4E5968'}">${E(m.e)} ${m.n}</span>`}).join('')}</div>
+     <div style="height:52px;border-radius:12px;background:#3182F6;color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center">${MARTS[sel].n}에 ${count}개 담기</div>
+   </div>${navBar("cook")}</div>`;
+}
 function appScreen({sel="coupang",items,counts,shop=false,fabs=true,title="구매예정",extra=""}){
   return `<div class="app"><div class="sb"><span>9:41</span><span>▂▄▆ 100</span></div>
    <div class="pt">${title}</div>${tabs(sel,counts)}
    ${shop?`<div class="tgl"><span>${MARTS[sel].n} 앱 바로가기</span><span class="sw"></span></div>`:''}
    ${items.map(row).join('')}
    ${fabs?`<div class="fabs"><div class="fab1">🎙 음성추가</div><div class="fab2">＋ 추가</div></div>`:''}
-   <div class="nav"><div class="on">${NAV_I.list}구매예정</div><div>${NAV_I.done}완료</div><div>${NAV_I.set}설정</div></div>${extra}</div>`;
+   ${navBar("list")}${extra}</div>`;
 }
 function widget({x,y,w,h,marts,check=[],fab=true}){
   return `<div class="wg" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;overflow:hidden">
@@ -172,7 +190,7 @@ const fg = [];
 const bigCard=({tabsList=null,sel,head=null,rows,w=440,fs=28,rot=0,x,y,shadow="0 24px 50px rgba(10,30,70,.28)"})=>`<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;background:#fff;border-radius:30px;padding:22px 26px 14px;box-shadow:${shadow};transform:rotate(${rot}deg);z-index:3">
  ${tabsList?`<div style="display:flex;gap:10px;padding-bottom:16px;border-bottom:2px solid #F2F4F6">${tabsList.map(k=>{const m=MARTS[k],on=k===sel;return `<div style="display:flex;align-items:center;gap:6px;height:50px;padding:0 16px;border-radius:25px;font-size:22px;font-weight:700;white-space:nowrap;${on?'background:#3182F6;color:#fff':'border:2px solid #E5E8EB;color:#4E5968'}">${E(m.e)} ${m.n}</div>`}).join('')}</div>`:''}
  ${head?(()=>{const m=MARTS[head];return `<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:2px solid #F2F4F6"><span class="emo" style="width:44px;height:44px;border-radius:12px;background:${m.bg};display:flex;align-items:center;justify-content:center;font-size:24px">${m.e}</span><b style="flex:1;font-size:26px;color:#4E5968">${m.n}</b><span style="font-size:20px;font-weight:800;color:${m.c};background:${m.bg};border-radius:14px;padding:3px 13px">${rows.length}</span></div>`})():''}
- ${rows.map(([n,d])=>`<div style="display:flex;align-items:center;gap:16px;height:${fs*2.1}px;font-size:${fs}px;${d?'color:#8B95A1;text-decoration:line-through;text-decoration-thickness:3px':''}">${d?`<i class="ringok" style="width:${fs}px;height:${fs}px;font-size:${fs*.55}px">✓</i>`:`<i class="ring" style="width:${fs}px;height:${fs}px;border-width:2.5px"></i>`}${n}</div>`).join('')}
+ ${rows.map(([n,d])=>`<div style="display:flex;align-items:center;gap:16px;height:${fs*2.1}px;font-size:${fs}px">${d?`<i class="ringok" style="width:${fs}px;height:${fs}px;font-size:${fs*.55}px">✓</i>`:`<i class="ring" style="width:${fs}px;height:${fs}px;border-width:2.5px"></i>`}<span${d?' style="color:#8B95A1;text-decoration:line-through;text-decoration-thickness:3px"':''}>${n}</span></div>`).join('')}
 </div>`;
 
 /* A — 브랜드 블루 + 기울어진 폰 */
@@ -296,12 +314,21 @@ ss.push({id:"ss1",name:"3. 마트별",html:`<div class="frame ss" style="backgro
 </div>`});
 
 ss.push({id:"ss2",name:"2. 위젯 체크",html:`<div class="frame ss" style="background:${BLUE}">
- ${head("앱 안 열고<br>홈 화면에서 체크","카트에 담으면서 하나씩 톡")}
+ ${head("이제 찾지 마세요<br>홈 화면에 늘 떠 있어요","앱 안 열고 바로 체크")}
  ${P(homeScreen(countWidget({x:16,y:62,w:160,marts:[["coupang",4],["daiso",3]]})+
    `<div class="hicon" style="left:200px;top:70px"><b style="background:#fff;padding:6px"><img src="${ICON}" style="width:100%;border-radius:10px"></b>마트노트</div>`+
    widget({x:16,y:166,w:328,h:420,marts:[["coupang",["생수 2L","휴지 30롤","세탁세제","햇반"]],["daiso",["건전지","수세미","지퍼백"]]],check:["휴지 30롤"]})))}
  <div class="pin emo" style="left:205px;top:1185px;font-size:110px;transform:rotate(-10deg)">👆</div>
  <div style="position:absolute;left:480px;top:1150px;z-index:7;background:#191F28;color:#fff;font-size:34px;font-weight:700;padding:16px 26px;border-radius:20px">바로 완료 ✓</div>
+</div>`});
+
+ss.push({id:"ss7",name:"4. 요리별 재료 (새로)",html:`<div class="frame ss" style="background:${BLUE}">
+ ${head("김치찌개에<br>뭘 넣더라?","요리만 고르면 살 재료가 나와요")}
+ ${P(recipeScreen({emoji:"🍲",name:"김치찌개",sel:"emart",count:3,marts:["coupang","daiso","emart"],groups:[
+   ["재료","",[["김치",0],["돼지고기 찌개용",1],["두부",1],["양파",0],["대파",1]]],
+   ["넣어도 좋은 것","",[["청양고추",0],["라면사리",0],["팽이버섯",0]]],
+   ["양념","집에 없는 것만",[["고춧가루",0],["다진 마늘",0],["국간장",0]]]]}))}
+ <div class="pin emo" style="left:820px;top:1000px;font-size:110px;transform:rotate(-8deg)">👆</div>
 </div>`});
 
 const addSheet=`<div style="position:absolute;inset:0;background:rgba(0,0,0,.42)"></div>
@@ -371,16 +398,27 @@ ss.push({id:"ss6",name:"1. 묻히던 메모",html:`<div class="frame ss" style="
  <div style="position:absolute;left:40px;top:930px;z-index:7;background:#fff;font-size:38px;font-weight:800;padding:18px 30px;border-radius:24px;transform:rotate(-6deg);box-shadow:0 10px 24px rgba(0,0,0,.14)">${E("😵")} 분명 보냈는데…</div>
 </div>`});
 
+/* ---------- 블로그 대표 사진 1080x1080 (?only=blogCover 로만 뽑음) ---------- */
+const blog=[{id:"blogCover",html:`<div class="frame" style="width:1080px;height:1080px;background:${BLUE}">
+ <div style="position:absolute;top:92px;width:100%;text-align:center;color:#fff">
+  <div style="font-size:86px;font-weight:800;line-height:1.2;letter-spacing:-0.045em">제가 불편해서 만든<br>장보기 메모 앱</div>
+  <div style="font-size:38px;font-weight:600;margin-top:26px;opacity:.94">쿠팡 따로, 다이소 따로 · 홈 화면에서 바로 체크</div></div>
+ <div style="position:absolute;left:188px;top:490px;transform:scale(1.6);transform-origin:0 0">
+  ${bigCard({tabsList:["coupang","daiso","emart"],sel:"coupang",rows:[["생수 2L 6입"],["휴지 30롤",1],["세탁세제"],["햇반 12개"]],x:0,y:0})}</div>
+ <div class="pin emo" style="left:48px;top:560px;font-size:120px;transform:rotate(-14deg)">🥛</div>
+ <div class="pin emo" style="left:922px;top:800px;font-size:120px;transform:rotate(14deg)">🥕</div>
+</div>`}];
+
 /* ---------- render ---------- */
 const only=new URLSearchParams(location.search).get("only");
 if(only){
-  const it=[...fg,...ss].find(f=>f.id===only);
+  const it=[...fg,...ss,...blog].find(f=>f.id===only);
   document.body.style.cssText="padding:0;margin:0;background:#fff";
   document.body.innerHTML=it.html;
 }else{
   const sc=(html,w,h,s)=>`<div class="scaler" style="width:${w*s}px;height:${h*s}px"><div style="transform:scale(${s});transform-origin:0 0">${html}</div></div>`;
   document.getElementById("fgs").innerHTML=fg.map(f=>`<div class="cell"><h3>${f.name}</h3><p>${f.desc}</p>${sc(f.html,1024,500,.52)}</div>`).join('');
-  document.getElementById("sss").innerHTML=["ss6","ss2","ss1","ss3","ss4","ss5"].map(id=>ss.find(f=>f.id===id)).map(f=>`<div class="cell"><h3>${f.name}</h3>${sc(f.html,1080,1920,.26)}</div>`).join('');
+  document.getElementById("sss").innerHTML=["ss6","ss2","ss1","ss7","ss3","ss4","ss5"].map(id=>ss.find(f=>f.id===id)).map(f=>`<div class="cell"><h3>${f.name}</h3>${sc(f.html,1080,1920,.26)}</div>`).join('');
   const comp=[["다른 앱 (기존 1위)","쇼핑 목록 - 간단한 노트와 장보기 메모장","Komorebi Inc."],];
   const ours=[{h:`<img src="우리.png" style="width:100%;height:100%;object-fit:cover;object-position:50% 18%">`,t:"현재 (우리)"}];
   document.getElementById("serp").innerHTML=

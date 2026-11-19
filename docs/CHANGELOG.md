@@ -3,6 +3,16 @@
 > 사용자 지시 1건 = 1줄. 최신이 맨 위. 탐색·빌드·실기기 검증은 기록하지 않음.
 > 형식: `- YYYY-MM-DD · {한 줄 요약} · {대표 파일들}` (커밋되면 끝에 ` (커밋 abc1234)` 추가)
 
+## 2026-11-19 · v1.6.0 (vc14) — 요리별 재료 탭 · 스토어 이름 변경
+
+- 2026-11-19 · **v1.6.0 (vc14) 버전업 + 출시 자료**: 스토어 앱 이름 → "장보기 메모 - 마트노트: 마트별 쇼핑 리스트 위젯"(검색어 131개 확인 결과 "장보기 메모"가 이름 일치로 뚫리는 유일한 큰 검색어 — `sample/검색어_확인.html`, CLAUDE.md "ASO 메모 2"), 짧은·자세한 설명·출시 노트, 스크린샷 7장(4번째 "김치찌개에 뭘 넣더라?" 새로) · `app/build.gradle.kts`, `docs/playstore_listing.md`, `docs/playstore_assets/v7_store/`, `scripts/build_release_kit.py`, `sample/업데이트_1.6.0_준비.html`, `sample/스토어그래픽_시안.html`
+- 2026-11-19 · 온보딩 3번째 장 "쇼핑 앱에서 검색" → **"요리만 고르면 살 재료가 나와요"**(실기기 캡처, 4장 유지) + "요리별 재료" 탭에 한 번 열면 사라지는 **새 기능 점** · `OnboardingScreen.kt`, `res/drawable/onboarding_page_recipe.png`, `BottomNavBar.kt`, `MainActivity.kt`, `SettingsDataStore.kt`
+- 2026-11-19 · **목록 위젯 빈 곳을 눌러도 앱이 열림**: 항목이 적을 때 목록(ListView)의 빈 영역이 탭을 삼키던 문제 → 목록 마지막에 남은 높이만큼의 눌리는 칸. 실제 높이가 필요해 목록 위젯을 SizeMode.Exact로 · `widget/common/WidgetCommon.kt`, `widget/GroceryWidgetMedium.kt`
+- 2026-11-19 · **"요리별 재료" 탭 (Phase 15 재개)**: 하단 탭 4개(구매예정/요리별 재료/완료/설정). 요리 296개 재료표(양 없음, 이름만; 인기 레시피 대조 + 독립 검수 3회), 검색(다른 이름·오타)·자주 찾는 요리·최근 본 요리, 재료는 미체크로 시작·고른 마트에 이미 있으면 비활성, 마트 칩(7개 이상이면 +N 펼치기), "만드는 법 보기"(영상 앱에서 "요리 이름 황금레시피" 검색), 없는 요리 검색어를 Analytics로(출시 전 방침·데이터 보안 신고 필요). 탭 최대 3개 규칙 → 4개로 변경 · `assets/recipes.txt`, `data/recipes/RecipeBook.kt`, `ui/screens/recipes/`, `ui/navigation/`, `util/Analytics.kt`, `CLAUDE.md`
+- 2026-11-19 · (보류) 요리 → 장볼 목록 **웹 버전**(양 계산 포함, 86개): 검색 경쟁력이 없다고 판단해 올리지 않음 · `web/jang/`, `sample/행사장보기_김장_시안.html`
+- 2026-11-19 · (홍보) 네이버 블로그 글·사진 세트(대표 1 + 본문 6), 쇼츠 대본 손질, 스토어 2번 이미지 문구 "이제 찾지 마세요 / 홈 화면에 늘 떠 있어요", 대표 그래픽 ✓ 취소선 수정 · `홍보자료/index.html`, `홍보자료/블로그_사진/`, `docs/playstore_assets/v6_store/`
+- 2026-11-17 · 목록 위젯: 전체에서 살 게 없는 마트는 숨김, 다 비었을 때 "살 거 생각나면 / 여기 적어 두세요", 2x2로 들어가고 넣은 직후 "꾹 누르면 크기를 바꿀 수 있어요" 안내 · `widget/common/WidgetCommon.kt`, `widget/WidgetPinSuccessReceiver.kt`, `res/xml/grocery_widget_medium_info.xml`
+
 ## 2026-11-17 · 스토어 그래픽 교체 · 기능 검토 · 원스토어(작업 중)
 
 - 2026-11-17 · (작업 중, 브랜치 `wip/onestore`) **원스토어용 빌드**: 빌드 종류를 play / onestore로 나눔. 원스토어 빌드는 Google Play 결제 라이브러리를 빼고(빈 BillingRepository), 별점(자동 창·설정 "별점 주기")은 원스토어 상세 화면으로(`ONESTORE_PRODUCT_ID` 채운 뒤에만 보임), 공유·추천 링크는 그대로 Play/목록 링크 페이지로(원스토어 사용자의 공유가 Play 설치로 이어지게). Analytics 사용자 속성 `store`. Play 빌드 명령은 `bundleRelease` → `bundlePlayRelease`로 바뀜. **첫 빌드가 실패(원인 미확인)한 채 사용자 요청으로 중단** — main에는 안 넣음. 원스토어는 게임 위주라 생활앱 유입이 적을 것으로 보고 우선순위 낮춤 · `app/build.gradle.kts`, `app/src/{play,onestore}/…/BillingRepository.kt`, `util/StoreLinks.kt`(신규), `HomeScreen.kt`, `SettingsScreen.kt`, `util/Analytics.kt`, `scripts/build_release_kit.py`

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>메뉴로 담기 — 탭 vs 버튼 시안</title>
+<style>
+:root{--brand:#3182F6;--soft:#E8F3FF;--t1:#191F28;--t2:#4E5968;--t3:#8B95A1;--t4:#C9CDD2;--bg2:#F9FAFB;--bg3:#F2F4F6;--div:#E5E8EB;--red:#F04452}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Pretendard,"Malgun Gothic",sans-serif;background:#E9ECEF;color:var(--t1);letter-spacing:-0.02em;line-height:1.5;padding:32px 24px 60px}
+h1{font-size:24px;text-align:center}
+.lead{text-align:center;color:var(--t2);margin-top:6px;font-size:15px}
+.opt{max-width:1000px;margin:36px auto 0;background:#fff;border-radius:20px;padding:28px}
+.opt h2{font-size:19px}
+.opt h2 span{display:inline-block;background:var(--brand);color:#fff;border-radius:8px;padding:2px 10px;font-size:14px;margin-right:8px}
+.opt .d{color:var(--t2);font-size:14px;margin-top:4px}
+.phones{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.col{width:290px}
+.cap{font-size:13px;color:var(--t2);text-align:center;margin-bottom:8px;font-weight:600}
+.ph{width:290px;height:590px;border:8px solid #191F28;border-radius:34px;background:#fff;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.title{font-size:20px;font-weight:800;padding:18px 18px 10px}
+.tabs{display:flex;gap:6px;padding:0 18px 10px}
+.pill{border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;background:var(--bg3);color:var(--t2)}
+.pill.on{background:var(--brand);color:#fff}
+.body{flex:1;overflow:hidden;padding:0 18px}
+.item{display:flex;align-items:center;justify-content:space-between;height:46px;border-bottom:1px solid var(--bg3);font-size:15px}
+.item em{font-style:normal;font-size:12px;color:var(--t2);background:var(--bg3);border-radius:8px;padding:5px 9px}
+.nav{display:flex;border-top:1px solid var(--div);height:56px;flex:none}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--t3);gap:2px}
+.nav div b{font-size:17px;font-weight:400}
+.nav div.on{color:var(--brand);font-weight:700}
+.fab{position:absolute;right:16px;bottom:72px;width:52px;height:52px;border-radius:50%;background:var(--brand);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(49,130,246,.35)}
+.inp{height:46px;border:1.5px solid var(--brand);border-radius:12px;display:flex;align-items:center;padding:0 14px;font-size:15px}
+.inp.idle{border:1px solid var(--div);color:var(--t3)}
+.sub{font-size:13px;color:var(--t2);font-weight:700;margin:14px 0 8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.card{border:1px solid var(--div);border-radius:10px;padding:9px 10px;font-size:14px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:999px;border:1px solid var(--div);padding:6px 11px;font-size:13px;color:var(--t2)}
+.chip.on{background:var(--soft);border-color:var(--brand);color:var(--brand);font-weight:700}
+.chip.dim{color:var(--t4)}
+.btn{height:48px;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;margin-top:14px}
+.dimbg{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:18px}
+.sheet h3{font-size:17px;margin-bottom:12px}
+.link{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:10px}
+.link span{color:var(--brand)}
+.mark{outline:3px solid #FFB800;outline-offset:3px;border-radius:12px}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+.pc div{background:var(--bg2);border-radius:14px;padding:14px 16px;font-size:14px;color:var(--t2)}
+.pc b{display:block;color:var(--t1);margin-bottom:4px}
+.note{max-width:1000px;margin:20px auto 0;font-size:13px;color:var(--t3);text-align:center}
+</style>
+</head>
+<body>
+<h1>메뉴 이름으로 재료 담기 — 어디에 둘까</h1>
+<p class="lead">노란 테두리가 들어가는 곳이에요. 두 안 모두 양·인분 없이 이름만 담습니다.</p>
+
+<!-- A -->
+<section class="opt">
+  <h2><span>A</span>아래 탭에 "메뉴" 추가 (탭 4개)</h2>
+  <p class="d">탭을 누르면 메뉴 목록이 보이고, 고르면 재료가 떠요.</p>
+  <div class="phones">
+    <div class="col"><div class="cap">① 메뉴 탭</div>
+      <div class="ph">
+        <div class="title">메뉴로 담기</div>
+        <div class="body">
+          <div class="inp idle">메뉴 이름 (예: 된장찌개)</div>
+          <div class="sub">찌개·국</div>
+          <div class="grid"><div class="card">🍲 된장찌개</div><div class="card">🍲 김치찌개</div><div class="card">🥣 미역국</div><div class="card">🍲 부대찌개</div></div>
+          <div class="sub">메인 요리</div>
+          <div class="grid"><div class="card">🥘 제육볶음</div><div class="card">🥘 소불고기</div><div class="card">🥘 닭볶음탕</div><div class="card">🍝 잡채</div></div>
+          <div class="sub">행사·모임</div>
+          <div class="grid"><div class="card">🥬 김장</div><div class="card">⛺ 캠핑 1박</div></div>
+        </div>
+        <div class="nav"><div><b>🛒</b>구매예정</div><div class="on mark"><b>🍲</b>메뉴</div><div><b>✓</b>완료</div><div><b>⚙</b>설정</div></div>
+      </div>
+    </div>
+    <div class="col"><div class="cap">② 메뉴를 고르면</div>
+      <div class="ph">
+        <div class="title">‹ 된장찌개</div>
+        <div class="body">
+          <div class="sub" style="margin-top:0">재료</div>
+          <div class="chips"><span class="chip on">두부</span><span class="chip on">애호박</span><span class="chip on">양파</span><span class="chip on">감자</span><span class="chip on">대파</span></div>
+          <div class="sub">넣으면 더 좋은 것</div>
+          <div class="chips"><span class="chip">청양고추</span><span class="chip">팽이버섯</span><span class="chip">바지락</span><span class="chip">차돌박이</span></div>
+          <div class="sub">집에 있을 것</div>
+          <div class="chips"><span class="chip dim">된장</span><span class="chip dim">다진 마늘</span><span class="chip dim">국물용 멸치</span></div>
+          <div class="sub">어디에 담을까요?</div>
+          <div class="chips mark"><span class="chip on">쿠팡</span><span class="chip">다이소</span><span class="chip">이마트</span></div>
+          <div class="btn">쿠팡에 5개 담기</div>
+        </div>
+        <div class="nav"><div><b>🛒</b>구매예정</div><div class="on"><b>🍲</b>메뉴</div><div><b>✓</b>완료</div><div><b>⚙</b>설정</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pc">
+    <div><b>좋은 점</b>늘 보여서 기능이 있다는 걸 바로 알아요. 마트에서 "김치찌개에 뭘 넣더라" 할 때 바로 찾아볼 수 있어요. 어떤 메뉴가 있는지 훑어볼 수 있어요.</div>
+    <div><b>아쉬운 점</b>담을 마트를 매번 한 번 더 골라야 해요. 담고 나서 구매예정 탭으로 돌아가야 해요. 가끔 쓰는 기능이 제일 좋은 자리를 차지해요.</div>
+  </div>
+</section>
+
+<!-- B -->
+<section class="opt">
+  <h2><span>B</span>추가 창 안에 "메뉴로 담기" (탭 3개 그대로)</h2>
+  <p class="d">+ 를 눌러 뜨는 창에서 메뉴 이름을 치거나, "메뉴로 담기"를 눌러 목록에서 골라요.</p>
+  <div class="phones">
+    <div class="col"><div class="cap">① + 를 누르면</div>
+      <div class="ph">
+        <div class="title">구매예정</div>
+        <div class="tabs"><span class="pill on">쿠팡 2</span><span class="pill">다이소 3</span></div>
+        <div class="body"><div class="item">우유<em>완료</em></div><div class="item">생수<em>완료</em></div></div>
+        <div class="dimbg"></div>
+        <div class="sheet">
+          <h3>쿠팡에 추가</h3>
+          <div class="inp idle">살 것 또는 메뉴 이름</div>
+          <div class="link mark">🍲 메뉴로 담기 <span>›</span></div>
+          <div class="btn" style="background:var(--bg3);color:var(--t4)">추가</div>
+        </div>
+      </div>
+    </div>
+    <div class="col"><div class="cap">② "된장찌개"라고 치면</div>
+      <div class="ph">
+        <div class="title">구매예정</div>
+        <div class="tabs"><span class="pill on">쿠팡 2</span><span class="pill">다이소 3</span></div>
+        <div class="body"><div class="item">우유<em>완료</em></div></div>
+        <div class="dimbg"></div>
+        <div class="sheet">
+          <h3>쿠팡에 추가</h3>
+          <div class="inp">된장찌개</div>
+          <div class="sub">된장찌개 재료 · 눌러서 빼고 넣기</div>
+          <div class="chips mark"><span class="chip on">두부</span><span class="chip on">애호박</span><span class="chip on">양파</span><span class="chip on">감자</span><span class="chip on">대파</span><span class="chip">청양고추</span><span class="chip">팽이버섯</span><span class="chip">바지락</span><span class="chip dim">된장</span><span class="chip dim">다진 마늘</span></div>
+          <div class="btn">재료 5개 담기</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pc">
+    <div><b>좋은 점</b>보고 있던 마트에 바로 담겨요(마트 고르기 없음). 평소 적던 자리라 한 번에 끝나요. 잘 안 쓰이면 빼기도 쉬워요.</div>
+    <div><b>아쉬운 점</b>+ 를 눌러야 보여서 A보다 덜 눈에 띄어요. 메뉴 목록은 "메뉴로 담기"를 한 번 더 눌러야 나와요.</div>
+  </div>
+</section>
+<p class="note">시안이에요. 실제 앱 화면과 글자·간격은 조금 다를 수 있어요.</p>
+</body>
+</html>

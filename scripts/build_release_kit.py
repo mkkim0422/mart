@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""출시 자료 폴더(출시자료_v1.5.1/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
+"""출시 자료 폴더(출시자료_v1.6.0/) 만들기 — 문구는 docs/playstore_listing.md에서 그대로 가져온다.
 
 결과:
-  출시자료_v1.5.1/
+  출시자료_v1.6.0/
     index.html            ← 브라우저로 열어 복사 버튼으로 붙여넣기
-    1_스크린샷/01~06.png    (1080x2400, 이 순서대로 업로드)
+    1_스크린샷/01~07.png    (1080x1920, 이 순서대로 업로드)
     2_피처그래픽/feature_graphic_1024x500.png
     3_앱아이콘/icon_512.png
     4_문구/*.txt           (출시노트·앱이름·짧은설명·자세한설명)
@@ -18,7 +18,7 @@ import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION, VC = "1.5.1", 13
+VERSION, VC = "1.6.0", 14
 OUT = os.path.join(ROOT, f"출시자료_v{VERSION}")
 SRC = os.path.join(ROOT, "docs", "playstore_assets")
 
@@ -39,12 +39,13 @@ texts = [
 ]
 
 SHOTS = [
-    ("01_memo_lost.png", "나에게 보내기에 묻힌 메모", "나에게 보내기로 보낸 장보기 또 찾고 계셨죠?"),
-    ("02_widget_home.png", "홈 화면 위젯", "폰만 켜면 살 게 다 보여요"),
-    ("03_widget_check.png", "위젯에서 체크", "구매한 건 홈 화면에서 바로 완료 체크!"),
-    ("04_list_link.png", "받은 목록 링크", "가족이 보낸 장보기, 누르면 바로 담겨요"),
-    ("05_name_only.png", "이름만 입력", "생각날 때 이름만 톡 적으면 끝"),
-    ("06_done.png", "완료", "다 산 건 '완료' 한 번"),
+    ("01_memo_lost.png", "나에게 보내기에 묻힌 메모", "나에게 보낸 장볼 목록, 찾기 힘드셨죠?"),
+    ("02_widget_check.png", "위젯에서 체크", "이제 찾지 마세요, 홈 화면에 늘 떠 있어요"),
+    ("03_by_mart.png", "마트별", "쿠팡 따로, 다이소 따로 마트별 장볼 목록"),
+    ("04_recipe.png", "요리별 재료 (새로)", "김치찌개에 뭘 넣더라?"),
+    ("05_name_only.png", "이름만 입력", "가격·수량 없이 이름만 적으면 끝"),
+    ("06_shop_search.png", "쇼핑 앱 검색", "누르면 쇼핑 앱에서 바로 검색"),
+    ("07_family_link.png", "가족 링크", "가족이 보낸 장보기, 눌러서 바로 담기"),
 ]
 
 # ---------- files ----------
@@ -54,8 +55,8 @@ if os.path.isdir(OUT):
 for d in ("1_스크린샷", "2_피처그래픽", "3_앱아이콘", "4_문구", "5_업로드파일"):
     os.makedirs(os.path.join(OUT, d), exist_ok=True)
 for fn, _, _ in SHOTS:
-    shutil.copy2(os.path.join(SRC, "v5_store", fn), os.path.join(OUT, "1_스크린샷", fn))
-shutil.copy2(os.path.join(SRC, "v5_store", "feature_graphic_1024x500.png"),
+    shutil.copy2(os.path.join(SRC, "v7_store", fn), os.path.join(OUT, "1_스크린샷", fn))
+shutil.copy2(os.path.join(SRC, "v7_store", "feature_graphic_1024x500.png"),
              os.path.join(OUT, "2_피처그래픽", "feature_graphic_1024x500.png"))
 shutil.copy2(os.path.join(SRC, "icon_512.png"), os.path.join(OUT, "3_앱아이콘", "icon_512.png"))
 for key, _, _, body in texts:
