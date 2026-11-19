@@ -187,8 +187,8 @@ const BIGMART=(sel,list,s=1.0)=>appScreen({sel,items:list});
 /* ===================== FEATURE GRAPHICS ===================== */
 const fg = [];
 /* 검색 결과(가로 416px)에서도 글씨가 읽히도록 폰 대신 크게 확대한 목록 카드 */
-const bigCard=({tabsList=null,sel,head=null,rows,w=440,fs=28,rot=0,x,y,shadow="0 24px 50px rgba(10,30,70,.28)"})=>`<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;background:#fff;border-radius:30px;padding:22px 26px 14px;box-shadow:${shadow};transform:rotate(${rot}deg);z-index:3">
- ${tabsList?`<div style="display:flex;gap:10px;padding-bottom:16px;border-bottom:2px solid #F2F4F6">${tabsList.map(k=>{const m=MARTS[k],on=k===sel;return `<div style="display:flex;align-items:center;gap:6px;height:50px;padding:0 16px;border-radius:25px;font-size:22px;font-weight:700;white-space:nowrap;${on?'background:#3182F6;color:#fff':'border:2px solid #E5E8EB;color:#4E5968'}">${E(m.e)} ${m.n}</div>`}).join('')}</div>`:''}
+const bigCard=({tabsList=null,sel,head=null,rows,w=440,fs=28,tab=22,rot=0,x,y,shadow="0 24px 50px rgba(10,30,70,.28)"})=>`<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;background:#fff;border-radius:30px;padding:22px 26px 14px;box-shadow:${shadow};transform:rotate(${rot}deg);z-index:3">
+ ${tabsList?`<div style="display:flex;gap:${tab<22?8:10}px;padding-bottom:16px;border-bottom:2px solid #F2F4F6">${tabsList.map(k=>{const m=MARTS[k],on=k===sel;return `<div style="display:flex;align-items:center;gap:6px;height:${Math.round(tab*2.27)}px;padding:0 ${Math.round(tab*.72)}px;border-radius:25px;font-size:${tab}px;font-weight:700;white-space:nowrap;${on?'background:#3182F6;color:#fff':'border:2px solid #E5E8EB;color:#4E5968'}">${E(m.e)} ${m.n}</div>`}).join('')}</div>`:''}
  ${head?(()=>{const m=MARTS[head];return `<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:2px solid #F2F4F6"><span class="emo" style="width:44px;height:44px;border-radius:12px;background:${m.bg};display:flex;align-items:center;justify-content:center;font-size:24px">${m.e}</span><b style="flex:1;font-size:26px;color:#4E5968">${m.n}</b><span style="font-size:20px;font-weight:800;color:${m.c};background:${m.bg};border-radius:14px;padding:3px 13px">${rows.length}</span></div>`})():''}
  ${rows.map(([n,d])=>`<div style="display:flex;align-items:center;gap:16px;height:${fs*2.1}px;font-size:${fs}px">${d?`<i class="ringok" style="width:${fs}px;height:${fs}px;font-size:${fs*.55}px">✓</i>`:`<i class="ring" style="width:${fs}px;height:${fs}px;border-width:2.5px"></i>`}<span${d?' style="color:#8B95A1;text-decoration:line-through;text-decoration-thickness:3px"':''}>${n}</span></div>`).join('')}
 </div>`;
@@ -209,18 +209,18 @@ html:`<div class="frame fg" style="background:linear-gradient(135deg,#3B8BFF 0%,
 </div>`});
 
 /* A2 — A 배경 + "무슨 앱인지 + 고를 이유" 문구, 마트별은 그림(탭)이 대신 말함 */
-fg.push({id:"fgA2",name:"A2. 파란 배경 + 앱 화면 (문구 수정)",desc:"A와 같은 그림, 제목만 '장보기 리스트, 홈 화면에서 바로 체크'로. 무슨 앱인지(장보기 리스트)와 고를 이유(위젯 체크)를 글로, 마트별은 카드의 색 탭이 보여줌.",
+fg.push({id:"fgA2",name:"A2. 파란 배경 + 앱 화면 (문구 수정)",desc:"A와 같은 그림, 제목만 '장보기 리스트, 홈 화면에서 바로 체크'로. 무슨 앱인지(장보기 리스트)와 고를 이유(위젯 체크)를 글로, 마트별은 카드의 색 탭이 보여줌. 2026-11-19: Play 검색 결과는 이 그림을 16:9로 잘라 보여 줘서(좌우 약 68px씩 잘림) 글자가 왼쪽 선에 붙어 보였음 → 글·카드·이모지를 모두 안쪽(x 120~930)으로 옮김.",
 html:`<div class="frame fg" style="background:linear-gradient(135deg,#3B8BFF 0%,#1B64DA 100%)">
   <div style="position:absolute;right:-120px;top:-160px;width:520px;height:520px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
-  <div style="position:absolute;left:64px;top:62px;color:#fff">
-    <div class="chip" style="background:rgba(255,255,255,.18);font-size:20px;padding:8px 16px">${E("🛒")} 장보기 메모 · 쇼핑 체크리스트</div>
-    <div style="font-size:60px;font-weight:800;line-height:1.16;margin-top:20px;letter-spacing:-0.04em">장보기 리스트,<br>홈 화면에서<br>바로 체크 <span style="color:#7CF0B4">✓</span></div>
-    <div style="font-size:23px;font-weight:500;margin-top:16px;opacity:.92">쿠팡 · 다이소 · 이마트, 마트별로 나눠서</div>
+  <div style="position:absolute;left:124px;top:70px;color:#fff">
+    <div class="chip" style="background:rgba(255,255,255,.18);font-size:19px;padding:8px 16px">${E("🛒")} 장보기 메모 · 쇼핑 리스트</div>
+    <div style="font-size:56px;font-weight:800;line-height:1.17;margin-top:20px;letter-spacing:-0.04em">장보기 리스트,<br>홈 화면에서<br>바로 체크 <span style="color:#7CF0B4">✓</span></div>
+    <div style="font-size:21px;font-weight:500;margin-top:16px;opacity:.92">쿠팡 · 다이소 · 이마트, 마트별로 나눠서</div>
   </div>
-  ${bigCard({tabsList:["coupang","daiso","emart"],sel:"coupang",rows:[["생수 2L 6입"],["휴지 30롤",1],["세탁세제"],["햇반 12개"]],w:440,x:540,y:62,rot:-4})}
-  <div class="pin emo" style="left:518px;top:258px;font-size:76px;transform:rotate(-12deg)">👆</div>
-  <div class="pin emo" style="left:930px;top:330px;font-size:84px;transform:rotate(10deg)">🥛</div>
-  <div class="pin emo" style="left:930px;top:20px;font-size:64px;transform:rotate(15deg)">🥕</div>
+  ${bigCard({tabsList:["coupang","daiso","emart"],sel:"coupang",rows:[["생수 2L 6입"],["휴지 30롤",1],["세탁세제"],["햇반 12개"]],w:404,fs:26,tab:19,x:508,y:74,rot:-4})}
+  <div class="pin emo" style="left:484px;top:262px;font-size:70px;transform:rotate(-12deg)">👆</div>
+  <div class="pin emo" style="left:838px;top:350px;font-size:76px;transform:rotate(10deg)">🥛</div>
+  <div class="pin emo" style="left:858px;top:26px;font-size:58px;transform:rotate(15deg)">🥕</div>
 </div>`});
 
 /* B — 프레시 그린 + 마트 3장 카드 */
