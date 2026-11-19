@@ -24,6 +24,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.rldjrgo.grocerynote.R
@@ -34,6 +35,7 @@ import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.domain.model.emoji
 import com.rldjrgo.grocerynote.widget.actions.OpenStoreAction
 import com.rldjrgo.grocerynote.widget.cardBgProvider
+import com.rldjrgo.grocerynote.widget.textSecondaryProvider
 import com.rldjrgo.grocerynote.widget.textTertiaryProvider
 import com.rldjrgo.grocerynote.widget.components.WidgetEmptyState
 import com.rldjrgo.grocerynote.widget.components.WidgetItemRow
@@ -191,9 +193,53 @@ fun CountContent(size: DpSize, data: WidgetData) {
 // Never two lists side by side: one widget may hold only ONE LazyColumn — 2+
 // collection views made Glance fail to inflate (blank, dead widget, 2026-05).
 @Composable
-fun ListContent(data: WidgetData, martId: Long, checking: Set<Long>) = EmptyOr(data) {
+fun ListContent(size: DpSize, data: WidgetData, martId: Long, checking: Set<Long>) = EmptyOr(data) {
     val single = data.stores.find { it.id == martId }
-    val marts = if (single != null) listOf(single) else listOrder(data)
+    // 전체: marts with nothing to buy are left out — a header + "아직 적은 게 없어요"
+    // per empty mart filled the widget with repeated lines (user 2026-11-17).
+    val marts = if (single != null) listOf(single)
+    else listOrder(data).filter { !data.itemsByStore[it.id].isNullOrEmpty() }
+    if (marts.isEmpty()) {
+        // 전체 and nothing anywhere: one quiet line instead of a stack of empty marts.
+        Box(modifier = GlanceModifier.fillMaxSize()) {
+            Box(
+                modifier = GlanceModifier.fillMaxSize().padding(bottom = 14.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "🛒", style = TextStyle(fontSize = 26.sp))
+                    Spacer(GlanceModifier.height(6.dp))
+                    Text(
+                        text = "살 거 생각나면",
+                        maxLines = 1,
+                        style = TextStyle(
+                            color = textSecondaryProvider(),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                    )
+                    Spacer(GlanceModifier.height(3.dp))
+                    Text(
+                        text = "여기 적어 두세요",
+                        maxLines = 1,
+                        style = TextStyle(color = textTertiaryProvider(), fontSize = 12.sp),
+                    )
+                }
+            }
+            AddFab(null)
+        }
+        return@EmptyOr
+    }
+    // The blank space under a short list must open the app too (user 2026-11-19: with one
+    // item on a 2x2, most of the widget was dead — only the row and "+" reacted). A
+    // RemoteViews ListView swallows taps on its own empty area, so WidgetCard's click
+    // never fires there. Fix: the list's last row is a clickable filler exactly as tall
+    // as the space left over (needs the real widget size → SizeMode.Exact).
+    val rowCount = marts.sumOf { (data.itemsByStore[it.id]?.size ?: 0).coerceAtLeast(1) }
+    val used = if (single != null) LIST_TOP_GAP + LIST_HEADER_H + LIST_ROW_H * rowCount
+    else LIST_ROW_H * rowCount + LIST_HEADER_H * marts.size +
+        LIST_TOP_GAP + LIST_MART_GAP * (marts.size - 1)
+    val filler = (size.height - CARD_PAD_V - used).coerceAtLeast(LIST_TAIL_MIN)
     Box(modifier = GlanceModifier.fillMaxSize()) {
         Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = 4.dp)) {
             if (single != null) {
@@ -225,8 +271,16 @@ fun ListContent(data: WidgetData, martId: Long, checking: Set<Long>) = EmptyOr(d
                         }
                     }
                 }
-                // Room under the last row so it can scroll clear of the "+" button.
-                item(itemId = Long.MIN_VALUE) { Spacer(GlanceModifier.height(44.dp)) }
+                // Tail: fills the leftover height and opens the app when tapped; never
+                // shorter than 44dp so the last row can scroll clear of the "+" button.
+                item(itemId = Long.MIN_VALUE) {
+                    Box(
+                        modifier = GlanceModifier
+                            .fillMaxWidth()
+                            .height(filler)
+                            .clickable(OpenStoreAction.forStore(storeId = single?.id ?: -1L)),
+                    ) {}
+                }
             }
         }
         AddFab(single?.id)
@@ -244,6 +298,11 @@ private const val EMPTY_ROW_ID_BASE = -1_000_000_000L
 private val CARD_PAD_V = 16.dp     // WidgetCard padding, top + bottom
 private val FAB_ZONE = 40.dp       // "+" (36dp) + gap
 private val COUNT_ROW_H = 32.dp    // WidgetStoreCountRow: 20dp badge + 2×6dp padding
+private val LIST_ROW_H = 36.dp     // WidgetItemRow: 36dp check box
+private val LIST_HEADER_H = 43.dp  // WidgetStoreHeader: 24 badge + 10 + 1 divider + 8
+private val LIST_TOP_GAP = 6.dp    // gap above the first header
+private val LIST_MART_GAP = 14.dp  // gap above each later mart's header (전체)
+private val LIST_TAIL_MIN = 44.dp  // keeps the last row clear of the "+"
 
 @Composable
 private fun StoreHeader(store: Store, data: WidgetData) {

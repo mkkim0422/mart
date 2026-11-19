@@ -2,6 +2,7 @@ package com.rldjrgo.grocerynote.widget
 
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.Preferences
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
@@ -18,12 +19,15 @@ import com.rldjrgo.grocerynote.widget.common.WidgetData
  * The layout just fills whatever size it's given → [SizeMode.Single].
  */
 class GroceryWidgetMedium : BaseGroceryWidget() {
-    override val sizeMode: SizeMode = SizeMode.Single
+    // Exact (was Single): ListContent needs the real height to size the tappable
+    // filler under a short list. The count widget has used Exact all along.
+    override val sizeMode: SizeMode = SizeMode.Exact
 
     @Composable
     override fun Content(data: WidgetData) {
         val prefs = currentState<Preferences>()
         ListContent(
+            size = LocalSize.current,
             data = data,
             martId = prefs[WidgetStateKeys.MartId] ?: WidgetStateKeys.ALL_MARTS,
             checking = prefs[WidgetStateKeys.Checking].orEmpty().mapNotNullTo(HashSet()) { it.toLongOrNull() },
