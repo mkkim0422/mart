@@ -5,6 +5,7 @@
 
 ## 2026-11-19 · v1.6.0 (vc14) — 요리별 재료 탭 · 스토어 이름 변경
 
+- 2026-11-19 · (출시 준비) Play 콘솔 게시 개요에 **14 (1.6.0) 전체 출시 + 앱 이름·간단한 설명·전체 설명·스크린샷 7장 + 데이터 보안** 변경을 올림(검토 전송은 사용자). 간단한 설명 최종 = "나에게 보내기에 묻히던 장보기 메모를 마트별 장보기 목록·쇼핑 리스트로. 위젯에서 바로 체크, 요리만 고르면 살 재료까지." **데이터 보안 양식을 처음으로 제대로 채움**: 대략적인 위치(수집·공유, 광고)·비정상 종료 로그(수집·공유, 애널리틱스)·진단(수집·공유)·앱 상호작용(수집·공유)·**앱 내 검색 기록(수집만, 애널리틱스 — 1.6.0 신규)**·기기 또는 기타 ID(수집·공유), 전부 필수·임시 처리 아님, 계정 없음, 삭제 요청 방법 없음. 콘솔 메뉴는 앱 콘텐츠 → "조치됨" 탭 → 데이터 보안 → 관리. 개인정보처리방침(gh-pages `privacy.html`)에 요리 검색어 수집·만드는 법 보기 문단 추가 · `docs/privacy.html`, `docs/playstore_listing.md`
 - 2026-11-19 · **v1.6.0 (vc14) 버전업 + 출시 자료**: 스토어 앱 이름 → "장보기 메모 - 마트노트: 마트별 쇼핑 리스트 위젯"(검색어 131개 확인 결과 "장보기 메모"가 이름 일치로 뚫리는 유일한 큰 검색어 — `sample/검색어_확인.html`, CLAUDE.md "ASO 메모 2"), 짧은·자세한 설명·출시 노트, 스크린샷 7장(4번째 "김치찌개에 뭘 넣더라?" 새로) · `app/build.gradle.kts`, `docs/playstore_listing.md`, `docs/playstore_assets/v7_store/`, `scripts/build_release_kit.py`, `sample/업데이트_1.6.0_준비.html`, `sample/스토어그래픽_시안.html`
 - 2026-11-19 · 온보딩 3번째 장 "쇼핑 앱에서 검색" → **"요리만 고르면 살 재료가 나와요"**(실기기 캡처, 4장 유지) + "요리별 재료" 탭에 한 번 열면 사라지는 **새 기능 점** · `OnboardingScreen.kt`, `res/drawable/onboarding_page_recipe.png`, `BottomNavBar.kt`, `MainActivity.kt`, `SettingsDataStore.kt`
 - 2026-11-19 · **목록 위젯 빈 곳을 눌러도 앱이 열림**: 항목이 적을 때 목록(ListView)의 빈 영역이 탭을 삼키던 문제 → 목록 마지막에 남은 높이만큼의 눌리는 칸. 실제 높이가 필요해 목록 위젯을 SizeMode.Exact로 · `widget/common/WidgetCommon.kt`, `widget/GroceryWidgetMedium.kt`
