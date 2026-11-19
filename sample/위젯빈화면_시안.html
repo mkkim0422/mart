@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>목록 위젯 빈 화면 · 기본 크기 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;background:#F2F4F6;color:#191F28;padding:32px 20px 80px;letter-spacing:-0.02em}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:700}
+.lead{margin-top:8px;color:#4E5968;font-size:15px;line-height:1.6}
+h2{font-size:20px;font-weight:700;margin:52px 0 6px}
+.sub{color:#4E5968;font-size:14px;line-height:1.6;margin-bottom:18px}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px;margin-bottom:10px;background:#fff;color:#191F28;border:1px solid #E5E8EB}
+.tag.rec{background:#E8F3FF;color:#3182F6;border-color:#E8F3FF}
+.note{margin-top:10px;font-size:13px;color:#4E5968;line-height:1.55;max-width:200px}
+.note.wide{max-width:372px}
+.note b{color:#191F28}
+
+.home{display:inline-block;padding:14px;border-radius:22px;background:linear-gradient(160deg,#8EC5FC 0%,#B8A9F5 55%,#E0C3FC 100%)}
+.home.dark{background:linear-gradient(160deg,#1c2541 0%,#2b2250 60%,#3a2a55 100%)}
+
+.w{position:relative;background:#fff;border-radius:22px;padding:8px 10px;overflow:hidden}
+.w.s22{width:168px;height:176px}
+.w.s42{width:344px;height:176px}
+.w.s24{width:168px;height:360px}
+.dark .w{background:#1F1F23}
+.hd{display:flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:8px;font-size:12.5px;font-weight:600;color:#4E5968;margin-top:4px;white-space:nowrap}
+.dark .hd{color:#A8B0BA}
+.hd .cnt{margin-left:auto;font-weight:500;color:#8B95A1}
+.it + .hd{margin-top:10px}
+.it{display:flex;align-items:center;gap:8px;height:30px;padding-left:6px;font-size:14px;color:#191F28;white-space:nowrap}
+.dark .it{color:#F2F4F6}
+.o{width:18px;height:18px;border:1.5px solid #C9CDD2;border-radius:50%;flex:0 0 auto}
+.dark .o{border-color:#6B7684}
+.fab{position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:50%;background:#3182F6;color:#fff;font-size:24px;font-weight:300;display:flex;align-items:center;justify-content:center;line-height:1;padding-bottom:3px}
+.dark .fab{background:#4592FF}
+.center{position:absolute;inset:0 0 14px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:0 10px}
+.center .ico{font-size:26px;line-height:1;margin-bottom:2px}
+.center .big{font-size:15px;font-weight:600;color:#4E5968}
+.dark .center .big{color:#A8B0BA}
+.center .t1{font-size:12.5px;color:#8B95A1;line-height:1.4}
+.dark .center .t1{color:#6B7684}
+
+/* 앱 안 위젯 추가 창 */
+.sheet{width:340px;background:#fff;border-radius:20px;padding:20px;border:1px solid #E5E8EB}
+.sheet h3{font-size:17px;font-weight:600;margin-bottom:14px}
+.card{border:1.5px solid #3182F6;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center}
+.card .mini{width:64px;height:64px;border-radius:14px;background:#F2F4F6;flex:0 0 auto;padding:8px;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.card .mini i{display:block;height:6px;border-radius:3px;background:#C9CDD2}
+.card .mini i:first-child{background:#3182F6;width:60%}
+.card b{font-size:15px}
+.card p{font-size:13px;color:#4E5968;margin-top:3px;line-height:1.45}
+.hint{margin-top:12px;background:#E8F3FF;color:#1B64DA;font-size:13px;font-weight:500;border-radius:12px;padding:10px 12px;line-height:1.5}
+.btn{margin-top:14px;height:52px;border-radius:12px;background:#3182F6;color:#fff;font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center}
+
+.pick{margin-top:52px;background:#fff;border-radius:16px;padding:20px 22px;border:1px solid #E5E8EB;font-size:15px;line-height:1.75;color:#4E5968}
+.pick b{color:#191F28}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>목록 위젯 — 빈 화면 문구 · 기본 크기 2x2</h1>
+<p class="lead">B안(그림 + 두 줄)으로 정하셨고, 기본 크기를 2x2로 줄인 모습으로 그렸습니다.</p>
+
+<h2>1. 빈 화면 문구 — 다섯 가지</h2>
+<p class="sub">처음 깔았을 때와 다 사고 난 뒤, 두 경우 모두 같은 문구가 나옵니다. 그래서 "다 샀어요"처럼 한쪽에만 맞는 말은 뺐습니다.</p>
+
+<div class="row">
+  <div>
+    <span class="tag rec">① 추천</span><br>
+    <div class="home"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">살 거 생각나면</div><div class="t1">여기 적어 두세요</div></div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">비어 있다는 말 없이 바로 쓰임새를 말합니다.</p>
+  </div>
+  <div>
+    <span class="tag">②</span><br>
+    <div class="home"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">살 게 없어요</div><div class="t1">생각나면 + 눌러 주세요</div></div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">지난 시안 문구를 다듬은 것입니다.</p>
+  </div>
+  <div>
+    <span class="tag">③</span><br>
+    <div class="home"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">뭐 사야 하더라?</div><div class="t1">생각날 때 바로 적기</div></div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">혼잣말 느낌입니다. 가볍지만 매일 보면 질릴 수 있습니다.</p>
+  </div>
+  <div>
+    <span class="tag">④</span><br>
+    <div class="home"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">장볼 목록</div><div class="t1">+ 눌러서 적어 두세요</div></div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">위젯 이름표처럼 보입니다. 가장 무난합니다.</p>
+  </div>
+  <div>
+    <span class="tag">⑤</span><br>
+    <div class="home"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">떨어진 거 없나요?</div><div class="t1">있으면 적어 두세요</div></div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">집에 떨어진 물건을 떠올리게 합니다.</p>
+  </div>
+</div>
+
+<h2>2. 기본 크기 2x2 — 담겼을 때와 늘렸을 때</h2>
+<p class="sub">처음 놓으면 2x2로 들어가고, 길게 눌러 옆이나 아래로 늘릴 수 있습니다. 이미 놓아 둔 위젯은 지금 크기 그대로입니다.</p>
+
+<div class="row">
+  <div>
+    <span class="tag rec">2x2 · 처음 놓았을 때</span><br>
+    <div class="home"><div class="w s22">
+      <div class="hd" style="background:rgba(240,68,82,.08)">🏪 다이소<span class="cnt">2</span></div>
+      <div class="it"><span class="o"></span>수세미</div>
+      <div class="it"><span class="o"></span>지퍼백</div>
+      <div class="hd" style="background:rgba(49,130,246,.08)">📦 쿠팡<span class="cnt">3</span></div>
+      <div class="it"><span class="o"></span>생수 2L</div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note">4~5줄이 보이고, 나머지는 밀어서 봅니다.</p>
+  </div>
+  <div>
+    <span class="tag">2x4 · 아래로 늘림</span><br>
+    <div class="home"><div class="w s24">
+      <div class="hd" style="background:rgba(240,68,82,.08)">🏪 다이소<span class="cnt">2</span></div>
+      <div class="it"><span class="o"></span>수세미</div>
+      <div class="it"><span class="o"></span>지퍼백</div>
+      <div class="hd" style="background:rgba(49,130,246,.08)">📦 쿠팡<span class="cnt">3</span></div>
+      <div class="it"><span class="o"></span>생수 2L</div>
+      <div class="it"><span class="o"></span>물티슈</div>
+      <div class="it"><span class="o"></span>키친타월</div>
+      <div class="fab">+</div>
+    </div></div>
+  </div>
+  <div>
+    <span class="tag">4x2 · 옆으로 늘림 (지금까지의 기본)</span><br>
+    <div class="home"><div class="w s42">
+      <div class="hd" style="background:rgba(240,68,82,.08)">🏪 다이소<span class="cnt">2</span></div>
+      <div class="it"><span class="o"></span>수세미</div>
+      <div class="it"><span class="o"></span>지퍼백</div>
+      <div class="hd" style="background:rgba(49,130,246,.08)">📦 쿠팡<span class="cnt">3</span></div>
+      <div class="it"><span class="o"></span>생수 2L</div>
+      <div class="fab">+</div>
+    </div></div>
+    <p class="note wide">보이는 줄 수는 2x2와 같고 오른쪽이 빕니다. 넓어서 좋은 건 긴 이름이 안 잘리는 것뿐입니다.</p>
+  </div>
+  <div>
+    <span class="tag">다크 모드</span><br>
+    <div class="home dark"><div class="w s22">
+      <div class="center"><div class="ico">🛒</div><div class="big">살 거 생각나면</div><div class="t1">여기 적어 두세요</div></div>
+      <div class="fab">+</div>
+    </div></div>
+  </div>
+</div>
+
+<h2>3. 늘릴 수 있다는 걸 알리기</h2>
+<p class="sub">위젯 종류를 다시 늘리는 대신, 앱 안 "위젯 추가" 창에서 눈에 띄게 한 줄로 알립니다. 지금도 안내 글 끝에 같은 말이 있지만 긴 글에 묻혀 있습니다.</p>
+
+<div class="row">
+  <div>
+    <span class="tag rec">앱 안 위젯 추가 창</span><br>
+    <div class="sheet">
+      <h3>위젯 추가</h3>
+      <div class="card">
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div><b>목록 위젯</b><p>살 것 목록, 바로 체크</p></div>
+      </div>
+      <div class="hint">↔ 놓은 뒤 위젯을 길게 누르면<br>크기를 늘릴 수 있어요</div>
+      <div class="btn">홈 화면에 추가</div>
+    </div>
+  </div>
+  <div>
+    <span class="tag">홈 화면 위젯 목록의 설명 글</span><br>
+    <div class="sheet">
+      <div class="card" style="border-color:#E5E8EB">
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div><b>목록 위젯</b><p>살 것 목록, 바로 체크<br>길게 눌러 크기 조절</p></div>
+      </div>
+    </div>
+    <p class="note wide">앱을 거치지 않고 홈 화면에서 직접 위젯을 찾는 사람에게 보이는 글입니다. 폰에 따라 안 보일 수 있습니다.</p>
+  </div>
+</div>
+
+<div class="pick">
+  <b>골라 주실 것:</b> 1번 문구 ①~⑤ 중 하나 (고쳐 쓰셔도 됩니다).<br>
+  <b>확인이 필요한 것:</b> 삼성 폰은 칸이 세로로 길어서 2x2가 그림보다 길쭉하게 보일 수 있습니다. 폰에 깔아 봐야 압니다.<br>
+  브라우저 그림이라 실제 폰과 글자 크기·간격이 조금 다를 수 있습니다.
+</div>
+
+</div>
+</body>
+</html>

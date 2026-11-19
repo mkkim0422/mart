@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>온보딩 시안 — 스토어 소개 이미지에 맞추기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;background:#F2F4F6;color:#191F28;padding:32px 20px 80px;letter-spacing:-0.02em}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font-size:24px;font-weight:700}
+.lead{margin-top:8px;color:#4E5968;font-size:15px;line-height:1.6}
+h2{font-size:20px;font-weight:700;margin:52px 0 6px}
+.sub{color:#4E5968;font-size:14px;line-height:1.6;margin-bottom:18px;max-width:900px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.no{font-size:13px;font-weight:600;color:#4E5968;margin-bottom:8px}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px;background:#E8F3FF;color:#3182F6;margin-left:8px;vertical-align:middle}
+
+/* 폰 화면 한 장 */
+.ph{width:270px;height:560px;background:#fff;border-radius:28px;border:1px solid #E5E8EB;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.skip{position:absolute;top:14px;right:16px;font-size:12px;color:#8B95A1;z-index:2}
+.dots{display:flex;gap:6px;justify-content:center;padding:10px 0}
+.dots i{width:6px;height:6px;border-radius:50%;background:#C9CDD2}
+.dots i.on{background:#3182F6;width:8px;height:8px;margin-top:-1px}
+.btns{display:flex;gap:10px;padding:4px 16px 16px;align-items:center}
+.btn{flex:1;height:44px;border-radius:12px;background:#3182F6;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.btn.ghost{flex:0 0 auto;background:none;color:#8B95A1;font-weight:400;font-size:12.5px;padding:0 6px}
+
+/* A안: 지금 틀 그대로 (그림 위, 글 아래) */
+.a .pic{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 0 0}
+.a .card{width:150px;height:248px;border-radius:18px;border:1px solid #E5E8EB;background-repeat:no-repeat;background-size:201px auto;background-position:-28px -109px}
+.a .tt{font-size:17px;font-weight:700;text-align:center;margin-top:16px;padding:0 14px;line-height:1.35}
+.a .st{font-size:12.5px;color:#4E5968;text-align:center;margin-top:6px;padding:0 18px;line-height:1.5;min-height:38px}
+
+/* B안: 소개 이미지 그대로 (글 위, 폰 아래, 배경색) */
+.b .img{flex:1;background-size:cover;background-position:top center}
+.b .skip{color:rgba(255,255,255,.85)}
+.b .skip.dk{color:#8B95A1}
+
+.old .card2{width:150px;height:248px;border-radius:18px;border:1px solid #E5E8EB;background:#F9FAFB;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8B95A1;text-align:center;line-height:1.5}
+
+table{border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #E5E8EB;font-size:14px;margin-top:6px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid #F2F4F6;vertical-align:top;line-height:1.5}
+th{background:#F9FAFB;font-weight:600;color:#4E5968}
+td.x{color:#8B95A1}
+td b{color:#191F28}
+.pick{margin-top:52px;background:#fff;border-radius:16px;padding:20px 22px;border:1px solid #E5E8EB;font-size:15px;line-height:1.75;color:#4E5968}
+.pick b{color:#191F28}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>온보딩을 스토어 소개 이미지에 맞추기</h1>
+<p class="lead">스토어에서 본 말과 앱을 처음 켰을 때 나오는 말이 다릅니다. 문구를 소개 이미지와 같게 맞추고, 그림을 어떻게 할지 두 가지 안으로 그렸습니다.</p>
+
+<h2>1. 문구 — 지금과 바꿀 것</h2>
+<p class="sub">장수는 4장 그대로입니다. 순서도 그대로이고(위젯 장이 마지막이어야 "위젯 추가하기" 버튼과 붙습니다), 말만 소개 이미지와 같게 바꿉니다.</p>
+<table>
+  <tr><th></th><th>지금</th><th>바꿀 것 (소개 이미지와 같은 말)</th></tr>
+  <tr><td>1장</td><td class="x">마트별로 따로 정리하세요<br>쿠팡, 다이소 따로따로, 어디 가서도 헷갈리지 않게</td><td><b>쿠팡 따로, 다이소 따로</b><br>탭만 바꾸면 그 마트에서 살 것만 보여요</td></tr>
+  <tr><td>2장</td><td class="x">이름만 적으면 끝나요<br>가격도 수량도 필요 없어요. 빠르고 심플하게!</td><td><b>가격·수량 없이 이름만 적으면 끝</b><br>1초면 담기고, 말로 해도 돼요</td></tr>
+  <tr><td>3장</td><td class="x">적어둔 그대로 쇼핑 앱에서 검색<br>항목 옆 🔍를 누르면 쿠팡·컬리 앱에서 바로 찾아줘요. 앱이 없으면 설치 화면으로 가요</td><td><b>🔍 누르면 쇼핑 앱에서 바로 검색</b><br>쿠팡·마켓컬리·11번가… 마트 이름에 맞춰 연결</td></tr>
+  <tr><td>4장</td><td class="x">홈 화면에서 보고, 바로 체크<br>위젯에서 동그라미만 누르면 앱을 안 열어도 체크돼요</td><td><b>앱 안 열고 홈 화면에서 체크</b><br>카트에 담으면서 하나씩 톡</td></tr>
+</table>
+
+<h2>2. A안 — 지금 틀 그대로, 말과 그림만 교체 <span class="tag">추천</span></h2>
+<p class="sub">흰 바탕에 그림이 위, 글이 아래인 지금 모양을 유지합니다. 그림 속 화면만 소개 이미지와 같은 장면으로 바꿉니다. 앱 화면과 같은 흰 바탕이라 온보딩에서 앱으로 넘어갈 때 자연스럽습니다.</p>
+<div class="row a">
+  <div><div class="no">1장</div><div class="ph"><span class="skip">건너뛰기</span>
+    <div class="pic"><div class="card" style="background-image:url('../docs/playstore_assets/v6_store/03_by_mart.png')"></div></div>
+    <div class="tt">쿠팡 따로, 다이소 따로</div><div class="st">탭만 바꾸면 그 마트에서 살 것만 보여요</div>
+    <div class="dots"><i class="on"></i><i></i><i></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">2장</div><div class="ph"><span class="skip">건너뛰기</span>
+    <div class="pic"><div class="card" style="background-image:url('../docs/playstore_assets/v6_store/04_name_only.png')"></div></div>
+    <div class="tt">가격·수량 없이<br>이름만 적으면 끝</div><div class="st">1초면 담기고, 말로 해도 돼요</div>
+    <div class="dots"><i></i><i class="on"></i><i></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">3장</div><div class="ph"><span class="skip">건너뛰기</span>
+    <div class="pic"><div class="card" style="background-image:url('../docs/playstore_assets/v6_store/05_shop_search.png')"></div></div>
+    <div class="tt">🔍 누르면<br>쇼핑 앱에서 바로 검색</div><div class="st">쿠팡·마켓컬리·11번가…<br>마트 이름에 맞춰 연결</div>
+    <div class="dots"><i></i><i></i><i class="on"></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">4장 (마지막)</div><div class="ph">
+    <div class="pic"><div class="card" style="background-image:url('../docs/playstore_assets/v6_store/02_widget_check.png')"></div></div>
+    <div class="tt">앱 안 열고<br>홈 화면에서 체크</div><div class="st">카트에 담으면서 하나씩 톡</div>
+    <div class="dots"><i></i><i></i><i></i><i class="on"></i></div><div class="btns"><div class="btn ghost">바로 시작하기</div><div class="btn">위젯 추가하기</div></div></div></div>
+</div>
+
+<h2>3. B안 — 소개 이미지 모양 그대로</h2>
+<p class="sub">큰 글씨가 위, 폰 그림이 아래이고 파란 바탕과 연한 바탕이 번갈아 나옵니다. 스토어에서 본 그림이 그대로 이어지지만, 화면 안에 폰 그림이 또 들어가서 내용이 작게 보이고, 앱 본 화면(흰 바탕)과 분위기가 달라집니다.</p>
+<div class="row b">
+  <div><div class="no">1장</div><div class="ph"><span class="skip dk">건너뛰기</span>
+    <div class="img" style="background-image:url('../docs/playstore_assets/v6_store/03_by_mart.png')"></div>
+    <div class="dots"><i class="on"></i><i></i><i></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">2장</div><div class="ph"><span class="skip">건너뛰기</span>
+    <div class="img" style="background-image:url('../docs/playstore_assets/v6_store/04_name_only.png')"></div>
+    <div class="dots"><i></i><i class="on"></i><i></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">3장</div><div class="ph"><span class="skip dk">건너뛰기</span>
+    <div class="img" style="background-image:url('../docs/playstore_assets/v6_store/05_shop_search.png')"></div>
+    <div class="dots"><i></i><i></i><i class="on"></i><i></i></div><div class="btns"><div class="btn">다음</div></div></div></div>
+  <div><div class="no">4장 (마지막)</div><div class="ph">
+    <div class="img" style="background-image:url('../docs/playstore_assets/v6_store/02_widget_check.png')"></div>
+    <div class="dots"><i></i><i></i><i></i><i class="on"></i></div><div class="btns"><div class="btn ghost">바로 시작하기</div><div class="btn">위젯 추가하기</div></div></div></div>
+</div>
+
+<h2>4. 소개 이미지에는 있는데 온보딩에 안 넣은 것</h2>
+<table>
+  <tr><th>소개 이미지</th><th>온보딩에 안 넣은 이유</th></tr>
+  <tr><td>나에게 보낸 장볼 목록, 찾기 힘드셨죠?</td><td>깔기 전에 "왜 필요한지" 설득하는 장면입니다. 이미 깐 사람에게는 필요 없습니다.</td></tr>
+  <tr><td>가족이 보낸 장보기, 눌러서 바로 담기</td><td>링크를 받았을 때 저절로 알게 되는 기능입니다. 넣으면 5장이 되고, 장수가 늘수록 건너뛰는 사람이 많아집니다.</td></tr>
+</table>
+
+<div class="pick">
+  <b>골라 주실 것:</b> A안(지금 틀 + 말·그림 교체) 또는 B안(소개 이미지 모양 그대로). 문구를 고치고 싶으시면 같이 알려 주세요.<br>
+  이 시안의 그림은 소개 이미지를 잘라 붙인 것이라 가장자리가 조금 어긋나 보입니다. 실제로는 온보딩 크기에 맞춰 새로 만듭니다.
+</div>
+
+</div>
+</body>
+</html>

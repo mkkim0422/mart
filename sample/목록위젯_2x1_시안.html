@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>목록 위젯 2x1 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;background:#F2F4F6;color:#191F28;padding:32px 20px 80px;letter-spacing:-0.02em}
+.wrap{max-width:1200px;margin:0 auto}
+h1{font-size:24px;font-weight:700}
+.lead{margin-top:8px;color:#4E5968;font-size:15px;line-height:1.6;max-width:880px}
+h2{font-size:20px;font-weight:700;margin:52px 0 6px}
+.sub{color:#4E5968;font-size:14px;line-height:1.6;margin-bottom:18px;max-width:880px}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px;margin-bottom:10px;background:#fff;color:#191F28;border:1px solid #E5E8EB}
+.tag.rec{background:#E8F3FF;color:#3182F6;border-color:#E8F3FF}
+.tag.old{background:#FFECEE;color:#F04452;border-color:#FFECEE}
+.note{margin-top:10px;font-size:13px;color:#4E5968;line-height:1.55;max-width:270px}
+.note b{color:#191F28}
+
+/* 홈 화면: 실제 폰(S24+) 칸 크기 비율. 1칸 = 가로 75 · 세로 109, 1.6배로 그림 */
+.home{display:inline-block;padding:14px;border-radius:22px;background:linear-gradient(160deg,#9aa39a 0%,#b9b59a 55%,#8d8f8a 100%)}
+.home.dark{background:linear-gradient(160deg,#1c2541 0%,#2b2250 60%,#3a2a55 100%)}
+.z{zoom:1.6}
+.w{position:relative;width:150px;background:#fff;border-radius:22px;padding:6px 8px;overflow:hidden}
+.w.h1{height:90px}
+.w.h2{height:199px}
+.dark .w{background:#1F1F23}
+.hd{display:flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:7px;font-size:11px;font-weight:600;color:#4E5968;white-space:nowrap}
+.dark .hd{color:#A8B0BA}
+.hd .cnt{margin-left:auto;font-weight:500;color:#8B95A1}
+.it + .hd{margin-top:6px}
+.it{display:flex;align-items:center;gap:6px;height:26px;padding-left:4px;font-size:13px;color:#191F28;white-space:nowrap}
+.dark .it{color:#F2F4F6}
+.o{width:16px;height:16px;border:1.5px solid #C9CDD2;border-radius:50%;flex:0 0 auto}
+.o.c1{border-color:#F04452}.o.c2{border-color:#3182F6}
+.dark .o{border-color:#6B7684}
+.fab{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:50%;background:#3182F6;color:#fff;font-size:21px;font-weight:300;display:flex;align-items:center;justify-content:center;line-height:1;padding-bottom:2px}
+.fab.sm{width:26px;height:26px;font-size:18px;right:7px;bottom:7px}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center}
+.center .ico{font-size:22px;line-height:1}
+.center .big{font-size:13px;font-weight:600;color:#4E5968}
+.center .t1{font-size:11px;color:#8B95A1}
+.line{position:absolute;inset:0 34px 0 0;display:flex;flex-direction:column;justify-content:center;padding-left:12px;gap:2px}
+.line .big{font-size:12.5px;font-weight:600;color:#4E5968}
+.line .t1{font-size:11px;color:#8B95A1}
+.cr{display:flex;align-items:center;gap:6px;height:32px;padding:0 6px;font-size:12.5px;font-weight:600;color:#4E5968}
+.cr .em{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.cr .pill{margin-left:auto;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
+.more{position:absolute;left:0;right:0;bottom:0;height:16px;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff)}
+
+.pick{margin-top:52px;background:#fff;border-radius:16px;padding:20px 22px;border:1px solid #E5E8EB;font-size:15px;line-height:1.75;color:#4E5968}
+.pick b{color:#191F28}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>목록 위젯을 2x1로 줄이면</h1>
+<p class="lead">자리는 납니다. 다만 2줄만 보입니다. 지금 폰(갤럭시 S24+)의 실제 칸 크기를 재서 같은 비율로 그렸습니다. 이 폰은 칸이 세로로 길어서 2x2가 정사각형이 아니라 세로로 긴 모양입니다.</p>
+
+<h2>1. 지금 2x2와 2x1 크기 비교</h2>
+<div class="row">
+  <div>
+    <span class="tag old">2x2 · 지금 폰에 놓인 크기</span><br>
+    <div class="home"><div class="z"><div class="w h2">
+      <div class="hd" style="background:rgba(240,68,82,.08)">🏪 다이소<span class="cnt">2</span></div>
+      <div class="it"><span class="o"></span>수세미</div>
+      <div class="it"><span class="o"></span>지퍼백</div>
+      <div class="hd" style="background:rgba(49,130,246,.08)">🚀 쿠팡<span class="cnt">3</span></div>
+      <div class="it"><span class="o"></span>생수 2L</div>
+      <div class="it"><span class="o"></span>물티슈</div>
+      <div class="it"><span class="o"></span>키친타월</div>
+      <div class="fab">+</div>
+    </div></div></div>
+    <p class="note">앱 아이콘 4개 자리(가로 2 × 세로 2)를 차지합니다.</p>
+  </div>
+  <div>
+    <span class="tag">2x1 · 개수 위젯 (지금 있는 것)</span><br>
+    <div class="home"><div class="z"><div class="w h1" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="cr"><span class="em" style="background:rgba(49,130,246,.12)">🚀</span>쿠팡<span class="pill" style="background:#E8F3FF;color:#3182F6">3</span></div>
+      <div class="cr"><span class="em" style="background:rgba(240,68,82,.12)">🏪</span>다이소<span class="pill" style="background:#FFECEE;color:#F04452">2</span></div>
+    </div></div></div>
+    <p class="note">2x1은 이만한 크기입니다. 아이콘 2개 자리입니다.</p>
+  </div>
+</div>
+
+<h2>2. 2x1 목록 위젯 — 두 가지 안</h2>
+<p class="sub">높이가 낮아서 마트 이름 줄을 넣으면 항목이 한 줄밖에 안 보입니다. 그래서 마트 이름 줄을 어떻게 할지가 갈립니다. 두 안 모두 밀어서 아래 항목을 볼 수 있고, 체크도 그대로 됩니다.</p>
+<div class="row">
+  <div>
+    <span class="tag rec">가 · 항목만 (추천)</span><br>
+    <div class="home"><div class="z"><div class="w h1" style="padding-top:8px">
+      <div class="it"><span class="o c1"></span>수세미</div>
+      <div class="it"><span class="o c1"></span>지퍼백</div>
+      <div class="it"><span class="o c2"></span>생수 2L</div>
+      <div class="more"></div>
+      <div class="fab sm">+</div>
+    </div></div></div>
+    <p class="note">마트 이름 줄을 빼고 <b>체크 동그라미 테두리를 마트 색</b>으로 합니다(빨강 = 다이소, 파랑 = 쿠팡). 2줄 반이 보입니다. 어느 마트인지는 색으로만 알 수 있습니다.</p>
+  </div>
+  <div>
+    <span class="tag">나 · 마트 이름 줄 유지</span><br>
+    <div class="home"><div class="z"><div class="w h1">
+      <div class="hd" style="background:rgba(240,68,82,.08)">🏪 다이소<span class="cnt">2</span></div>
+      <div class="it"><span class="o"></span>수세미</div>
+      <div class="it"><span class="o"></span>지퍼백</div>
+      <div class="more"></div>
+      <div class="fab sm">+</div>
+    </div></div></div>
+    <p class="note">큰 위젯과 같은 모양입니다. 마트가 분명하지만 항목이 <b>한 줄 반</b>만 보여서 계속 밀어야 합니다.</p>
+  </div>
+  <div>
+    <span class="tag">비었을 때 (두 안 공통)</span><br>
+    <div class="home"><div class="z"><div class="w h1">
+      <div class="line"><div class="big">살 거 생각나면</div><div class="t1">여기 적어 두세요</div></div>
+      <div class="fab sm">+</div>
+    </div></div></div>
+    <p class="note">장바구니 그림은 자리가 없어서 빼고 글 두 줄만 둡니다.</p>
+  </div>
+  <div>
+    <span class="tag">다크 모드 (가)</span><br>
+    <div class="home dark"><div class="z"><div class="w h1" style="padding-top:8px">
+      <div class="it"><span class="o c1"></span>수세미</div>
+      <div class="it"><span class="o c1"></span>지퍼백</div>
+      <div class="it"><span class="o c2"></span>생수 2L</div>
+      <div class="fab sm" style="background:#4592FF">+</div>
+    </div></div></div>
+  </div>
+</div>
+
+<h2>3. 처음 놓일 때 크기를 무엇으로 할지</h2>
+<p class="sub">2x1까지 줄일 수 있게 열어 두는 것과, 처음부터 2x1로 놓이게 하는 것은 다른 결정입니다.</p>
+<div class="row">
+  <div>
+    <span class="tag rec">처음엔 2x2, 2x1까지 줄일 수 있게 (추천)</span>
+    <p class="note" style="max-width:420px">목록 위젯의 장점은 살 것이 한눈에 보이는 것인데, 2x1은 2줄뿐이라 첫인상이 약합니다. 작게 쓰고 싶은 사람만 줄이면 됩니다.</p>
+  </div>
+  <div>
+    <span class="tag">처음부터 2x1</span>
+    <p class="note" style="max-width:420px">홈 화면 자리를 가장 적게 씁니다. 대신 항목이 3개만 넘어도 밀어야 보이고, 개수 위젯과 크기가 같아져서 둘의 차이가 줄어듭니다.</p>
+  </div>
+</div>
+
+<div class="pick">
+  <b>골라 주실 것:</b> ① 2번의 가 / 나, ② 3번의 처음 크기(2x2 / 2x1).<br>
+  브라우저 그림이라 실제 폰과 글자 크기·간격이 조금 다를 수 있습니다. 고르시면 폰에 넣어서 바로 확인할 수 있습니다.
+</div>
+
+</div>
+</body>
+</html>
