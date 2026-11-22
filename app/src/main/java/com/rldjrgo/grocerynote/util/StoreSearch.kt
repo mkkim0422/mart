@@ -15,8 +15,8 @@ import java.net.URLEncoder
  *
  * Tapping 🔍 on an item:
  *  1. Apps with a search link open on that item's results. Verified on S24+ (2026-10-28):
- *     쿠팡, 컬리, 11번가, 옥션, 테무 (results), G마켓 (search box pre-filled); 알리 (2026-11-13).
- *     From APK analysis, not yet seen on a device: 홈플러스, SSG.
+ *     쿠팡, 컬리, 11번가, 옥션, 테무, 알리, G마켓, SSG, 홈플러스 — all open the item's results
+ *     (re-verified together on S24+ 2026-11-21, including a second keyword while running).
  *  2. Others: the app opens on its first screen (no search link found).
  *  3. App not installed → its Play Store page. Never a website.
  *
@@ -51,12 +51,19 @@ object StoreSearch {
         internal fun intents(context: Context, query: String): List<Intent> {
             val q = URLEncoder.encode(query.trim(), "UTF-8")
             return listOfNotNull(
-                // CLEAR_TASK: if the shop app is already running, many (컬리, 11번가…) just bring
-                // their old screen to the front and ignore the new keyword (user saw "우유" instead
-                // of their item). Clearing the shop app's task makes it open on the new search.
+                // Flags (2026-11-21): NEW_TASK + CLEAR_TOP only — NOT CLEAR_TASK, NOT SINGLE_TOP.
+                //  - Without extra flags, a running shop app (컬리, 11번가…) just came to the front
+                //    with its old screen and ignored the new keyword (user saw "우유", 2026-10-28).
+                //  - CLEAR_TASK (the 10-28 fix) killed the shop app's task → cold start → its
+                //    once-a-day event/notice popup → after the popup the app went HOME and dropped
+                //    our keyword (user report 2026-11-21, every shop app).
+                //  - CLEAR_TOP|SINGLE_TOP fixed most apps but 알리 kept the old keyword (its result
+                //    activity ignores onNewIntent). CLEAR_TOP alone re-creates that activity with
+                //    the new intent instead. Verified S24+ 2026-11-21, second keyword while the app
+                //    was running: 쿠팡·컬리·11번가·옥션·테무·홈플러스·알리 all switched.
                 searchLink?.let {
                     Intent(Intent.ACTION_VIEW, Uri.parse(it(q))).setPackage(packageName)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 },
                 context.packageManager.getLaunchIntentForPackage(packageName),
                 Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(packageName),
@@ -77,10 +84,10 @@ object StoreSearch {
         ShopApp("이마트에브리데이", "com.emarteveryday", listOf("이마트에브리데이", "이마트 에브리데이")),
         ShopApp("이마트몰", "kr.co.emart.emartmall", listOf("이마트몰")),
         ShopApp("이마트", "com.emart.today", listOf("이마트")),
-        // ssg://execute params become a Bundle for the main screen; "landingUrl" is the
-        // key its code reads (APK strings). Unverified on device: worst case the app opens on home.
+        // The app's manifest claims https://m.ssg.com/applink/redirect.ssg; ?url= is opened in-app
+        // → search results (S24+ 2026-11-21). ssg://execute?landingUrl= only opened the home screen.
         ShopApp("SSG", "kr.co.ssg", listOf("쓱", "SSG"), searchLink = { q ->
-            "ssg://execute?landingUrl=" + enc("https://m.ssg.com/search.ssg?query=$q")
+            "https://m.ssg.com/applink/redirect.ssg?url=" + enc("https://m.ssg.com/search.ssg?query=$q")
         }),
         // App manifest registers https://mfront.homeplus.co.kr/search → sent to the app package, it opens in-app.
         ShopApp("홈플러스", "com.socialapps.homeplus", listOf("홈플러스"), searchLink = { q -> "https://mfront.homeplus.co.kr/search?keyword=$q" }),
@@ -99,10 +106,10 @@ object StoreSearch {
         ShopApp("11번가", "com.elevenst", listOf("11번가"), searchLink = { q ->
             "elevenst://loadurl?url=" + enc("https://search.11st.co.kr/MW/search?searchKeyword=$q")
         }),
-        // Opens G마켓's search box with the keyword filled in (one tap to results) — the closest
-        // link found; openwindow/webview variants only showed the home screen (S24+, 2026-10-28).
+        // gmarket://search?keyword= → search RESULTS (S24+ 2026-11-21). The earlier
+        // "?type=page&keyword=" only opened the search sheet, and by 2026-11 with an empty box.
         ShopApp("G마켓", "com.ebay.kr.gmarket", listOf("G마켓", "지마켓"), searchLink = { q ->
-            "gmarket://search?type=page&keyword=$q"
+            "gmarket://search?keyword=$q"
         }),
         // auction://openwindow.v2?targeturl= opens a URL in-app → search results (verified S24+).
         ShopApp("옥션", "com.ebay.kr.auction", listOf("옥션"), searchLink = { q ->
