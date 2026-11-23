@@ -68,8 +68,20 @@ class HomeViewModel @Inject constructor(
     private val _askReview = MutableStateFlow(false)
     val askReview: StateFlow<Boolean> = _askReview
 
-    fun consumeReviewAsk() {
+    /** Called once the review flow was actually launched — only now is it "asked" for good, so
+     *  leaving the screen during the short wait doesn't burn the one-time chance. */
+    fun onReviewLaunched() {
         _askReview.value = false
+        viewModelScope.launch { settings.setReviewAsked() }
+    }
+
+    /** Widget ○ checks bump the same counter but can't show the dialog — catch up when Home resumes. */
+    fun checkReviewOnResume() {
+        viewModelScope.launch {
+            if (settings.completedCount() >= REVIEW_AT && !settings.reviewAsked.first()) {
+                _askReview.value = true
+            }
+        }
     }
 
     /** First-run mart picker (1.5.1): fresh installs only — anyone with items never sees it. */
@@ -256,7 +268,6 @@ class HomeViewModel @Inject constructor(
             // A finished shopping run is the happy moment to ask for a rating (once; Google
             // also rate-limits the dialog itself). Reviews were 13 → search rank stuck.
             if (settings.bumpCompletedCount() >= REVIEW_AT && !settings.reviewAsked.first()) {
-                settings.setReviewAsked()
                 _askReview.value = true
             }
         }

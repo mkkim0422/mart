@@ -49,6 +49,9 @@ class CheckItemAction : ActionCallback {
         setChecking(context, glanceId, itemId, on = false)
         val storeName = entry.storeRepository().getStore(item.storeId)?.name.orEmpty()
         Analytics.itemCompleted(storeName, fromWidget = true)
+        // Widget checks count toward the in-app review ask too; the dialog itself needs an
+        // Activity, so Home asks on its next resume (HomeViewModel.checkReviewOnResume).
+        entry.settingsDataStore().bumpCompletedCount()
         entry.widgetUpdater().updateAll()
     }
 

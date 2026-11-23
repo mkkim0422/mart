@@ -13,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.rldjrgo.grocerynote.notify.NudgeSlot
 import com.rldjrgo.grocerynote.notify.NudgeType
@@ -94,12 +95,14 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         context.dataStore.edit { it[Keys.HasSeenMartPicker] = true }
     }
 
-    /** In-app review (2026-11-13): count in-app completes; ask once at the Nth. */
+    /** In-app review: count completes (in-app + widget ○, 2026-11-23); ask once at the Nth. */
     suspend fun bumpCompletedCount(): Int {
         var n = 0
         context.dataStore.edit { n = (it[Keys.CompletedCount] ?: 0) + 1; it[Keys.CompletedCount] = n }
         return n
     }
+
+    suspend fun completedCount(): Int = context.dataStore.data.first()[Keys.CompletedCount] ?: 0
 
     val reviewAsked: Flow<Boolean> = context.dataStore.data
         .map { it[Keys.ReviewAsked] ?: false }

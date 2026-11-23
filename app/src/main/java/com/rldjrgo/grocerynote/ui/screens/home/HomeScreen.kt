@@ -242,19 +242,24 @@ fun HomeScreen(
     // Share FAB debounce — guard against double-taps so the system share sheet
     // is not requested twice (causes flicker on some launchers).
     var lastShareAt by remember { mutableLongStateOf(0L) }
-    // Google Play in-app review — asked once, at the 10th completed item (HomeViewModel).
+    // Google Play in-app review — asked once, at the 10th completed item (in-app or widget).
     // Shown after the 완료 snackbar has had its moment; never blocks the list.
+    // The flag is cleared only AFTER the launch: clearing it first changed this effect's key,
+    // which cancelled the coroutine during the delay — the dialog never opened (1.5.1~1.6.1).
     val askReview by viewModel.askReview.collectAsStateWithLifecycle()
     LaunchedEffect(askReview) {
         if (!askReview) return@LaunchedEffect
-        viewModel.consumeReviewAsk()
         kotlinx.coroutines.delay(2_500)
-        val activity = context.findActivity() ?: return@LaunchedEffect
-        runCatching {
-            val manager = com.google.android.play.core.review.ReviewManagerFactory.create(activity)
-            val info = manager.requestReview()
-            manager.launchReview(activity, info)
+        val activity = context.findActivity()
+        if (activity != null) {
+            val result = runCatching {
+                val manager = com.google.android.play.core.review.ReviewManagerFactory.create(activity)
+                val info = manager.requestReview()
+                manager.launchReview(activity, info)
+            }
+            android.util.Log.i("Review", "launch " + (result.exceptionOrNull()?.toString() ?: "ok"))
         }
+        viewModel.onReviewLaunched()
     }
     val undo by viewModel.undoEvent.collectAsStateWithLifecycle()
     val newlyAddedStoreId by viewModel.newlyAddedStoreId.collectAsStateWithLifecycle()
@@ -264,6 +269,7 @@ fun HomeScreen(
     // 실제 설치 상태와 맞춘다 (설치됨 → 배너 자동 숨김).
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
         viewModel.syncWidgetPresence()
+        viewModel.checkReviewOnResume()
         onPauseOrDispose { }
     }
     LaunchedEffect(undo) {
