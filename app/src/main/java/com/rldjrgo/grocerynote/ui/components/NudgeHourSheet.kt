@@ -32,16 +32,16 @@ fun hourLabel(hour: Int): String {
 }
 
 /**
- * 알림 시간 고르기 — 시·분 피커 대신 정시 목록(초심플). [hours] 범위만 보여 준다
- * (아침 6~11시, 저녁 16~21시).
+ * 알림 시간 고르기 — 아침·저녁을 한 시트에서(설정 줄을 하나로 줄임, 2026-11-23). 시·분 피커 대신
+ * 정시 칩(초심플): 아침 6~11시, 저녁 16~21시. 누르면 바로 적용되고 시트는 열려 있다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NudgeHourSheet(
-    title: String,
-    hours: IntRange,
-    selected: Int,
-    onPick: (Int) -> Unit,
+fun NudgeTimeSheet(
+    morningHour: Int,
+    eveningHour: Int,
+    onPickMorning: (Int) -> Unit,
+    onPickEvening: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = AppTheme.colors
@@ -53,34 +53,55 @@ fun NudgeHourSheet(
         dragHandle = null,
     ) {
         Column(Modifier.fillMaxWidth().padding(20.dp).navigationBarsPadding()) {
-            Text(title, style = typo.headingM, color = colors.textPrimary)
+            Text("알림 시간", style = typo.headingM, color = colors.textPrimary)
             Spacer(Modifier.height(4.dp))
-            Text("정한 시각쯤 하루 1번만 와요", style = typo.bodyS, color = colors.textTertiary)
-            Spacer(Modifier.height(16.dp))
-            hours.forEach { h ->
+            Text("아침이나 저녁, 정한 시각쯤 하루 1번만 와요", style = typo.bodyS, color = colors.textTertiary)
+            Spacer(Modifier.height(20.dp))
+            HourChips("아침", 6..11, morningHour, onPickMorning)
+            Spacer(Modifier.height(20.dp))
+            HourChips("저녁", 16..21, eveningHour, onPickEvening)
+            Spacer(Modifier.height(20.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .background(colors.brandPrimary, RoundedCornerShape(12.dp))
+                    .clickable(onClick = onDismiss),
+                contentAlignment = Alignment.Center,
+            ) { Text("확인", style = typo.title, color = androidx.compose.ui.graphics.Color.White) }
+        }
+    }
+}
+
+@Composable
+private fun HourChips(label: String, hours: IntRange, selected: Int, onPick: (Int) -> Unit) {
+    val colors = AppTheme.colors
+    val typo = AppTheme.typography
+    Text(label, style = typo.bodyS.copy(fontWeight = FontWeight.Medium), color = colors.textSecondary)
+    Spacer(Modifier.height(8.dp))
+    hours.chunked(3).forEach { rowHours ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            rowHours.forEach { h ->
                 val on = h == selected
-                Row(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
+                        .weight(1f)
+                        .height(44.dp)
                         .background(
-                            if (on) colors.brandPrimarySoft else colors.bgPrimary,
+                            if (on) colors.brandPrimarySoft else colors.bgTertiary,
                             RoundedCornerShape(12.dp),
                         )
-                        .clickable { onPick(h) }
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .clickable { onPick(h) },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         hourLabel(h),
                         style = typo.body.copy(fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal),
                         color = if (on) colors.brandPrimary else colors.textPrimary,
                     )
-                    if (on) Box { Text("✓", style = typo.body, color = colors.brandPrimary) }
                 }
             }
-            Spacer(Modifier.height(8.dp))
         }
+        Spacer(Modifier.height(8.dp))
     }
 }
