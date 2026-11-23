@@ -25,6 +25,8 @@ import com.rldjrgo.grocerynote.data.local.DarkModePref
 import com.rldjrgo.grocerynote.data.local.SettingsDataStore
 import com.rldjrgo.grocerynote.ui.components.BottomNavBar
 import com.rldjrgo.grocerynote.ui.navigation.AppNavHost
+import com.rldjrgo.grocerynote.notify.NudgeReceiver
+import kotlinx.coroutines.launch
 import com.rldjrgo.grocerynote.ui.navigation.Routes
 import com.rldjrgo.grocerynote.ui.navigation.currentRouteOrNull
 import com.rldjrgo.grocerynote.ui.screens.onboarding.OnboardingScreen
@@ -70,6 +72,7 @@ class MainActivity : ComponentActivity() {
             )
         )
         DeepLinkBus.consume(intent)
+        debugRunNudge(intent)
         setContent {
             val darkPref by settings.darkMode.collectAsStateWithLifecycle(initialValue = DarkModePref.Off)
             val system = isSystemInDarkTheme()
@@ -102,6 +105,23 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         DeepLinkBus.consume(intent)
+        debugRunNudge(intent)
+    }
+
+    /**
+     * 디버그 빌드 전용 수동 시험: `adb shell am start -n <pkg>/.MainActivity --es debug_nudge_slot MORNING|EVENING`.
+     * Android 14+는 adb가 비공개 리시버로 브로드캐스트를 못 보내서(not exported) 이 경로로 같은 코드를 돌린다.
+     * 릴리스 빌드에서는 아무 일도 하지 않는다.
+     */
+    private fun debugRunNudge(intent: Intent?) {
+        if (!BuildConfig.DEBUG) return
+        val slotName = intent?.getStringExtra("debug_nudge_slot") ?: return
+        intent.removeExtra("debug_nudge_slot")
+        val slot = runCatching { com.rldjrgo.grocerynote.notify.NudgeSlot.valueOf(slotName) }.getOrNull() ?: return
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            runCatching { com.rldjrgo.grocerynote.notify.NudgeRunner.run(applicationContext, slot, rearm = false) }
+                .onFailure { android.util.Log.w("Nudge", "debug run failed", it) }
+        }
     }
 }
 
@@ -115,6 +135,8 @@ object DeepLinkBus {
         val itemId: Long? = null,
         val openAddItem: Boolean = false,
         val sharedText: String? = null,
+        /** 시즌 알림 탭 → 요리별 재료 탭에서 이 요리를 연다 (RecipesScreen이 소비). */
+        val recipeName: String? = null,
         /** Items from a received list link (martnote://add) → straight to SharedItemsSheet. */
         val linkItems: List<String>? = null,
         /** Mart name the sender's list came from — preselected if the receiver has it. */
@@ -127,6 +149,16 @@ object DeepLinkBus {
 
     fun consume(intent: Intent?) {
         if (intent == null) return
+        // 리텐션 알림을 눌러서 열림 → 집계 후 extra 제거(재생성 때 중복 집계 방지).
+        intent.getStringExtra(NudgeReceiver.EXTRA_NUDGE_TYPE)?.let { t ->
+            Analytics.nudgeOpened(t)
+            intent.removeExtra(NudgeReceiver.EXTRA_NUDGE_TYPE)
+        }
+        intent.getStringExtra(NudgeReceiver.EXTRA_RECIPE_NAME)?.let { name ->
+            intent.removeExtra(NudgeReceiver.EXTRA_RECIPE_NAME)
+            flow.value = Payload(recipeName = name)
+            return
+        }
         // Share sheet (카톡 등 텍스트 공유) → 한 줄이면 추가 시트 프리필,
         // 여러 줄이면 HomeScreen이 SharedItemsSheet로 줄마다 항목을 만든다.
         if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
@@ -208,8 +240,10 @@ private fun MainScaffold(settings: SettingsDataStore) {
         DeepLinkBus.flow.collect { payload ->
             if (payload == null) return@collect
             val route = navController.currentDestination?.route
-            if (route != null && route != Routes.HOME) {
-                navController.navigate(Routes.HOME) {
+            // 시즌 알림은 요리별 재료 탭으로, 나머지는 홈으로.
+            val target = if (payload.recipeName != null) Routes.RECIPES else Routes.HOME
+            if (route != null && route != target) {
+                navController.navigate(target) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
                     restoreState = true

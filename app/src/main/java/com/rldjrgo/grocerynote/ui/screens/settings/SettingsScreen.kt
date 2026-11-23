@@ -38,6 +38,19 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.WbSunny
+import androidx.compose.material.icons.outlined.NightsStay
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.rldjrgo.grocerynote.notify.NudgeSlot
+import com.rldjrgo.grocerynote.notify.NudgeType
+import com.rldjrgo.grocerynote.ui.components.NudgeHourSheet
+import com.rldjrgo.grocerynote.ui.components.hourLabel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -100,6 +113,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         ActivityResultContracts.OpenDocument(),
     ) { uri -> uri?.let(viewModel::importFrom) }
 
+    // 알림 섹션 상태: 시간 고르기 시트, 폰 알림 허용 여부(설정 앱 다녀오면 다시 확인).
+    var hourPick by remember { mutableStateOf<NudgeSlot?>(null) }
+    val notifCtx = LocalContext.current
+    var notifTick by remember { mutableStateOf(0) }
+    LifecycleResumeEffect(Unit) { notifTick++; onPauseOrDispose { } }
+    val notifAllowed = remember(notifTick) { NotificationManagerCompat.from(notifCtx).areNotificationsEnabled() }
+
     Column(modifier = Modifier.fillMaxSize().background(colors.bgPrimary).statusBarsPadding()) {
         PageTitle(title = "설정")
         LazyColumn(
@@ -134,6 +154,77 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         tint = colors.textTertiary,
                         modifier = Modifier.size(20.dp),
                     )
+                }
+            }
+
+            item { SectionHeader("알림") }
+            item {
+                val np = state.nudge
+                ToggleRow(
+                    label = "장보기 알림",
+                    icon = Icons.Outlined.Notifications,
+                    sub = if (np.enabled) "${hourLabel(np.morningHour)} · ${hourLabel(np.eveningHour)}, 하루 1번" else "꺼짐",
+                    checked = np.enabled,
+                    onToggle = { viewModel.setNudgeEnabled(!np.enabled) },
+                )
+            }
+            if (state.nudge.enabled) {
+                if (!notifAllowed) item {
+                    SettingRow(
+                        label = "휴대폰 알림이 꺼져 있어요",
+                        icon = Icons.Outlined.NotificationsOff,
+                        sub = "눌러서 휴대폰 설정에서 마트노트 알림 켜기",
+                        onClick = {
+                            val i = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, notifCtx.packageName)
+                            runCatching { notifCtx.startActivity(i) }
+                        },
+                    ) {
+                        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = colors.danger, modifier = Modifier.size(20.dp))
+                    }
+                }
+                item {
+                    ToggleRow(
+                        label = "남은 목록 알림",
+                        icon = Icons.Outlined.Inventory2,
+                        sub = "5일 넘게 남아 있는 목록이 있으면 아침에",
+                        checked = state.nudge.staleEnabled,
+                        onToggle = { viewModel.setNudgeTypeEnabled(NudgeType.STALE_LIST, !state.nudge.staleEnabled) },
+                    )
+                }
+                item {
+                    ToggleRow(
+                        label = "배송 마감 알림",
+                        icon = Icons.Outlined.LocalShipping,
+                        sub = "컬리·쿠팡 목록이 있으면 저녁에",
+                        checked = state.nudge.deliveryEnabled,
+                        onToggle = { viewModel.setNudgeTypeEnabled(NudgeType.DELIVERY, !state.nudge.deliveryEnabled) },
+                    )
+                }
+                item {
+                    ToggleRow(
+                        label = "명절·시즌 알림",
+                        icon = Icons.Outlined.CalendarMonth,
+                        sub = "설·추석·김장 일주일 전에",
+                        checked = state.nudge.seasonEnabled,
+                        onToggle = { viewModel.setNudgeTypeEnabled(NudgeType.SEASON, !state.nudge.seasonEnabled) },
+                    )
+                }
+                item {
+                    SettingRow(
+                        label = "아침 알림 시간",
+                        icon = Icons.Outlined.WbSunny,
+                        sub = hourLabel(state.nudge.morningHour),
+                        onClick = { hourPick = NudgeSlot.MORNING },
+                    ) { Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(20.dp)) }
+                }
+                item {
+                    SettingRow(
+                        label = "저녁 알림 시간",
+                        icon = Icons.Outlined.NightsStay,
+                        sub = hourLabel(state.nudge.eveningHour),
+                        onClick = { hourPick = NudgeSlot.EVENING },
+                    ) { Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(20.dp)) }
                 }
             }
 
@@ -272,6 +363,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 confirmWipe2 = false
             },
             onDismiss = { confirmWipe2 = false },
+        )
+    }
+
+    hourPick?.let { slot ->
+        val morning = slot == NudgeSlot.MORNING
+        NudgeHourSheet(
+            title = if (morning) "아침 알림 시간" else "저녁 알림 시간",
+            hours = if (morning) 6..11 else 16..21,
+            selected = if (morning) state.nudge.morningHour else state.nudge.eveningHour,
+            onPick = { h -> viewModel.setNudgeHour(slot, h); hourPick = null },
+            onDismiss = { hourPick = null },
         )
     }
 

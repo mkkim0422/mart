@@ -3,6 +3,11 @@
 > 사용자 지시 1건 = 1줄. 최신이 맨 위. 탐색·빌드·실기기 검증은 기록하지 않음.
 > 형식: `- YYYY-MM-DD · {한 줄 요약} · {대표 파일들}` (커밋되면 끝에 ` (커밋 abc1234)` 추가)
 
+## 2026-11-22 · 리텐션 알림(넛지) 1차 — 작업 중 (1.7.0 예정)
+
+- 2026-11-22 · **정밀검사 수정**: ① 2028 설 날짜 1/26 → **1/27**(KASI 기반 계산으로 대조, 나머지 7개 날짜 일치) ② "시즌 알림 나간 날 1건 더" 예외가 실제론 안 먹던 것 수정(저녁 배송 알림 허용) ③ 캠핑 제목 "캠핑 준비물 재료" → "캠핑 장볼 것 N가지" ④ 안 쓰는 함수 제거 ⑤ 단위 테스트 6개 추가·통과(JUnit 직접 실행) · `notify/{SeasonCalendar,NudgeEngine}.kt`, `app/src/test/.../notify/NudgeEngineTest.kt`
+- 2026-11-22 · **리텐션 알림 1차 구현(미커밋·실기기 미확인)**: 서버 없이 하루 2번(아침 9시·저녁 18시, inexact 알람) 깨어 `NudgeEngine`이 그날 1건만 고름 — 첫 목록 유도(설치 20h 후 항목 0), 남은 목록(5일+ 미완료, 마트별 5일 쿨다운), 배송 마감(컬리·쿠팡 목록, 3일 쿨다운, 저녁), 명절·시즌(설·추석 D-7 2027~2030 날짜표 + 김장·캠핑·소풍, 탭하면 요리별 재료의 그 체크리스트). 설정 "알림" 절(마스터·종류 3개·아침/저녁 시간), 종류별 알림 채널 4개, 온보딩 마지막 장에서 한 줄 설명 → 알림 권한 팝업, 재부팅·앱 시작 시 알람 재등록, Analytics nudge_sent/opened·notif_permission. 사용자 결정: 주간 요약(A-8)·월급날(C-14) 제외, 권한은 온보딩에서, 시간 9시/18시. **문구 교체(사용자 지적 "목록 1개가 기다리고 있어요"·"설까지 일주일…" 안 끌림)**: 항목 이름을 제목 앞에 — 첫 목록 "오늘 뭐 사야 하죠? 지금 적어 두세요", 남은 목록 "우유, 아직 안 사셨죠? / 쿠팡에서 살 것 1개 · 6일째 그대로예요", 배송 "오늘 쿠팡 주문 마감 전이에요 / 우유 담아 두셨어요", 시즌 "설 차례상 재료 19가지(요리표 실제 수), 빠진 거 없는지 확인해요 / 설까지 7일". 검증: 에뮬레이터(Android 14) 4종 + 폰 S24+(Android 15) 4종 — 폰에서는 시계를 옮겨 실제 알람으로 첫 목록·배송·남은 목록·추석을 띄움(그 과정에서 다른 앱 예약 알림이 몰려 울림 — 다음엔 사전 고지). adb 브로드캐스트는 14+에서 차단돼 디버그 전용 `debug_nudge_slot` 경로 추가 · `notify/{NudgeType,SeasonCalendar,NudgeEngine,NudgeScheduler,NudgeReceiver}.kt`, `data/local/{NudgePrefs,SettingsDataStore}.kt`, `di/NudgeEntryPoint.kt`, `ui/components/NudgeHourSheet.kt`, `SettingsScreen/ViewModel`, `OnboardingScreen`, `MainActivity`, `HomeScreen`, `Recipes*`, `BootReceiver`, `App.kt`, `AndroidManifest.xml`, `util/Analytics.kt`, `CLAUDE.md` §12.5
+
 ## 2026-11-22 · v1.6.1 (vc15) — 🔍 쇼핑 앱 검색어 유실 수정
 
 - 2026-11-22 · **v1.6.1 (vc15) 버전업 + 출시 노트**: 1.6.0(vc14)은 이미 Play에 배포된 상태라 🔍 수정을 1.6.1로 분리 배포(사용자 결정). 알림(푸시) 기능은 1.7.0으로. 출시 노트 §0 갱신, 출시자료 폴더 재생성 · `app/build.gradle.kts`, `docs/playstore_listing.md`, `scripts/build_release_kit.py`

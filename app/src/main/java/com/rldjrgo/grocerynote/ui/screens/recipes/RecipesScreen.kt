@@ -102,6 +102,14 @@ fun RecipesScreen(viewModel: RecipesViewModel = hiltViewModel()) {
 
     BackHandler(enabled = opened != null) { viewModel.close() }
 
+    // 시즌 알림(설·추석·김장) 탭 → 그 체크리스트를 바로 연다.
+    val deepLink by com.rldjrgo.grocerynote.DeepLinkBus.flow.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(deepLink) {
+        val name = deepLink?.recipeName ?: return@LaunchedEffect
+        com.rldjrgo.grocerynote.DeepLinkBus.flow.value = null
+        viewModel.openByName(name)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

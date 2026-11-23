@@ -140,6 +140,14 @@ class RecipesViewModel @Inject constructor(
         viewModelScope.launch { settings.pushRecentRecipe(recipe.name) }
     }
 
+    /** 시즌 알림 딥링크: 이름으로 열기(표가 아직 안 읽혔으면 읽고 나서). 없는 이름이면 목록에 머문다. */
+    fun openByName(name: String) {
+        viewModelScope.launch {
+            val recipes = local.value.recipes ?: book.load()
+            recipes.firstOrNull { it.name == name }?.let { open(it) }
+        }
+    }
+
     fun close() = local.update { it.copy(opened = null, picked = emptySet()) }
 
     fun toggle(item: String) = local.update {

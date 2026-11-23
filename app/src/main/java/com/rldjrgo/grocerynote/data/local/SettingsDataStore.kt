@@ -14,6 +14,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.rldjrgo.grocerynote.notify.NudgeSlot
+import com.rldjrgo.grocerynote.notify.NudgeType
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "grocery_prefs")
 
@@ -41,6 +43,20 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         val RecentRecipes = stringPreferencesKey("recent_recipes")
         val RecipeLastStoreId = longPreferencesKey("recipe_last_store_id")
         val HasOpenedRecipes = booleanPreferencesKey("has_opened_recipes")
+        // 리텐션 알림(넛지) — 1.7.0
+        val NudgeEnabled = booleanPreferencesKey("nudge_enabled")
+        val NudgeStale = booleanPreferencesKey("nudge_stale")
+        val NudgeDelivery = booleanPreferencesKey("nudge_delivery")
+        val NudgeSeason = booleanPreferencesKey("nudge_season")
+        val NudgeMorningHour = intPreferencesKey("nudge_morning_hour")
+        val NudgeEveningHour = intPreferencesKey("nudge_evening_hour")
+        val NudgeLastSentDay = longPreferencesKey("nudge_last_sent_day")
+        val NudgeLastSentWasSeason = booleanPreferencesKey("nudge_last_sent_was_season")
+        val NudgeFirstListSent = booleanPreferencesKey("nudge_first_list_sent")
+        val NudgeStaleLastSent = stringPreferencesKey("nudge_stale_last_sent")
+        val NudgeDeliveryLastSent = stringPreferencesKey("nudge_delivery_last_sent")
+        val NudgeSeasonSent = stringPreferencesKey("nudge_season_sent")
+        val NotifPermAsked = booleanPreferencesKey("notif_perm_asked")
     }
 
     /** "요리별 재료" tab: last opened dishes, newest first (names, max [RECENT_RECIPES_MAX]). */
@@ -163,4 +179,84 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
     suspend fun setLargeWidgetStoreIds(ids: List<Long>) {
         context.dataStore.edit { it[Keys.LargeWidgetStoreIds] = ids.joinToString(",") }
     }
+
+    // ── 리텐션 알림(넛지) 설정 + 발송 이력 (1.7.0) ─────────────────────────────────
+    val nudgePrefs: Flow<NudgePrefs> = context.dataStore.data.map { p ->
+        NudgePrefs(
+            enabled = p[Keys.NudgeEnabled] ?: true,
+            staleEnabled = p[Keys.NudgeStale] ?: true,
+            deliveryEnabled = p[Keys.NudgeDelivery] ?: true,
+            seasonEnabled = p[Keys.NudgeSeason] ?: true,
+            morningHour = p[Keys.NudgeMorningHour] ?: NudgePrefs.DEFAULT_MORNING_HOUR,
+            eveningHour = p[Keys.NudgeEveningHour] ?: NudgePrefs.DEFAULT_EVENING_HOUR,
+            lastSentDay = p[Keys.NudgeLastSentDay] ?: -1L,
+            lastSentWasSeason = p[Keys.NudgeLastSentWasSeason] ?: false,
+            firstListSent = p[Keys.NudgeFirstListSent] ?: false,
+            staleLastSent = parseDayMap(p[Keys.NudgeStaleLastSent]),
+            deliveryLastSent = parseDayMap(p[Keys.NudgeDeliveryLastSent]),
+            seasonSent = (p[Keys.NudgeSeasonSent] ?: "").split(",").filter { it.isNotBlank() }.toSet(),
+            permissionAsked = p[Keys.NotifPermAsked] ?: false,
+        )
+    }
+
+    suspend fun setNudgeEnabled(on: Boolean) {
+        context.dataStore.edit { it[Keys.NudgeEnabled] = on }
+    }
+
+    suspend fun setNudgeTypeEnabled(type: NudgeType, on: Boolean) {
+        val key = when (type) {
+            NudgeType.STALE_LIST -> Keys.NudgeStale
+            NudgeType.DELIVERY -> Keys.NudgeDelivery
+            NudgeType.SEASON -> Keys.NudgeSeason
+            NudgeType.FIRST_LIST -> return // 평생 1회짜리, 토글 없음
+        }
+        context.dataStore.edit { it[key] = on }
+    }
+
+    suspend fun setNudgeHour(slot: NudgeSlot, hour: Int) {
+        val key = if (slot == NudgeSlot.MORNING) Keys.NudgeMorningHour else Keys.NudgeEveningHour
+        context.dataStore.edit { it[key] = hour.coerceIn(0, 23) }
+    }
+
+    suspend fun setNotifPermissionAsked() {
+        context.dataStore.edit { it[Keys.NotifPermAsked] = true }
+    }
+
+    /** 알림 1건을 보낸 직후 호출 — 하루 상한·종류별 쿨다운·시즌 중복 방지 이력. */
+    suspend fun recordNudgeSent(type: NudgeType, today: Long, storeId: Long?, seasonKey: String?) {
+        context.dataStore.edit { p ->
+            p[Keys.NudgeLastSentDay] = today
+            p[Keys.NudgeLastSentWasSeason] = type == NudgeType.SEASON
+            when (type) {
+                NudgeType.FIRST_LIST -> p[Keys.NudgeFirstListSent] = true
+                NudgeType.STALE_LIST -> if (storeId != null) {
+                    p[Keys.NudgeStaleLastSent] = encodeDayMap(parseDayMap(p[Keys.NudgeStaleLastSent]) + (storeId to today))
+                }
+                NudgeType.DELIVERY -> if (storeId != null) {
+                    p[Keys.NudgeDeliveryLastSent] = encodeDayMap(parseDayMap(p[Keys.NudgeDeliveryLastSent]) + (storeId to today))
+                }
+                NudgeType.SEASON -> if (seasonKey != null) {
+                    val cur = (p[Keys.NudgeSeasonSent] ?: "").split(",").filter { it.isNotBlank() }.toMutableSet()
+                    cur += seasonKey
+                    // 지난 연도 키는 버려서 무한히 안 자라게 (키 끝이 연도).
+                    val thisYear = java.time.LocalDate.ofEpochDay(today).year
+                    p[Keys.NudgeSeasonSent] = cur.filter { k -> (k.substringAfterLast('-').toIntOrNull() ?: thisYear) >= thisYear - 1 }
+                        .joinToString(",")
+                }
+            }
+        }
+    }
+
+    /** "storeId:epochDay,storeId:epochDay" ↔ Map. 마트가 몇 개 안 되니 문자열로 충분. */
+    private fun parseDayMap(raw: String?): Map<Long, Long> =
+        (raw ?: "").split(",").mapNotNull { e ->
+            val parts = e.split(":")
+            if (parts.size != 2) return@mapNotNull null
+            val id = parts[0].toLongOrNull() ?: return@mapNotNull null
+            val day = parts[1].toLongOrNull() ?: return@mapNotNull null
+            id to day
+        }.toMap()
+
+    private fun encodeDayMap(m: Map<Long, Long>): String =
+        m.entries.joinToString(",") { "${it.key}:${it.value}" }
 }

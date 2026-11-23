@@ -280,6 +280,25 @@ Test scenarios (verify each after Phase 4):
 - Also: 자동완성 (`ProductDictionary.swift`, generated from Android's), swipe list ←→ = next/prev mart, 위젯 안내 배너 (hidden once `WidgetCenter.getCurrentConfigurations` finds one), 별점 (`requestReview`), `PrivacyInfo.xcprivacy` (UserDefaults CA92.1/1C8F.1) in both targets.
 - Not yet: AdMob (needs an iOS app id), Firebase, Share Extension (receive text from other apps), Home Screen quick action, widget 노출순서, real-screen onboarding images, signing/TestFlight (needs Apple Developer account), list page iOS button (after App Store id exists).
 
+## 12.5 리텐션 알림(넛지) — 1.7.0 (2026-11-22 사용자 확정, 코드 `notify/`)
+
+서버/FCM 없음. `NudgeScheduler`가 하루 2번(아침 기본 9시·저녁 기본 18시, inexact `setAndAllowWhileIdle`, 요청코드 9000/9001) `NudgeReceiver`를 깨우고, `NudgeEngine.decide(slot, snapshot)`이 **그날 보낼 알림 1개**만 고른다(순수 함수, 안드로이드 의존 없음). 설정·이력은 `SettingsDataStore.nudgePrefs`(`NudgePrefs`).
+- **하루 최대 1건.** 예외: 아침에 시즌 알림이 나간 날은 저녁 배송 알림 1건 더(사용자 합의 "날짜형 있는 날만 2건"; 정밀검사 전엔 이 예외가 실제로는 동작하지 않았음 — 2026-11-22 수정).
+- 아침: SEASON > FIRST_LIST > STALE_LIST. 저녁: DELIVERY만.
+- FIRST_LIST(D-15): 설치(`firstInstallTime`) 20시간 후 항목(완료 포함) 0개면 평생 1번. 탭 → 추가 시트.
+- STALE_LIST(A-3): 생성 5일 지난 미완료 항목이 있는 마트, 가장 많은 마트 1개, 마트별 5일 쿨다운. 탭 → 그 마트.
+- DELIVERY(A-6): 이름이 `StoreSearch.appFor` 로 컬리/쿠팡에 매핑되고(쇼핑앱 토글 ON) 미완료 ≥1, 마트별 3일 쿨다운. 문구는 "오늘 주문하면 내일 새벽" — **마감 시각(23시 등)은 지역마다 달라 적지 않음**. 탭 → 그 마트.
+- SEASON(B-11·12): `SeasonCalendar` 날짜표. 설·추석 2027~2030 양력(**`korean-lunar-calendar`(KASI 기반)로 계산 대조**; 2027 설 = 2/7, **2028 설 = 1/27** — 둘 다 중국 춘절보다 하루 늦음. 처음엔 웹 요약을 믿고 2028을 1/26으로 넣었다가 정밀검사에서 잡음 → 날짜는 반드시 계산으로 검증), 김장 11/15·캠핑 5/1·봄소풍 4/20·가을소풍 10/5(제품 가정). D-7(소풍 D-5)부터 3일 창, 키별 1회. 탭 → 요리별 재료 탭에서 그 요리(`DeepLinkBus.Payload.recipeName` → `RecipesViewModel.openByName`). 표는 2030까지 — 연 1회 연장 필요, 끝나면 조용히 안 나감.
+- 제외(사용자 결정): A-8 주간 요약(열어도 할 일 없음), C-14 월급날. 2차: B-9 저녁 메뉴, C-13 행사일(11/11·블프만). 3차: E-20 위치.
+- **문구 원칙(사용자 지적 2026-11-22: "쿠팡 목록 1개가 기다리고 있어요"는 어색, "설까지 일주일…"은 안 끌림)**: 사용자가 적은 **항목 이름을 제목 맨 앞에**, "목록 N개가 …" 식 목록 주어 금지, 온라인 마트도 있으니 "갈 때" 금지, 숫자는 실제 값만(지어낸 통계 금지), 할인·행사 문구 없음. 확정 문구 — 첫 목록 "오늘 뭐 사야 하죠? 지금 적어 두세요 / 이름만 적으면 끝, 10초" · 남은 목록 "우유, 아직 안 사셨죠? / 쿠팡에서 살 것 1개 · 5일째 그대로예요" · 배송 마감 "오늘 쿠팡 주문 마감 전이에요 / 우유 외 2개 담아 두셨어요" · 시즌 "설 차례상 재료 19가지, 빠진 거 없는지 확인해요 / 설까지 7일 · 눌러서 마트 목록에 담기"(재료 수는 요리표 main 개수, D-day는 계산).
+- 채널 4개(종류별 `nudge_start/list/delivery/season`, 중요도 DEFAULT) → 폰 설정에서 종류별 차단 가능. 앱 설정 "알림" 절: 마스터 토글 + 종류 3개 토글 + 아침/저녁 시간(정시 목록 6~11시 / 16~21시) + 폰 알림 꺼짐이면 설정 앱으로 가는 줄.
+- 권한: **온보딩 마지막 장(위젯 장) 진입 시 한 줄 설명 다이얼로그 → 시스템 팝업**(13+). 거부하면 다시 안 묻고(`permissionAsked`) 설정 줄로 안내. 기존 사용자(온보딩 안 봄)는 권한이 없으면 알림이 조용히 안 나감 — 홈에서 1회 유도는 미구현(검토 항목).
+- 재부팅(`BootReceiver`)·프로세스 시작(`App.onCreate`)·설정 변경 시 `ensureArmed()`. 마스터 OFF면 알람 자체 제거.
+- Analytics: `nudge_sent{type}`, `nudge_opened{type}`(MainActivity 인텐트 extra), `notif_permission{granted,where}`. 종류별 열림률로 약한 알림을 뺀다.
+- 단위 테스트 `app/src/test/.../notify/NudgeEngineTest.kt`(6개: 첫 목록·남은 목록·배송·하루 상한·설 문구·날짜표). **이 PC에서는 `gradlew testDebugUnitTest`가 기존 테스트까지 ClassNotFound로 실패**(테스트 워커 문제, 원인 미확인 — 한글 경로 추정이나 ASCII 드라이브로도 재현) → 컴파일된 클래스를 `java -cp … org.junit.runner.JUnitCore`로 직접 실행해 6개 통과 확인(2026-11-22).
+- **알려진 빈틈**: 온보딩에서 "건너뛰기"를 누르면 마지막 장을 안 거쳐 알림 권한을 묻지 않음. 기존 사용자(온보딩 이미 봄)도 마찬가지 → 홈 1회 안내 필요 여부 사용자 결정 대기.
+- 수동 시험(**디버그 빌드만**): `adb shell am start -n com.rldjrgo.grocerynote/.MainActivity --es debug_nudge_slot MORNING` (EVENING) → `MainActivity.debugRunNudge` → `NudgeRunner.run`(재예약 없이). adb로 리시버에 직접 브로드캐스트는 Android 14+에서 "not exported"로 차단돼 **안 된다**(2026-11-22 에뮬레이터에서 확인, `dumpsys activity broadcasts history`에 skipped by policy). 하루 1건 상한 때문에 두 번째는 안 뜸 — 날짜를 바꿔야 함: 에뮬레이터는 `settings put global auto_time 0` 후 `cmd alarm set-time <epochMillis>`(auto_time을 안 끄면 몇 초 뒤 원래 시각으로 되돌아감). 로그 태그 `Nudge`.
+
 ## 13. Folder Structure
 
 ```
@@ -344,6 +363,7 @@ app/src/main/java/com/rldjrgo/grocerynote/
 - **2026-11-17 기능 검토 결론**: 큰 새 기능보다 설치 수가 병목. Phase 15(메뉴→재료)·가족 실시간 공유는 **보류**(데이터 보고 판단: `list_link_opened` 등), 사진 OCR은 뺌. 할 일 후보 = 백업 규칙 버그 의심 수정(DataStore 경로·Room `-wal`, CHANGELOG 2026-11-17) + 중복 이름 표시.
 - **원스토어 빌드 (작업 중, 브랜치 `wip/onestore`, 빌드 실패 상태로 중단 2026-11-17)**: play/onestore flavor, 원스토어는 Play 결제 라이브러리 제외·별점은 원스토어로·공유는 Play로. 원스토어 등록은 생활앱 유입이 적어 우선순위 낮음. 이어서 하려면 브랜치에서 빌드 오류부터 확인.
 - [ ] **Phase 15 재개 (2026-11-19, 사용자 결정 — 작업 중, 미커밋·미출시, 실기기 미확인)** — **"요리별 재료" 탭** (하단 탭 2번째: 구매예정 / 요리별 재료 / 완료 / 설정; 화면 제목 "뭘 넣더라?"). 장면 = 마트에서 "김치찌개에 뭘 넣더라". 요리 검색·분류 목록 → 요리를 누르면 재료 칩(재료 / 넣어도 좋은 것 / 양념 "집에 없는 것만" / 준비물) → 마트 골라 "○○에 N개 담기". 규칙(사용자 확정): **아무것도 미리 체크하지 않음**(집에 뭐가 있는지 모름; 재료·준비물 칸에만 "전체 선택"), **이미 어느 마트 목록에 있는 이름은 비활성 + "○○에 있음"**(이름 완전 일치만), **양(그램·개수) 없음 — 양은 사용자 몫**, 조리법은 앱에 안 넣고 "만드는 법 보기" → 유튜브 검색(행사 분류 제외), "최근 본 요리" 8개. 데이터 = `app/src/main/assets/recipes.txt` (약 300개, 한 줄 = `이름|이모지|다른 이름·오타|재료|넣어도 좋은 것|양념|준비물`, `## 분류`; 약 60KB, 탭 처음 열 때 1회 로드). 다른 이름 기준 = "그 이름으로 찾은 사람이 이 재료를 보고 맞다고 할 때만"(참치찌개≠고추장 참치찌개, 까르보나라≠투움바처럼 다른 요리는 줄을 나눔; 다른 이름에 든 재료는 '재료' 칸에 있어야 함). 2026-11 인기 레시피(요리당 6개) 대조 + 독립 검수 2회 거침, 그래도 재료 구분은 최종적으로 사람 눈 확인 필요. 코드: `data/recipes/RecipeBook.kt`, `ui/screens/recipes/`, Analytics `recipe_opened`/`recipe_items_added`/`recipe_howto`(2단계 = 앱 안 간단 조리 순서, howto 수치 보고 판단). 웹 버전(`web/jang/`, 양 계산 포함)은 검색 경쟁력 없다고 판단해 보류. 검색이 주 사용 경로라 분류 세분화·분류 필터는 안 함(사용자 2026-11-19); 대신 "자주 찾는 요리" 버튼 줄. **⚠ 출시 전 필수: `recipe_search_miss`가 '없는 요리 검색어'(글자만, 20자)를 Analytics로 보냄 — 사용자가 친 글이 기기 밖으로 나가는 유일한 곳(사용자 결정 2026-11-19). gh-pages `privacy.html`에 문구 추가 + Play Console 데이터 보안 양식에 "앱 활동 > 인앱 검색 기록(분석 목적)" 신고를 먼저 해야 함. 안 하고 올리면 정책 위반.** **보류(사용자 2026-11-19 "킵하자")**: 내 레시피 직접 추가(로그인 없이 기기 저장, 검색 결과 없을 때 진입) · 레시피 공유/제안하기(공개 공유는 사용자 수·신고/차단 의무·품질 문제로 시기상조, 대안 = 메일로 제안 → 운영자가 검수해 기본 표에 추가). 그 밖의 후보: 초성 검색. 아래는 예전 계획:
+- [ ] **Phase 16 — v1.7.0 리텐션 알림 1차** (2026-11-22 착수, 사용자 확정 범위: 기반 + D-15·A-3·A-6·B-11·B-12; §12.5). 1.6.1(vc15)은 🔍 검색어 수정만 먼저 배포(커밋 5669550).
 - [ ] (예전 계획) Phase 15 (보류 2026-11-17 — 원래 사용자 확정 2026-10-27) — **메뉴 → 재료 자동 제안**: 추가 시트에 요리 이름("된장찌개")을 치면 재료가 칩으로 떠서 탭해 담음. 한국 요리 200~300종 재료표를 앱 내 번들(서버 없음). 완성 시 스토어 첫 스크린샷/홍보 문구를 "메뉴만 치면 장보기 끝"으로. 그 뒤 후보: "다시 살 때 됐어요" 칩(완료 주기, 알림 없음) → 가족 공유 6자리 코드(가입 없음 원칙 재검토 필요)
 
 > Note: an earlier **share** feature also exists (Home share SmallFAB above the add-FAB → `ShareRequestDialog` with a 200-char 부탁 문구, 15 rotating placeholders, footer "마트노트에서 보냄" + "👉 눌러서 마트노트에 바로 담기: <list page link>" (1.5.0; the page decides Android → app/Play, iPhone → list only); 심부름 pivot) and the **XLarge widget breakpoint** (320×320, up to 6 marts, adaptive-only). Both pre-date Phase 11 in the CHANGELOG (2026-05-26) and ship in v1.1.0.

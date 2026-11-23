@@ -3,6 +3,7 @@ package com.rldjrgo.grocerynote
 import android.app.Application
 import android.content.res.Configuration
 import com.google.android.gms.ads.MobileAds
+import com.rldjrgo.grocerynote.di.NudgeEntryPoint
 import com.rldjrgo.grocerynote.di.WidgetEntryPoint
 import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.EntryPointAccessors
@@ -26,6 +27,14 @@ class App : Application() {
         // Firebase / Crashlytics auto-initialize via google-services plugin.
 
         lastNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+
+        // 리텐션 알림 알람(아침/저녁)을 설정에 맞춰 건다 — 업데이트 설치 직후에도 첫 실행 때 걸린다.
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            runCatching {
+                EntryPointAccessors.fromApplication(this@App, NudgeEntryPoint::class.java)
+                    .nudgeScheduler().ensureArmed()
+            }
+        }
 
         // Start the widget auto-refresher (process-lifetime DB subscription).
         runCatching {

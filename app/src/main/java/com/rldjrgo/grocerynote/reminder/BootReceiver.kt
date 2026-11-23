@@ -3,6 +3,7 @@ package com.rldjrgo.grocerynote.reminder
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.rldjrgo.grocerynote.di.NudgeEntryPoint
 import com.rldjrgo.grocerynote.di.ReminderEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +30,11 @@ class BootReceiver : BroadcastReceiver() {
         )
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
+                // 넛지 알람(아침/저녁)도 재부팅에 지워지니 다시 건다.
+                runCatching {
+                    EntryPointAccessors.fromApplication(context.applicationContext, NudgeEntryPoint::class.java)
+                        .nudgeScheduler().ensureArmed()
+                }
                 val repo = entry.itemRepository()
                 val scheduler = entry.reminderScheduler()
                 val now = System.currentTimeMillis()

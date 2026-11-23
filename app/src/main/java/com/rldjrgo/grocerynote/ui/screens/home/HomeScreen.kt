@@ -284,6 +284,7 @@ fun HomeScreen(
     val deepLink by com.rldjrgo.grocerynote.DeepLinkBus.flow.collectAsStateWithLifecycle()
     LaunchedEffect(deepLink) {
         val payload = deepLink ?: return@LaunchedEffect
+        if (payload.recipeName != null) return@LaunchedEffect // 요리별 재료 탭이 소비
         viewModel.handleDeepLink(payload.storeId, payload.itemId)
         if (payload.linkItems != null) {
             // 받은 목록 링크 → 한 개여도 확인 시트(받은 목록이라는 걸 보여줌).

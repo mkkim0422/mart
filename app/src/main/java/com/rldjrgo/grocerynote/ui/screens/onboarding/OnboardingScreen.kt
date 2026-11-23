@@ -52,6 +52,14 @@ import com.rldjrgo.grocerynote.ui.theme.AppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.rldjrgo.grocerynote.util.Analytics
+import kotlinx.coroutines.flow.map
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -61,6 +69,13 @@ class OnboardingViewModel @Inject constructor(
 ) : androidx.lifecycle.ViewModel() {
     /** For the 목록 위젯 "어떤 마트를 보여줄까요?" step in the widget picker. */
     val stores = storeRepo.observeActiveStores()
+
+    /** 온보딩에서 알림 권한을 이미 물었는지 (거부해도 다시 안 묻는다). */
+    val notifAsked = settings.nudgePrefs.map { it.permissionAsked }
+
+    fun markNotifAsked() {
+        viewModelScope.launch { settings.setNotifPermissionAsked() }
+    }
 
     fun markSeen() {
         viewModelScope.launch {
@@ -125,6 +140,21 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
     var showWidgetHint by remember { mutableStateOf(false) }
     var showSizePicker by remember { mutableStateOf(false) }
+
+    // 알림 권한(Android 13+): 마지막 장(위젯 장)에 들어올 때 한 줄 설명 → 시스템 팝업 (2026-11-22 결정).
+    // 거부하면 다시 묻지 않고, 설정 > 알림 줄에서 폰 설정으로 보낸다.
+    var showNotifPrompt by remember { mutableStateOf(false) }
+    val notifAsked by viewModel.notifAsked.collectAsStateWithLifecycle(initialValue = true)
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        Analytics.notifPermission(granted, "onboarding")
+        viewModel.markNotifAsked()
+    }
+    LaunchedEffect(pagerState.currentPage, notifAsked) {
+        val needs = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        if (pagerState.currentPage == pages.lastIndex && !notifAsked && needs) showNotifPrompt = true
+    }
 
     val finish: () -> Unit = {
         viewModel.markSeen()
@@ -281,6 +311,24 @@ fun OnboardingScreen(
             },
             // Closed without pinning (or after the manual guide) → onboarding is over too.
             onDismiss = { showSizePicker = false; finish() },
+        )
+    }
+
+    if (showNotifPrompt) {
+        com.rldjrgo.grocerynote.ui.screens.home.ConfirmDialog(
+            title = "깜빡한 장보기, 알려드릴까요?",
+            message = "오래 남은 목록, 배송 마감 전, 명절 장보기 시기에 하루 1번만 알려드려요. 설정에서 언제든 끌 수 있어요.",
+            confirmLabel = "알림 받기",
+            destructive = false,
+            onConfirm = {
+                showNotifPrompt = false
+                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            },
+            onDismiss = {
+                showNotifPrompt = false
+                viewModel.markNotifAsked()
+                Analytics.notifPermission(false, "onboarding_skip")
+            },
         )
     }
 

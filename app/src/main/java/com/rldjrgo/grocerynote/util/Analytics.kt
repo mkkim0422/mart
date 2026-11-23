@@ -50,6 +50,12 @@ object Analytics {
     }
     fun adRemoved() = log("ad_removed")
     fun onboardingCompleted() = log("onboarding_completed")
+    /** 리텐션 알림(1.7.0): 보냄 / 눌러서 열림 — 종류별 열림률로 약한 알림을 뺀다. */
+    fun nudgeSent(type: String) = log("nudge_sent", "type" to type)
+    fun nudgeOpened(type: String) = log("nudge_opened", "type" to type)
+    /** 알림 권한 결과. where = onboarding / onboarding_skip */
+    fun notifPermission(granted: Boolean, where: String) =
+        log("notif_permission", "granted" to granted.toString(), "where" to where)
 
     private fun log(name: String, vararg params: Pair<String, String>) {
         runCatching {

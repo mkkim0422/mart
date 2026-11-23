@@ -102,6 +102,11 @@
             android:name=".reminder.ReminderReceiver"
             android:exported="false" />
 
+        <!-- 리텐션 알림(넛지) 아침/저녁 알람 수신 (명시적 인텐트로만, 비공개) -->
+        <receiver
+            android:name=".notify.NudgeReceiver"
+            android:exported="false" />
+
         <!-- 재부팅 후 미래 알림 재등록 (inexact 알람은 재부팅 시 소실됨) -->
         <receiver
             android:name=".reminder.BootReceiver"

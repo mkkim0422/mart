@@ -16,6 +16,10 @@ import com.rldjrgo.grocerynote.data.repository.BackupRepository
 import com.rldjrgo.grocerynote.data.repository.StoreRepository
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.reminder.ReminderScheduler
+import com.rldjrgo.grocerynote.data.local.NudgePrefs
+import com.rldjrgo.grocerynote.notify.NudgeScheduler
+import com.rldjrgo.grocerynote.notify.NudgeSlot
+import com.rldjrgo.grocerynote.notify.NudgeType
 import com.rldjrgo.grocerynote.util.WidgetPinHelper
 import com.rldjrgo.grocerynote.util.WidgetUpdater
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,6 +41,7 @@ data class SettingsUiState(
     // 하드코딩 금지 — 빌드의 실제 versionName을 그대로 표시 (업데이트 때 자동 반영).
     val version: String = BuildConfig.VERSION_NAME,
     val toast: String? = null,
+    val nudge: NudgePrefs = NudgePrefs(),
 )
 
 @HiltViewModel
@@ -50,6 +55,7 @@ class SettingsViewModel @Inject constructor(
     private val widgetPin: WidgetPinHelper,
     private val backup: BackupRepository,
     private val reminderScheduler: ReminderScheduler,
+    private val nudgeScheduler: NudgeScheduler,
 ) : AndroidViewModel(application) {
 
     private val toast = MutableStateFlow<String?>(null)
@@ -69,7 +75,20 @@ class SettingsViewModel @Inject constructor(
         s.copy(stores = stores)
     }.combine(settings.largeWidgetStoreIds) { s, ids ->
         s.copy(largeWidgetStoreIds = ids)
+    }.combine(settings.nudgePrefs) { s, np ->
+        s.copy(nudge = np)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
+
+    // ── 리텐션 알림 설정 (변경 후 알람을 다시 맞춘다) ──
+    fun setNudgeEnabled(on: Boolean) {
+        viewModelScope.launch { settings.setNudgeEnabled(on); nudgeScheduler.ensureArmed() }
+    }
+    fun setNudgeTypeEnabled(type: NudgeType, on: Boolean) {
+        viewModelScope.launch { settings.setNudgeTypeEnabled(type, on) }
+    }
+    fun setNudgeHour(slot: NudgeSlot, hour: Int) {
+        viewModelScope.launch { settings.setNudgeHour(slot, hour); nudgeScheduler.ensureArmed() }
+    }
 
     fun setDarkMode(pref: DarkModePref) {
         viewModelScope.launch { settings.setDarkMode(pref) }
