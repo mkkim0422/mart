@@ -141,7 +141,15 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeList(
     val open: (Recipe) -> Unit = { focus.clearFocus(); viewModel.open(it) }
 
     // Same rule as the other tabs: the screen title is the tab's own name.
-    PageTitle(title = "준비 목록", subtitle = "고르면 살 것이 나와요")
+    val group = state.group
+    if (group != null && state.query.isBlank()) {
+        // On a chip: "← 🎒 아이·학교", like a list's own header — the ← goes back to 전체
+        // (users looked for an on-screen back, not only the system one; 2026-11-24).
+        val emoji = state.groups.firstOrNull { it.first == group }?.second.orEmpty()
+        BackHeader(if (emoji.isEmpty()) group else "$emoji $group") { viewModel.setGroup(null) }
+    } else {
+        PageTitle(title = "준비 목록", subtitle = "고르면 살 것이 나와요")
+    }
     SearchField(state.query, viewModel::setQuery)
     GroupChips(state.groups, state.group, onSelect = { focus.clearFocus(); viewModel.setGroup(it) })
 
@@ -259,6 +267,35 @@ private fun SearchField(query: String, onChange: (String) -> Unit) {
                 modifier = Modifier.size(20.dp).clickable { onChange("") },
             )
         }
+    }
+}
+
+/** ← + title, same look as a list's header ([RecipeDetail]). */
+@Composable
+private fun BackHeader(title: String, onBack: () -> Unit) {
+    val colors = AppTheme.colors
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "뒤로",
+            tint = colors.textPrimary,
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .clickable(onClick = onBack)
+                .padding(12.dp)
+                .size(24.dp),
+        )
+        Text(
+            title,
+            style = AppTheme.typography.headingL,
+            color = colors.textPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
