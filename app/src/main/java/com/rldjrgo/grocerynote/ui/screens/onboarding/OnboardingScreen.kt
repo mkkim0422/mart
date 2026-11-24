@@ -112,9 +112,10 @@ private val pages = listOf(
     // Replaced the "쇼핑 앱에서 검색" page (R.drawable.onboarding_page_shop) so the count
     // stays at 4: that feature already has its own one-time tip on the first 🔍, and the
     // store screenshots now show 요리별 재료 too (user 2026-11-19).
+    // 1.7.0: tab renamed "준비 목록" (요리 + 명절·나들이·아이·아플 때·생활) — copy and capture follow.
     Page(
-        "요리만 고르면 살 재료가 나와요",
-        "“김치찌개에 뭘 넣더라?” 싶을 때, 필요한 것만 눌러 담으세요",
+        "고르기만 하면 살 게 나와요",
+        "“김치찌개에 뭘 넣더라?” “캠핑 가는데 뭐 사지?” 할 때 필요한 것만 눌러 담으세요",
         R.drawable.onboarding_page_recipe,
     ),
     // LAST page on purpose: the widget-or-start choice is rendered on

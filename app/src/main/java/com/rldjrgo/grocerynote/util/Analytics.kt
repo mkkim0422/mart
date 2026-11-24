@@ -33,7 +33,7 @@ object Analytics {
     fun listLinkOpened(count: Int) =
         log("list_link_opened", "count" to if (count >= 10) "10+" else count.toString())
     /** "요리별 재료" tab: a dish was opened. Dish names are our own bundled table, not user text. */
-    fun recipeOpened(name: String) = log("recipe_opened", "recipe" to name)
+    fun recipeOpened(name: String, group: String) = log("recipe_opened", "recipe" to name, "group" to group)
     fun recipeItemsAdded(count: Int) =
         log("recipe_items_added", "count" to if (count >= 10) "10+" else count.toString())
     /** "만드는 법 보기" → YouTube search. Tells whether in-app cooking steps (phase 2) are worth building. */

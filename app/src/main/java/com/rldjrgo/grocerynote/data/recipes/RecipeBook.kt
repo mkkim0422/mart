@@ -7,13 +7,20 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/** The chip that holds cooking dishes — the only group with "만드는 법 보기" and 재료/양념 wording. */
+const val FOOD_GROUP = "요리"
+
 /**
- * One dish (or occasion) and the things to buy for it. Names only — no amounts
+ * One dish / occasion / checklist and the things to buy for it. Names only — no amounts
  * (CLAUDE.md §3: quantity is the user's call).
  */
 data class Recipe(
     val name: String,
     val emoji: String,
+    /** Top chip on the "준비 목록" tab ("@그룹" line): 요리, 명절·행사, 나들이·여행, 아이·학교, 아플 때, 생활. */
+    val group: String,
+    val groupEmoji: String,
+    /** "## 분류" sub-heading inside a group (only 요리 has them; otherwise = [group]). */
     val category: String,
     val aliases: List<String>,
     /** 재료 — what nearly everyone puts in. */
@@ -25,6 +32,8 @@ data class Recipe(
     /** 준비물 — non-food supplies (occasions only). */
     val supplies: List<String>,
 ) {
+    val isFood: Boolean get() = group == FOOD_GROUP
+
     /** Name + aliases, normalized for search. */
     val searchKeys: List<String> = (listOf(name) + aliases).map(::normalizeRecipeQuery)
 }
@@ -34,7 +43,7 @@ fun normalizeRecipeQuery(s: String): String =
     s.replace(" ", "").lowercase().replace("찌게", "찌개")
 
 /**
- * The bundled "요리별 재료" table (`assets/recipes.txt`, ~60KB of text). Parsed
+ * The bundled "준비 목록" table (`assets/recipes.txt`, ~60KB of text). Parsed
  * once, on first open of the tab, off the main thread — app start, Home and the
  * widgets never touch it.
  */
@@ -50,11 +59,19 @@ class RecipeBook @Inject constructor(@ApplicationContext private val context: Co
 
     private fun parse(): List<Recipe> {
         val out = ArrayList<Recipe>(320)
+        var group = FOOD_GROUP
+        var groupEmoji = ""
         var category = ""
         context.assets.open("recipes.txt").bufferedReader(Charsets.UTF_8).useLines { lines ->
             lines.forEach { raw ->
                 val line = raw.trim()
                 when {
+                    line.startsWith("@") -> {
+                        val g = line.removePrefix("@").split("|")
+                        group = g[0].trim()
+                        groupEmoji = g.getOrNull(1)?.trim().orEmpty()
+                        category = group
+                    }
                     line.startsWith("## ") -> category = line.removePrefix("## ").trim()
                     line.isEmpty() || line.startsWith("#") -> Unit
                     else -> {
@@ -63,6 +80,8 @@ class RecipeBook @Inject constructor(@ApplicationContext private val context: Co
                             out += Recipe(
                                 name = p[0].trim(),
                                 emoji = p[1].trim(),
+                                group = group,
+                                groupEmoji = groupEmoji,
                                 category = category,
                                 aliases = p[2].csv(),
                                 main = p[3].csv(),

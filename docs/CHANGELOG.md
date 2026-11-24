@@ -3,6 +3,11 @@
 > 사용자 지시 1건 = 1줄. 최신이 맨 위. 탐색·빌드·실기기 검증은 기록하지 않음.
 > 형식: `- YYYY-MM-DD · {한 줄 요약} · {대표 파일들}` (커밋되면 끝에 ` (커밋 abc1234)` 추가)
 
+## 2026-11-24 · 준비 목록 (1.7.0에 알림과 함께)
+
+- 2026-11-24 · **v1.7.0 (vc16) 버전업 + 출시 노트**: 준비 목록 · 장보기 알림. 온보딩 3번째 장 문구·캡처 교체(하단 탭 '준비 목록'), 스토어 자세한 설명 3)번 갱신, 실기기 확인 중 고친 것 2개(목록에서 돌아오면 고른 칩이 화면 밖 → 자동 스크롤, 전체의 요리 미리보기가 된장류 4개 → 자주 찾는 요리 순), 새 목록 4개 칸 조정(물놀이·등산 간식, 해외여행 컵라면·김, 출산 분유 → 있으면 좋은 것) · `app/build.gradle.kts`, `OnboardingScreen.kt`, `res/drawable/onboarding_page_recipe.png`, `docs/playstore_listing.md`, `scripts/build_release_kit.py`
+- 2026-11-24 · **"요리별 재료" 탭 → "준비 목록"**: 검색 아래 칩 한 줄(전체/요리/명절·행사/나들이·여행/아이·학교/아플 때/생활), 전체는 칩마다 4개 + 더 보기, 요리만 소제목 유지, 검색 결과에 칩 이름. 요리가 아닌 목록은 칸 이름 "꼭 필요한 것/있으면 좋은 것/집에 있는지 확인". 행사·모임 14개 재배치 + 새 목록 20개(초안, 검수 필요). recipe_opened에 group · `assets/recipes.txt`, `data/recipes/RecipeBook.kt`, `ui/screens/recipes/`, `ui/components/BottomNavBar.kt`, `util/Analytics.kt`, `CLAUDE.md`, `sample/준비목록_카테고리_시안.html`
+
 ## 2026-11-22 · 리텐션 알림(넛지) 1차 — 작업 중 (1.7.0 예정)
 
 - 2026-11-22 · **정밀검사 수정**: ① 2028 설 날짜 1/26 → **1/27**(KASI 기반 계산으로 대조, 나머지 7개 날짜 일치) ② "시즌 알림 나간 날 1건 더" 예외가 실제론 안 먹던 것 수정(저녁 배송 알림 허용) ③ 캠핑 제목 "캠핑 준비물 재료" → "캠핑 장볼 것 N가지" ④ 안 쓰는 함수 제거 ⑤ 단위 테스트 6개 추가·통과(JUnit 직접 실행) · `notify/{SeasonCalendar,NudgeEngine}.kt`, `app/src/test/.../notify/NudgeEngineTest.kt`

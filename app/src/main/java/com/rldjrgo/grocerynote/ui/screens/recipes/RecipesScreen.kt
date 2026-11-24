@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rldjrgo.grocerynote.data.recipes.FOOD_GROUP
 import com.rldjrgo.grocerynote.data.recipes.Recipe
 import com.rldjrgo.grocerynote.domain.model.Store
 import com.rldjrgo.grocerynote.domain.model.emoji
@@ -86,11 +87,12 @@ private fun openHowTo(context: android.content.Context, query: String) {
         .onFailure { Toast.makeText(context, "열 수 있는 앱이 없어요", Toast.LENGTH_SHORT).show() }
 }
 
-/** Occasions (김장·캠핑…) aren't a single dish, so no "만드는 법 보기" there. */
-private const val OCCASION_CATEGORY = "행사·모임"
+/** Cards per group on the 전체 chip before "더 보기". */
+private const val PREVIEW_PER_GROUP = 4
 
 /**
- * "요리별 재료" tab — pick a dish, see what to buy, tick what you need and add it
+ * "준비 목록" tab (was "요리별 재료" until 1.7.0) — search, pick a chip (요리 / 명절·행사 /
+ * 나들이·여행 / 아이·학교 / 아플 때 / 생활), open a list, tick what you need and add it
  * to a mart. Nothing is pre-ticked (we can't know what's at home), names already
  * on a list are greyed out, and there are no amounts.
  */
@@ -101,6 +103,8 @@ fun RecipesScreen(viewModel: RecipesViewModel = hiltViewModel()) {
     val opened = state.opened
 
     BackHandler(enabled = opened != null) { viewModel.close() }
+    // Back on a chip (not 전체, no list open) → back to 전체 first, like leaving a sub-page.
+    BackHandler(enabled = opened == null && state.group != null && state.query.isBlank()) { viewModel.setGroup(null) }
 
     // 시즌 알림(설·추석·김장) 탭 → 그 체크리스트를 바로 연다.
     val deepLink by com.rldjrgo.grocerynote.DeepLinkBus.flow.collectAsStateWithLifecycle()
@@ -137,20 +141,24 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeList(
     val open: (Recipe) -> Unit = { focus.clearFocus(); viewModel.open(it) }
 
     // Same rule as the other tabs: the screen title is the tab's own name.
-    PageTitle(title = "요리별 재료", subtitle = "요리를 고르면 살 재료가 나와요")
+    PageTitle(title = "준비 목록", subtitle = "고르면 살 것이 나와요")
     SearchField(state.query, viewModel::setQuery)
+    GroupChips(state.groups, state.group, onSelect = { focus.clearFocus(); viewModel.setGroup(it) })
 
-    val grouped = remember(state.recipes) { state.recipes.groupBy { it.category } }
+    val byGroup = remember(state.recipes) { state.recipes.groupBy { it.group } }
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(state.group) { listState.scrollToItem(0) }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.weight(1f).fillMaxWidth(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
     ) {
         if (state.query.isNotBlank()) {
             if (state.results.isEmpty() && !state.loading) {
                 item(key = "none") {
                     Text(
-                        "아직 없는 요리예요",
+                        "아직 없는 목록이에요",
                         style = typo.body,
                         color = colors.textTertiary,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
@@ -158,10 +166,12 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeList(
                     )
                 }
             }
-            items(state.results.chunked(2), key = { "r-" + it.first().name }) { row -> RecipeRow(row, open) }
-        } else {
+            item(key = "results-top") { Spacer(Modifier.height(12.dp)) }
+            // Results span every chip, so each card says which one it's from.
+            items(state.results.chunked(2), key = { "r-" + it.first().name }) { row -> RecipeRow(row, open, showGroup = true) }
+        } else if (state.group == null) {
             if (state.recent.isNotEmpty()) {
-                item(key = "recent-h") { SectionHeader("최근 본 요리", null) }
+                item(key = "recent-h") { SectionHeader("최근 본 것", null) }
                 item(key = "recent") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.recent, key = { it.name }) { r ->
@@ -171,7 +181,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeList(
                 }
             }
             if (state.popular.isNotEmpty()) {
-                item(key = "popular-h") { SectionHeader("자주 찾는 요리", null) }
+                item(key = "popular-h") { SectionHeader("자주 찾는 것", null) }
                 item(key = "popular") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.popular, key = { it.name }) { r ->
@@ -180,8 +190,28 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeList(
                     }
                 }
             }
-            grouped.forEach { (category, list) ->
-                item(key = "h-$category") { SectionHeader(category, "${list.size}") }
+            // Every chip in turn, a few cards each — the chip itself shows the rest.
+            state.groups.forEach { (group, emoji) ->
+                val list = byGroup[group].orEmpty()
+                // 요리's file order starts with four 된장 dishes — lead with everyday ones instead.
+                val preview = (if (group == FOOD_GROUP) state.popularAll.filter { it.group == group } + list else list)
+                    .distinct().take(PREVIEW_PER_GROUP)
+                item(key = "gh-$group") {
+                    SectionHeader("$emoji $group", null, onMore = { viewModel.setGroup(group) })
+                }
+                items(preview.chunked(2), key = { "g-" + it.first().name }) { row -> RecipeRow(row, open) }
+            }
+        } else {
+            val list = byGroup[state.group].orEmpty()
+            val subs = list.groupBy { it.category }
+            if (subs.size > 1) {
+                // 요리: keep its sub-headings (찌개·국·탕, 반찬 …).
+                subs.forEach { (category, l) ->
+                    item(key = "h-$category") { SectionHeader(category, "${l.size}") }
+                    items(l.chunked(2), key = { "c-" + it.first().name }) { row -> RecipeRow(row, open) }
+                }
+            } else {
+                item(key = "group-top") { Spacer(Modifier.height(12.dp)) }
                 items(list.chunked(2), key = { "c-" + it.first().name }) { row -> RecipeRow(row, open) }
             }
         }
@@ -208,7 +238,7 @@ private fun SearchField(query: String, onChange: (String) -> Unit) {
         Spacer(Modifier.width(8.dp))
         Box(modifier = Modifier.weight(1f)) {
             if (query.isEmpty()) {
-                Text("요리 이름 (예: 김치찌개)", style = typo.body, color = colors.textTertiary)
+                Text("요리·준비물 (예: 김치찌개, 캠핑)", style = typo.body, color = colors.textTertiary)
             }
             BasicTextField(
                 value = query,
@@ -232,8 +262,48 @@ private fun SearchField(query: String, onChange: (String) -> Unit) {
     }
 }
 
+/** One line of chips under the search box: 전체 + each group. Same pill shape as the mart tabs. */
 @Composable
-private fun SectionHeader(title: String, count: String?) {
+private fun GroupChips(groups: List<Pair<String, String>>, selected: String?, onSelect: (String?) -> Unit) {
+    if (groups.isEmpty()) return
+    // The row is rebuilt after a list is closed — bring the selected chip back into view.
+    val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(selected, groups.size) {
+        val i = groups.indexOfFirst { it.first == selected } + 1 // +1: 전체 comes first
+        rowState.animateScrollToItem(if (i > 1) i - 1 else 0)
+    }
+    LazyRow(
+        state = rowState,
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item(key = "all") { GroupChip("전체", selected == null) { onSelect(null) } }
+        items(groups, key = { it.first }) { (name, emoji) ->
+            GroupChip(if (emoji.isEmpty()) name else "$emoji $name", selected == name) { onSelect(name) }
+        }
+    }
+}
+
+@Composable
+private fun GroupChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = AppTheme.colors
+    Text(
+        text,
+        style = AppTheme.typography.body,
+        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        color = if (selected) colors.bgPrimary else colors.textSecondary,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (selected) colors.textPrimary else colors.bgTertiary)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    )
+}
+
+@Composable
+private fun SectionHeader(title: String, count: String?, onMore: (() -> Unit)? = null) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
     Row(
@@ -245,22 +315,34 @@ private fun SectionHeader(title: String, count: String?) {
             Spacer(Modifier.width(6.dp))
             Text(count, style = typo.bodyS, color = colors.textTertiary)
         }
+        if (onMore != null) {
+            Spacer(Modifier.weight(1f))
+            Text(
+                "더 보기 ›",
+                style = typo.bodyS,
+                color = colors.brandPrimary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onMore)
+                    .padding(4.dp),
+            )
+        }
     }
 }
 
 @Composable
-private fun RecipeRow(row: List<Recipe>, onOpen: (Recipe) -> Unit) {
+private fun RecipeRow(row: List<Recipe>, onOpen: (Recipe) -> Unit, showGroup: Boolean = false) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        row.forEach { r -> RecipeCard(r, Modifier.weight(1f)) { onOpen(r) } }
+        row.forEach { r -> RecipeCard(r, Modifier.weight(1f), showGroup) { onOpen(r) } }
         if (row.size == 1) Spacer(Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun RecipeCard(recipe: Recipe, modifier: Modifier, onClick: () -> Unit) {
+private fun RecipeCard(recipe: Recipe, modifier: Modifier, showGroup: Boolean, onClick: () -> Unit) {
     val colors = AppTheme.colors
     val typo = AppTheme.typography
     Row(
@@ -275,14 +357,17 @@ private fun RecipeCard(recipe: Recipe, modifier: Modifier, onClick: () -> Unit) 
     ) {
         Text(recipe.emoji, style = typo.title)
         Spacer(Modifier.width(8.dp))
-        Text(
-            recipe.name,
-            style = typo.body,
-            fontWeight = FontWeight.Medium,
-            color = colors.textPrimary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column {
+            Text(
+                recipe.name,
+                style = typo.body,
+                fontWeight = FontWeight.Medium,
+                color = colors.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (showGroup) Text(recipe.group, style = typo.micro, color = colors.textTertiary, maxLines = 1)
+        }
     }
 }
 
@@ -350,7 +435,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeDetail(
         // Right under the dish name: dish → how it's made → what to buy. Top of the page
         // is "about the dish", the bottom bar is "about buying" (user 2026-11-19). The old
         // "살 것만 누르세요" line here just repeated the button's own "살 것을 눌러 주세요".
-        if (recipe.category != OCCASION_CATEGORY) {
+        if (recipe.isFood) {
             val shape = RoundedCornerShape(999.dp)
             Row(
                 modifier = Modifier
@@ -376,9 +461,11 @@ private fun androidx.compose.foundation.layout.ColumnScope.RecipeDetail(
                 Text("만드는 법 보기", style = typo.body, fontWeight = FontWeight.Medium, color = colors.textPrimary)
             }
         }
-        IngredientGroup("재료", null, recipe.main, state, viewModel, selectAll = true)
-        IngredientGroup("넣어도 좋은 것", null, recipe.optional, state, viewModel)
-        IngredientGroup("양념", "집에 없는 것만", recipe.pantry, state, viewModel)
+        // Same 4 columns everywhere; only dishes get the cooking words (재료·양념).
+        val food = recipe.isFood
+        IngredientGroup(if (food) "재료" else "꼭 필요한 것", null, recipe.main, state, viewModel, selectAll = true)
+        IngredientGroup(if (food) "넣어도 좋은 것" else "있으면 좋은 것", null, recipe.optional, state, viewModel)
+        IngredientGroup(if (food) "양념" else "집에 있는지 확인", if (food) "집에 없는 것만" else "없는 것만", recipe.pantry, state, viewModel)
         IngredientGroup("준비물", null, recipe.supplies, state, viewModel, selectAll = true)
     }
 

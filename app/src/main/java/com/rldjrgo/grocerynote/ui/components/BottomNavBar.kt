@@ -18,7 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.RestaurantMenu
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -38,7 +38,7 @@ private data class NavItem(
 
 private val items = listOf(
     NavItem(Routes.HOME, "구매예정", Icons.AutoMirrored.Outlined.List),
-    NavItem(Routes.RECIPES, "요리별 재료", Icons.Outlined.RestaurantMenu),
+    NavItem(Routes.RECIPES, "준비 목록", Icons.Outlined.Checklist),
     NavItem(Routes.COMPLETED, "완료", Icons.Outlined.CheckCircle),
     NavItem(Routes.SETTINGS, "설정", Icons.Outlined.Settings),
 )
@@ -99,7 +99,7 @@ fun BottomNavBar(
                         text = item.label,
                         color = tint,
                         style = AppTheme.typography.micro,
-                        // 4 tabs: keep "요리별 재료" on one line even with a large system font.
+                        // 4 tabs: keep "준비 목록" on one line even with a large system font.
                         maxLines = 1,
                         softWrap = false,
                     )

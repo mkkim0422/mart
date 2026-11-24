@@ -28,12 +28,18 @@ data class RecipesUiState(
     val loading: Boolean = true,
     /** Every dish, in file order (grouped by [Recipe.category]). */
     val recipes: List<Recipe> = emptyList(),
+    /** Chips under the search box: (group name, emoji), file order. "전체" is not in here. */
+    val groups: List<Pair<String, String>> = emptyList(),
+    /** Selected chip; null = 전체. */
+    val group: String? = null,
     val query: String = "",
     /** Dishes matching [query] (empty query → empty; the screen shows the full list instead). */
     val results: List<Recipe> = emptyList(),
     val recent: List<Recipe> = emptyList(),
     /** Everyday dishes offered as one-tap pills so nobody has to type at the mart. */
     val popular: List<Recipe> = emptyList(),
+    /** [popular] without the recent-filter — leads the 요리 preview on the 전체 chip. */
+    val popularAll: List<Recipe> = emptyList(),
     val opened: Recipe? = null,
     /** Ingredient names the user ticked on the opened dish. Nothing is pre-ticked. */
     val picked: Set<String> = emptySet(),
@@ -69,6 +75,7 @@ class RecipesViewModel @Inject constructor(
     private data class Local(
         val recipes: List<Recipe>? = null,
         val query: String = "",
+        val group: String? = null,
         val opened: Recipe? = null,
         val picked: Set<String> = emptySet(),
         val storeId: Long? = null,
@@ -93,10 +100,13 @@ class RecipesViewModel @Inject constructor(
         RecipesUiState(
             loading = l.recipes == null,
             recipes = recipes,
+            groups = recipes.map { it.group to it.groupEmoji }.distinct(),
+            group = l.group,
             query = l.query,
             results = search(recipes, l.query),
             recent = recentNames.mapNotNull { byName[it] },
             popular = POPULAR.mapNotNull { byName[it] }.filter { it.name !in recentNames },
+            popularAll = POPULAR.mapNotNull { byName[it] },
             opened = l.opened,
             picked = l.picked.filterNot { existing[itemKey(it)]?.contains(selected) == true }.toSet(),
             stores = stores,
@@ -134,9 +144,12 @@ class RecipesViewModel @Inject constructor(
         }
     }
 
+    /** Chip tap. null = 전체. Clears the search so the chip's list is what shows. */
+    fun setGroup(group: String?) = local.update { it.copy(group = group, query = "") }
+
     fun open(recipe: Recipe) {
         local.update { it.copy(opened = recipe, picked = emptySet()) }
-        Analytics.recipeOpened(recipe.name)
+        Analytics.recipeOpened(recipe.name, recipe.group)
         viewModelScope.launch { settings.pushRecentRecipe(recipe.name) }
     }
 
@@ -196,8 +209,9 @@ class RecipesViewModel @Inject constructor(
     companion object {
         /** Must match names in assets/recipes.txt (missing ones are simply skipped). */
         private val POPULAR = listOf(
-            "김치찌개", "된장찌개", "미역국", "제육볶음", "카레라이스", "김밥",
-            "떡볶이", "닭볶음탕", "소불고기", "잡채", "계란말이", "삼겹살 구이",
+            "김치찌개", "된장찌개", "차례상", "미역국", "제육볶음", "캠핑 1박 2일",
+            "카레라이스", "김밥", "생필품 채우기", "떡볶이", "닭볶음탕", "소불고기",
+            "잡채", "계란말이", "삼겹살 구이",
         )
 
         /** Same rule the lists use to call two names "the same item". */
